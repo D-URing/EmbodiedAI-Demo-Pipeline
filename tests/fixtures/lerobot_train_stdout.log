@@ -1,0 +1,6 @@
+2026-07-13 10:00:00 INFO Start offline training on a fixed dataset
+2026-07-13 10:00:10 INFO step=20 loss=2.421 grdn=1.200 lr=1.0e-4
+2026-07-13 10:00:20 INFO step=40 loss=1.730 grdn=1.100 lr=1.0e-4
+2026-07-13 10:00:30 INFO step=60 loss=1.112 grdn=0.900 lr=1.0e-4
+2026-07-13 10:00:40 INFO step=80 loss=0.743 grdn=0.700 lr=1.0e-4
+2026-07-13 10:00:50 INFO Checkpoint policy after step 100

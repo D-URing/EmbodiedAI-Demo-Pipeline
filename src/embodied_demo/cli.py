@@ -22,8 +22,6 @@ from embodied_demo.schemas import (
     TaskRegistry,
     TaskSpec,
 )
-from embodied_demo.training_demo import train_behavior_cloning_demo
-from embodied_demo.training_demo import train_and_eval_behavior_cloning_demo
 
 
 def _write_text(path: Path, content: str) -> None:
@@ -119,54 +117,6 @@ def _command_run(args: argparse.Namespace) -> int:
     return 0
 
 
-def _command_train_demo(args: argparse.Namespace) -> int:
-    artifact_dir = train_behavior_cloning_demo(
-        args.config,
-        output_dir=args.output_dir,
-        epochs=args.epochs,
-        learning_rate=args.learning_rate,
-    )
-    metrics = json.loads((artifact_dir / "metrics.json").read_text(encoding="utf-8"))
-    print(f"TRAIN_COMPLETE {artifact_dir}")
-    print(
-        "SUMMARY "
-        f"loss_decreased={str(metrics['loss_decreased']).lower()} "
-        f"initial_loss={metrics['initial_loss']:.4f} "
-        f"final_loss={metrics['final_loss']:.4f} "
-        f"drop={metrics['loss_drop_ratio']:.2%}"
-    )
-    print(f"TRAIN_LOG {artifact_dir / 'train_log.jsonl'}")
-    print(f"CHECKPOINT {artifact_dir / 'checkpoint.json'}")
-    print(f"REPORT {artifact_dir / 'report.md'}")
-    return 0
-
-
-def _command_train_eval_demo(args: argparse.Namespace) -> int:
-    artifact_dir = train_and_eval_behavior_cloning_demo(
-        args.config,
-        output_dir=args.output_dir,
-        epochs=args.epochs,
-        learning_rate=args.learning_rate,
-    )
-    metrics = json.loads((artifact_dir / "metrics.json").read_text(encoding="utf-8"))
-    rollout = metrics["learned_rollout"]
-    print(f"TRAIN_EVAL_COMPLETE {artifact_dir}")
-    print(
-        "SUMMARY "
-        f"true_flow_complete={str(metrics['true_flow_complete']).lower()} "
-        f"loss_decreased={str(metrics['loss_decreased']).lower()} "
-        f"initial_loss={metrics['initial_loss']:.4f} "
-        f"final_loss={metrics['final_loss']:.4f} "
-        f"eval_success={str(rollout['episode_success']).lower()} "
-        f"eval_progress={rollout['progress_score']:.1f}"
-    )
-    print(f"TRAIN_LOG {artifact_dir / 'train_log.jsonl'}")
-    print(f"CHECKPOINT {artifact_dir / 'checkpoint.json'}")
-    print(f"EVAL_RESULT {artifact_dir / rollout['result']}")
-    print(f"REPORT {artifact_dir / 'report.md'}")
-    return 0
-
-
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="embodied-demo",
@@ -193,25 +143,6 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--config", required=True, type=Path)
     run.add_argument("--output-dir", type=Path)
     run.set_defaults(handler=_command_run)
-
-    train_demo = subparsers.add_parser(
-        "train-demo", help="train a tiny behavior-cloning demo policy"
-    )
-    train_demo.add_argument("--config", required=True, type=Path)
-    train_demo.add_argument("--output-dir", type=Path)
-    train_demo.add_argument("--epochs", type=int, default=30)
-    train_demo.add_argument("--learning-rate", type=float, default=1.2)
-    train_demo.set_defaults(handler=_command_train_demo)
-
-    train_eval_demo = subparsers.add_parser(
-        "train-eval-demo",
-        help="train a tiny BC policy and evaluate the learned checkpoint",
-    )
-    train_eval_demo.add_argument("--config", required=True, type=Path)
-    train_eval_demo.add_argument("--output-dir", type=Path)
-    train_eval_demo.add_argument("--epochs", type=int, default=30)
-    train_eval_demo.add_argument("--learning-rate", type=float, default=1.2)
-    train_eval_demo.set_defaults(handler=_command_train_eval_demo)
 
     export_schema = subparsers.add_parser(
         "export-schema", help="export public contracts as JSON Schema"

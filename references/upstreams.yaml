@@ -78,16 +78,28 @@ sources:
       - remote_submission_as_current_requirement
 
   lerobot:
-    role: data_and_training_format_reference
+    role: gpu_training_replication_target
     repository: https://github.com/huggingface/lerobot
     default_branch: main
     pinned_commit: e40b58a8dfa9e7b86918c374791599d070518d11
     pinned_commit_date_utc: "2026-07-08T11:25:54Z"
     license: Apache-2.0
+    referenced_paths:
+      - README.md
+      - docs/source/installation.mdx
+      - docs/source/multi_gpu_training.mdx
+      - docs/source/lerobot-dataset-v3.mdx
+      - src/lerobot/scripts/lerobot_train.py
+      - src/lerobot/configs/train.py
+      - examples/training/train_policy.py
     in_scope:
       - trajectory_dataset_format_reference
-      - replay_and_converter_future_target
-      - lightweight_policy_training_reference_after_m3
+      - real_lerobot_train_cli
+      - gpu_required_training_smoke
+      - act_policy_on_pusht_dataset
+      - train_log_checkpoint_artifact_flow
     out_of_scope:
       - replacing_core_task_schema
-      - making_training_required_for_first_demo
+      - cpu_toy_training
+      - vendoring_lerobot_code
+      - requiring_lerobot_in_core_python_environment

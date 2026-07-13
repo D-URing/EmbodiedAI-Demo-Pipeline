@@ -121,55 +121,25 @@ make dry-run
 - 当前 evaluator 只覆盖两个 MVP 的内置阶段谓词；M2 仍需抽象为通用 evaluator。
 - 当前 artifact 已足够汇报和调试，但还不是最终 release profile 聚合格式。
 
-## 2026-07-13：First Trainable Demo
-
-状态：已实现最小训练闭环。
+## 2026-07-13：LeRobot GPU Training Replication
 
 ### 已落地
 
 | 规划项 | 实现位置 | 当前能力 |
 |---|---|---|
-| CLI train | `embodied-demo train-demo --config ...` | 单命令训练一个轻量行为克隆 policy |
-| Dataset artifact | `dataset.jsonl` | 保存 mock observation-feature/action-label 样本 |
-| Train log | `train_log.jsonl` | 逐 epoch 输出 `train_loss` |
-| Checkpoint | `checkpoint.json` | 保存 softmax BC 分类器权重和 action vocabulary |
-| Metrics/report | `metrics.json`、`report.md` | 记录 initial/final loss、下降比例和边界说明 |
-| 快速入口 | `make train-demo` | 连续训练两个 MVP 的最小 BC demo |
+| 安装脚本 | `scripts/lerobot/install_lerobot_cluster.sh` | 安装 Python 3.12 环境中的 CUDA PyTorch 与 pinned LeRobot 源码 |
+| 训练脚本 | `scripts/lerobot/run_pusht_act_gpu_smoke.sh` | 检查 CUDA 后调用官方 `lerobot-train` |
+| 训练配置 | `configs/lerobot/pusht_act_gpu_smoke.sh` | 默认 `lerobot/pusht`、`policy.type=act`、`policy.device=cuda` |
+| 日志解析 | `scripts/lerobot/parse_train_log.py` | 从 `lerobot-train` stdout 中提取 loss summary |
+| Slurm 样例 | `scripts/lerobot/slurm_pusht_act_gpu_smoke.sbatch` | 给未知集群一个可改的提交模板 |
+| 快速入口 | `make lerobot-train-smoke` | 在已安装 LeRobot 的 CUDA 节点上启动真实训练 smoke |
 
 ### 当前结论
 
-这版已经可以回答“有没有 loss 正常下降”：有，训练 demo 会输出 `loss_decreased=true`、初始 loss、最终 loss 和下降比例。
+这版不再使用 CPU toy trainer。loss 是否下降由集群上的真实 `lerobot-train` 日志和 `loss_summary.json` 证明。
 
 ### 边界
 
-- 当前模型是纯 Python softmax behavior cloning demo，不依赖 PyTorch/CUDA。
-- 当前 dataset 是从 mock/scripted expert 生成的小样本，不是 LeRobot 真数据，也不是仿真/真机采集数据。
-- 当前目标是证明训练管线、日志、checkpoint 和报告闭环，不是追求模型能力。
-
-## 2026-07-13：First Train-Eval Closed Loop
-
-状态：已实现训练到执行的最小真闭环。
-
-### 已落地
-
-| 规划项 | 实现位置 | 当前能力 |
-|---|---|---|
-| CLI train-eval | `embodied-demo train-eval-demo --config ...` | 单命令完成训练、保存、加载 checkpoint 和 learned rollout |
-| Learned policy | `LearnedBehaviorCloningPolicy` | 从 `checkpoint.json` 读取权重并输出动作 |
-| Learned rollout artifacts | `learned_rollout/` | 输出 learned policy 的 `events.jsonl`、`result.json`、`metrics.json`、`report.md` |
-| True-flow metrics | `metrics.json` | 输出 `true_flow_complete`、loss 下降与 learned rollout 成功状态 |
-| 快速入口 | `make train-eval-demo` | 连续运行两个 MVP 的训练到执行闭环 |
-
-### 当前结论
-
-这版不仅能回答 loss 是否下降，还能证明训练出来的 checkpoint 被加载并实际参与执行。对外最推荐演示：
-
-```bash
-make train-eval-demo
-```
-
-### 边界
-
-- 这仍然是 CPU-only 的轻量 BC demo，用于证明工程闭环。
-- learned rollout 运行在 mock backend，不代表物理仿真或真机泛化。
-- 下一步若要更贴近开源生态，应把 dataset/checkpoint 格式进一步向 LeRobot adapter 对齐，并引入一个真实 PyTorch/LeRobot policy。
+- 本地 macOS core 环境不安装 LeRobot、PyTorch CUDA 或仿真依赖。
+- `make lerobot-train-smoke` 必须在有 CUDA 的 LeRobot 环境中运行；没有 GPU 会失败。
+- 默认任务是官方轻量 `lerobot/pusht` + ACT smoke，用于验证训练链路和 loss 下降，不代表家庭任务最终模型能力。

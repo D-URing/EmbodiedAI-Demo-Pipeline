@@ -2,7 +2,7 @@ PYTHON ?= python3.11
 VENV ?= .venv
 CONSTRAINTS ?= requirements/constraints-py311.txt
 
-.PHONY: setup doctor test validate dry-run demo train-demo train-eval-demo schemas reference-fetch clean
+.PHONY: setup doctor test validate dry-run demo lerobot-check-scripts lerobot-train-smoke schemas reference-fetch clean
 
 setup:
 	$(PYTHON) -m venv $(VENV)
@@ -27,13 +27,14 @@ demo:
 	$(VENV)/bin/embodied-demo run --config configs/runs/tabletop_sorting_mock.yaml
 	$(VENV)/bin/embodied-demo run --config configs/runs/towel_folding_mock.yaml
 
-train-demo:
-	$(VENV)/bin/embodied-demo train-demo --config configs/runs/tabletop_sorting_mock.yaml
-	$(VENV)/bin/embodied-demo train-demo --config configs/runs/towel_folding_mock.yaml
+lerobot-check-scripts:
+	bash -n scripts/lerobot/install_lerobot_cluster.sh
+	bash -n scripts/lerobot/run_pusht_act_gpu_smoke.sh
+	bash -n scripts/lerobot/slurm_pusht_act_gpu_smoke.sbatch
+	$(VENV)/bin/python scripts/lerobot/parse_train_log.py --log tests/fixtures/lerobot_train_stdout.log --output-dir build/lerobot-parser-test
 
-train-eval-demo:
-	$(VENV)/bin/embodied-demo train-eval-demo --config configs/runs/tabletop_sorting_mock.yaml
-	$(VENV)/bin/embodied-demo train-eval-demo --config configs/runs/towel_folding_mock.yaml
+lerobot-train-smoke:
+	bash scripts/lerobot/run_pusht_act_gpu_smoke.sh
 
 schemas:
 	$(VENV)/bin/embodied-demo export-schema --output-dir build/schemas
