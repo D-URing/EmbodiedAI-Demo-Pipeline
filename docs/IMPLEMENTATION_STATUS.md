@@ -100,3 +100,23 @@ make dry-run
 6. 之后进入 M3，实现两个 scripted policy 和 deterministic mock backend。
 
 在确认 NVIDIA 集群的 GPU、CUDA、调度器、容器和共享存储前，不安装本机 CUDA/Isaac 依赖，也不把 Slurm 或容器实现绑定到某一种集群假设。
+
+## 2026-07-13：First Runnable Mock Demo
+
+状态：已实现最小可交付闭环。
+
+### 已落地
+
+| 规划项 | 实现位置 | 当前能力 |
+|---|---|---|
+| CLI run | `embodied-demo run --config ...` | 单命令执行 deterministic mock rollout |
+| Scripted policy | `src/embodied_demo/demo_runner.py` | 贴合 `reset -> update_observation -> get_action` 生命周期 |
+| Mock backend | `src/embodied_demo/demo_runner.py` | 支持 `tabletop_sorting_v1` 和 `towel_folding_v1` 的符号/运动学状态推进 |
+| Artifact writer | `runs/<run>/<episode>/` | 输出 `manifest.yaml`、`events.jsonl`、`result.json`、`metrics.json`、`report.md` |
+| 快速入口 | `make demo` | 连续运行两个 MVP mock demo |
+
+### 边界
+
+- 当前 demo 证明工程链路可运行，不代表仿真或真机能力。
+- 当前 evaluator 只覆盖两个 MVP 的内置阶段谓词；M2 仍需抽象为通用 evaluator。
+- 当前 artifact 已足够汇报和调试，但还不是最终 release profile 聚合格式。

@@ -2,7 +2,7 @@ PYTHON ?= python3.11
 VENV ?= .venv
 CONSTRAINTS ?= requirements/constraints-py311.txt
 
-.PHONY: setup doctor test validate dry-run schemas reference-fetch clean
+.PHONY: setup doctor test validate dry-run demo schemas reference-fetch clean
 
 setup:
 	$(PYTHON) -m venv $(VENV)
@@ -22,6 +22,10 @@ validate:
 
 dry-run:
 	$(VENV)/bin/embodied-demo dry-run --config configs/runs/tabletop_sorting_mock.yaml --output runs/tabletop_sorting/resolved.yaml
+
+demo:
+	$(VENV)/bin/embodied-demo run --config configs/runs/tabletop_sorting_mock.yaml
+	$(VENV)/bin/embodied-demo run --config configs/runs/towel_folding_mock.yaml
 
 schemas:
 	$(VENV)/bin/embodied-demo export-schema --output-dir build/schemas

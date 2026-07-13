@@ -10,6 +10,7 @@ from pydantic import ValidationError
 
 from embodied_demo import __version__
 from embodied_demo.config import dump_yaml, load_registry, load_resolved_run, load_task
+from embodied_demo.demo_runner import run_mock_demo
 from embodied_demo.errors import PipelineError, SchemaValidationError
 from embodied_demo.registry import iter_registered_tasks
 from embodied_demo.schemas import (
@@ -101,6 +102,21 @@ def _command_export_schema(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_run(args: argparse.Namespace) -> int:
+    artifact_dir = run_mock_demo(args.config, args.output_dir)
+    result = json.loads((artifact_dir / "result.json").read_text(encoding="utf-8"))
+    print(f"RUN_COMPLETE {artifact_dir}")
+    print(
+        "SUMMARY "
+        f"success={str(result['episode_success']).lower()} "
+        f"progress={result['progress_score']:.1f} "
+        f"steps={result['episode_steps']}"
+    )
+    print(f"REPORT {artifact_dir / 'report.md'}")
+    print(f"RESULT {artifact_dir / 'result.json'}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="embodied-demo",
@@ -122,6 +138,11 @@ def build_parser() -> argparse.ArgumentParser:
     dry_run.add_argument("--config", required=True, type=Path)
     dry_run.add_argument("--output", type=Path)
     dry_run.set_defaults(handler=_command_dry_run)
+
+    run = subparsers.add_parser("run", help="execute a deterministic mock demo rollout")
+    run.add_argument("--config", required=True, type=Path)
+    run.add_argument("--output-dir", type=Path)
+    run.set_defaults(handler=_command_run)
 
     export_schema = subparsers.add_parser(
         "export-schema", help="export public contracts as JSON Schema"

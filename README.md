@@ -11,7 +11,8 @@
 - 已实现：严格 schema、YAML 显式组合、两项任务定义、运行配置、CLI 校验/dry-run、JSON Schema 导出、单元测试
 - 已预留：mock/replay/sim/real 模式，local/Slurm launcher，inproc/WebSocket policy transport，CPU/GPU 资源声明
 - 已固化：XPolicyLab `demo_policy`/debug flow 作为复刻基准，RoboDojo 作为后续外部仿真评测目标，LeRobot 作为后续数据/训练格式参考
-- 下一里程碑：M2 Evaluation Core 与 M3 deterministic mock demo
+- 当前可运行：`embodied-demo run --config configs/runs/tabletop_sorting_mock.yaml` 可生成第一版 mock demo artifacts
+- 下一里程碑：M2 Evaluation Core 完整化与 M3 deterministic mock demo 扩展
 - 暂缓：Viewer、真实 simulator adapter、重量级模型、大数据下载、多节点运行、真机闭环
 
 ## 快速开始
@@ -39,6 +40,19 @@ embodied-demo validate --config configs/runs/towel_folding_mock.yaml
 embodied-demo dry-run \
   --config configs/runs/tabletop_sorting_mock.yaml \
   --output runs/tabletop_sorting/resolved.yaml
+```
+
+运行第一版可交付 mock demo：
+
+```bash
+embodied-demo run --config configs/runs/tabletop_sorting_mock.yaml
+embodied-demo run --config configs/runs/towel_folding_mock.yaml
+```
+
+运行完成后会在 `runs/<run_name>/<run_id>/` 下生成 `manifest.yaml`、`events.jsonl`、`result.json`、`metrics.json` 和 `report.md`。也可以直接执行：
+
+```bash
+make demo
 ```
 
 运行测试和导出公共 schema：
@@ -75,8 +89,9 @@ make reference-fetch
 ├── src/embodied_demo/
 │   ├── schemas/                  # Task/Observation/Action/Run/Evaluation 契约
 │   ├── config.py                 # YAML 组合、校验和 resolved config
+│   ├── demo_runner.py            # 第一版 deterministic mock demo runner
 │   ├── registry.py               # 任务注册表加载
-│   └── cli.py                    # validate/list-tasks/dry-run/export-schema
+│   └── cli.py                    # validate/list-tasks/dry-run/run/export-schema
 ├── tasks/
 │   ├── registry.yaml
 │   ├── tabletop_sorting_v1/
