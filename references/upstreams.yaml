@@ -103,3 +103,66 @@ sources:
       - cpu_toy_training
       - vendoring_lerobot_code
       - requiring_lerobot_in_core_python_environment
+
+  fastwam:
+    role: world_action_model_backend_reference
+    repository: https://github.com/yuantianyuan01/FastWAM
+    default_branch: main
+    pinned_commit: 45d8e1458921d83f8ad6cf9ce993d371208dabd0
+    pinned_commit_date_utc: "2026-04-03T11:39:01Z"
+    license: Other
+    referenced_paths:
+      - README.md
+      - configs/model/fastwam.yaml
+      - configs/train.yaml
+      - scripts/train.py
+      - scripts/train_zero1.sh
+      - scripts/preprocess_action_dit_backbone.py
+      - src/fastwam/
+    in_scope:
+      - world_action_model_training_backend
+      - released_checkpoint_finetuning
+      - wan22_video_expert_action_expert_recipe
+      - libero_robotwin_reference_tasks
+    out_of_scope:
+      - vendoring_fastwam_code
+      - installing_cuda_dependencies_in_core_environment
+      - claiming_household_demo_task_success_from_base_fastwam_alone
+
+  fastwam_realrobot_pipeline:
+    role: internal_realrobot_training_eval_overlay
+    repository: https://github.com/D-URing/fastwam-realrobot-pipeline.git
+    private: true
+    default_branch: main
+    pinned_commit: 5b9791f7d49956b96e0694786f46ff94e8214eca
+    pinned_commit_date_utc: "2026-07-13T14:32:21Z"
+    license: internal_overlay_on_fastwam_upstream
+    referenced_paths:
+      - ABOUT_THIS_REPO.md
+      - REAL_ROBOT_TRAINING.md
+      - WORLD_FAST_CODEBOOK.md
+      - configs/train.yaml
+      - configs/model/fastwam.yaml
+      - configs/task/real_robot_joint_2cam224_1e-4.yaml
+      - configs/task/real_robot_uncond_2cam224_1e-4.yaml
+      - configs/task/real_robot_joint_2cam224_v6_decision.yaml
+      - scripts/train_zero1.sh
+      - scripts/train_real_robot_8gpu.sh
+      - scripts/train_v6_multinode.sh
+      - scripts/offline_fastwam_smoke.py
+      - scripts/offline_action_check.py
+      - src/fastwam/trainer.py
+      - src/fastwam/runtime.py
+      - src/fastwam/datasets/lerobot/
+    in_scope:
+      - private_overlay_workflow
+      - realrobot_lerobot_v3_data_loading
+      - seven_d_joint_and_ten_d_pose_training_configs
+      - fastwam_loss_checkpoint_artifact_flow
+      - world_fast_codebook_optional_extension
+      - nvidia_cluster_smoke_pilot_full_modes
+    out_of_scope:
+      - copying_private_overlay_code_into_this_repo
+      - storing_weights_datasets_or_runs
+      - treating_one_step_smoke_as_loss_convergence
+      - bypassing_robot_safety_for_realrobot_eval

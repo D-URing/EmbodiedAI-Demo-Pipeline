@@ -13,6 +13,7 @@
 - 已固化：XPolicyLab `demo_policy`/debug flow 作为复刻基准，RoboDojo 作为后续外部仿真评测目标，LeRobot 作为后续数据/训练格式参考
 - 当前可运行：`embodied-demo run --config configs/runs/tabletop_sorting_mock.yaml` 可生成第一版 mock demo artifacts
 - 当前 LeRobot 复刻：`make lerobot-train-smoke` 在 CUDA 集群上调用真实 `lerobot-train` 训练 ACT/PushT smoke
+- 当前 FastWAM 集成：`make fastwam-train-smoke` 在 CUDA/FastWAM 环境中调用真实 FastWAM/DeepSpeed 训练入口；`pilot` 模式可生成 loss 下降报告
 - 下一里程碑：M2 Evaluation Core 完整化与 M3 deterministic mock demo 扩展
 - 暂缓：Viewer、真实 simulator adapter、重量级模型、大数据下载、多节点运行、真机闭环
 
@@ -65,6 +66,16 @@ make lerobot-train-smoke
 
 该入口不会 fallback 到 CPU，也不调用本仓库的 toy trainer。它会调用官方 `lerobot-train`，默认复刻 LeRobot 的 `lerobot/pusht` + `act` 训练路径，并在 `runs/lerobot/...` 下保存 stdout、loss summary、LeRobot 输出目录和 checkpoint。详细说明见 [`docs/LEROBOT_REPLICATION.md`](docs/LEROBOT_REPLICATION.md)。
 
+在 CUDA 集群上接入你已有的 FastWAM 真机训练/评测 pipeline：
+
+```bash
+bash scripts/fastwam/prepare_fastwam_overlay.sh
+FASTWAM_MODE=pilot FASTWAM_RECIPE=joint_base \
+bash scripts/fastwam/run_realrobot_train_eval.sh
+```
+
+该入口会把官方 FastWAM 与私有 realrobot overlay 组合为外部 backend，并在 `runs/fastwam/...` 下保存 stdout、`loss_summary.json` 和 FastWAM 原生 checkpoint 路径。详细说明见 [`docs/FASTWAM_REALROBOT_INTEGRATION.md`](docs/FASTWAM_REALROBOT_INTEGRATION.md)。
+
 运行测试和导出公共 schema：
 
 ```bash
@@ -92,9 +103,11 @@ make reference-fetch
 │   └── runs/                     # 可直接校验和展开的运行入口
 ├── docs/
 │   ├── ENVIRONMENT.md            # macOS/Linux/NVIDIA 集群环境配置
+│   ├── FASTWAM_REALROBOT_INTEGRATION.md
 │   └── MASTER_PLAN.md            # 项目范围、架构、资源映射与路线图
 ├── requirements/                 # 经过验收的 Python 版本约束
 ├── references/                   # 上游复刻基准和引用 pin
+├── scripts/fastwam/              # FastWAM 外部 backend 准备、启动和日志解析
 ├── scenes/mock/                  # 轻量场景描述；不声称物理真实性
 ├── src/embodied_demo/
 │   ├── schemas/                  # Task/Observation/Action/Run/Evaluation 契约

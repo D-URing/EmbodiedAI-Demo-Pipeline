@@ -143,3 +143,32 @@ make dry-run
 - 本地 macOS core 环境不安装 LeRobot、PyTorch CUDA 或仿真依赖。
 - `make lerobot-train-smoke` 必须在有 CUDA 的 LeRobot 环境中运行；没有 GPU 会失败。
 - 默认任务是官方轻量 `lerobot/pusht` + ACT smoke，用于验证训练链路和 loss 下降，不代表家庭任务最终模型能力。
+
+## 2026-07-13：FastWAM Real-Robot Backend Integration
+
+状态：已完成第一版薄集成，可交给 NVIDIA 集群运行。
+
+### 已落地
+
+| 规划项 | 实现位置 | 当前能力 |
+|---|---|---|
+| backend 配置 | `configs/fastwam/realrobot_train_eval.sh` | pin 官方 FastWAM 与私有 realrobot overlay，声明模型/数据/运行开关 |
+| overlay 准备 | `scripts/fastwam/prepare_fastwam_overlay.sh` | clone 官方 FastWAM，clone 私有 overlay，rsync 覆盖，排除权重/数据/runs |
+| 训练入口 | `scripts/fastwam/run_realrobot_train_eval.sh` | CUDA-only 调用 FastWAM `scripts/train_zero1.sh`，支持 smoke/pilot/full |
+| recipe 映射 | `scripts/fastwam/run_realrobot_train_eval.sh` | `joint_base`、`pose_base`、`v6_*` 变体映射到 FastWAM task |
+| 日志解析 | `scripts/fastwam/parse_train_log.py` | 解析真实 FastWAM stdout，输出 loss、子 loss、checkpoint summary |
+| Slurm 样例 | `scripts/fastwam/slurm_realrobot_pilot.sbatch` | 给未知 NVIDIA 集群一个可改模板 |
+| 文档 | `docs/FASTWAM_REALROBOT_INTEGRATION.md` | 说明环境、路径、运行命令、产物和 RoboDojo-style 分层评测 |
+| 上游 pin | `references/upstreams.yaml` | 固定官方 FastWAM 与私有 overlay commit |
+| 回归测试 | `tests/test_fastwam_scripts.py` | 验证 parser、CUDA-only 契约和 overlay 准备契约 |
+
+### 当前结论
+
+FastWAM 现在是本项目的 R3 外部训练/评测后端。第一阶段用它补上“真实可训练模型 + loss 曲线 + checkpoint”的交付证据；本仓库继续负责 contract、任务库、mock demo 和统一 artifact。
+
+### 边界
+
+- 本仓库不 vendor FastWAM 或私有 overlay 代码，不存权重、数据和 runs。
+- `make fastwam-train-smoke` 必须在已准备好的 FastWAM CUDA 环境中运行；没有 GPU 会失败。
+- smoke 只验证真实前反传和 checkpoint；要证明 loss 下降，应跑 `FASTWAM_MODE=pilot`。
+- 真机闭环和 RoboDojo/RoboTwin 仿真评测仍是后续阶段，当前只落地训练/离线评测入口。

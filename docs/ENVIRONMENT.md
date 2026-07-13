@@ -184,6 +184,39 @@ python -m pip freeze
 
 每个 simulator adapter 必须先通过 E0 schema 和 E1 wiring smoke，再进入 GPU sweep。不能因为 simulator 支持并行环境，就默认将 `num_envs` 调大；只有 policy 声明 `supports_batch: true` 后配置才允许多环境。
 
+### 5.1 FastWAM real-robot policy/training 环境
+
+FastWAM 属于独立 CUDA policy 环境，不进入 core `.venv`。推荐在 NVIDIA 集群创建 Python 3.10/Conda 环境：
+
+```bash
+FASTWAM_CREATE_CONDA=1 FASTWAM_INSTALL=1 \
+bash scripts/fastwam/prepare_fastwam_overlay.sh
+```
+
+它会把官方 FastWAM 与私有 `D-URing/fastwam-realrobot-pipeline` overlay 到 `$FASTWAM_WORKDIR`，再按 CUDA 12.8 默认安装 PyTorch 与 editable FastWAM。若集群 CUDA wheel、模型目录或私有仓库 checkout 位置不同，通过以下变量覆盖：
+
+```bash
+export FASTWAM_WORKDIR="$SCRATCH/upstreams/FastWAM-realrobot"
+export FASTWAM_MODEL_BASE="/path/to/shared/models"
+export FASTWAM_TORCH_INDEX_URL="https://download.pytorch.org/whl/cu128"
+```
+
+训练入口明确禁止 CPU fallback：
+
+```bash
+FASTWAM_MODE=smoke FASTWAM_RECIPE=joint_base \
+bash scripts/fastwam/run_realrobot_train_eval.sh
+```
+
+要观察 loss 是否下降，跑 pilot：
+
+```bash
+FASTWAM_MODE=pilot FASTWAM_RECIPE=joint_base \
+bash scripts/fastwam/run_realrobot_train_eval.sh
+```
+
+结果会写到 `runs/fastwam/.../loss_summary.json`。FastWAM 原生 checkpoint 仍保留在 `$FASTWAM_WORKDIR/runs/<task>/<run_id>/`，本仓库只记录路径和摘要。
+
 ## 6. 配置开关
 
 当前默认配置位于 `configs/base.yaml`：

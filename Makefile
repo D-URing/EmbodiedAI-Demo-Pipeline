@@ -2,7 +2,7 @@ PYTHON ?= python3.11
 VENV ?= .venv
 CONSTRAINTS ?= requirements/constraints-py311.txt
 
-.PHONY: setup doctor test validate dry-run demo lerobot-check-scripts lerobot-train-smoke schemas reference-fetch clean
+.PHONY: setup doctor test validate dry-run demo lerobot-check-scripts lerobot-train-smoke fastwam-check-scripts fastwam-train-smoke schemas reference-fetch clean
 
 setup:
 	$(PYTHON) -m venv $(VENV)
@@ -35,6 +35,15 @@ lerobot-check-scripts:
 
 lerobot-train-smoke:
 	bash scripts/lerobot/run_pusht_act_gpu_smoke.sh
+
+fastwam-check-scripts:
+	bash -n scripts/fastwam/prepare_fastwam_overlay.sh
+	bash -n scripts/fastwam/run_realrobot_train_eval.sh
+	bash -n scripts/fastwam/slurm_realrobot_pilot.sbatch
+	$(VENV)/bin/python scripts/fastwam/parse_train_log.py --log tests/fixtures/fastwam_train_stdout.log --output-dir build/fastwam-parser-test
+
+fastwam-train-smoke:
+	FASTWAM_MODE=smoke bash scripts/fastwam/run_realrobot_train_eval.sh
 
 schemas:
 	$(VENV)/bin/embodied-demo export-schema --output-dir build/schemas
