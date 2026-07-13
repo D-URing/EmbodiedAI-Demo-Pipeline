@@ -1,7 +1,8 @@
 # 具身智能 Demo 场景与开源全流程打通：工程总规划
 
-> 文档状态：Planning Baseline v0.1<br>
+> 文档状态：Planning Baseline v0.2<br>
 > 基线日期：2026-07-13<br>
+> 最近更新：2026-07-14<br>
 > 适用阶段：项目立项至首个仿真/模型闭环<br>
 > 维护原则：本文件是项目级稳定参考；具体实现变化通过 ADR、配置版本和变更记录更新，不静默改写关键决策。
 
@@ -15,6 +16,7 @@
   -> 策略适配器
   -> 动作契约
   -> mock / replay / sim / real 执行
+  -> 训练/离线证据导入
   -> 轨迹与运行产物
   -> 分层评测
   -> 报告与后期可视化
@@ -31,12 +33,19 @@
 
 2026-07-13 的补充决策：本项目以 XPolicyLab 的 `demo_policy` 与 `debug` evaluation flow 作为第一复刻基准，以 RoboDojo 作为后续 NVIDIA/Isaac 外部评测目标，以 LeRobot 作为后续数据和轻量训练格式参考。该决策只影响接口和验收锚点，不把 XPolicyLab、RoboDojo、Isaac 或 LeRobot 变成 core 依赖。详见 [`REFERENCE_BASELINE.md`](REFERENCE_BASELINE.md) 与 [`adr/0001-reference-baseline.md`](adr/0001-reference-baseline.md)。
 
+2026-07-14 的补充决策：FastWAM real-robot pipeline 已作为第一条真实 CUDA 训练证据链接入。本项目因此从“两个 mock MVP”升级为“三层证据链”：任务/工程链路证据、真实训练证据、后续仿真/真机能力证据。三者必须分别标注 readiness，不能把 loss 下降、mock 成功和真实家庭任务成功混报。详见 [`DEMO_COVERAGE_ROADMAP.md`](DEMO_COVERAGE_ROADMAP.md)、[`FASTWAM_REALROBOT_INTEGRATION.md`](FASTWAM_REALROBOT_INTEGRATION.md) 与 [`adr/0002-fastwam-evidence-chain.md`](adr/0002-fastwam-evidence-chain.md)。
+
 第一阶段的两个纵向 Demo 为：
 
 - `tabletop_sorting_v1`：桌面/厨房物品分类归位，验证刚性多物体、语言条件、阶段进度和抓放链路。
 - `towel_folding_v1`：叠毛巾，验证双臂语义、柔性物体状态和形变评测链路。
 
 第一阶段最重要的交付不是视频页面，而是：两个任务能够通过同一个 runner 在 mock/replay 后端执行，产生可复现 episode、部分进度分数、成功率、失败原因和完整 manifest。
+
+FastWAM 接入后，第一阶段交付拆成两条并行但不混报的线：
+
+- **家庭任务 demo 线**：继续扩展 `tabletop_sorting_v1`、`towel_folding_v1`，并新增少量 R0/R1 任务规格，例如厨房台面整理、抽屉取放、衣物/垃圾分类。
+- **真实训练证据线**：使用 LeRobot/FastWAM 在 NVIDIA 集群上产生真实 loss、checkpoint、训练配置和 handoff 报告，回答“模型训练链路是否打通”。
 
 ---
 
@@ -61,13 +70,15 @@
 | 阶段 | 目标 | 完成标志 |
 |---|---|---|
 | Phase 0：规划与契约 | 固化工程边界、目录、schema、评测分层与优先级 | 本文通过评审，关键未决项被记录 |
-| Phase 1：Headless Core | 打通配置校验、runner、mock/replay、logger、evaluator | 两个 MVP 可由 CLI 运行且可复现 |
-| Phase 2：数据与适配 | 接入 LeRobot 风格样例与首个 policy adapter 的 debug mode | 不依赖仿真器完成 IO/shape/action 检查 |
-| Phase 3：NVIDIA 集群准备 | 容器化、作业 manifest、资源声明、任务分片、断点续跑 | 同一命令可通过 local/cluster launcher 提交 |
-| Phase 4：首个仿真闭环 | 接 RoboDojo、RoboCasa 或 RoboTwin 中的一个 | 至少一个任务完成 smoke、dev、release 三档评测 |
-| Phase 5：首个学习策略 | 接入一个开源 policy 并形成同协议对比 | scripted/replay/learned policy 结果可比较 |
-| Phase 6：真机准备 | shadow mode、安全过滤、标定、遥操作数据、真机 adapter | 预测动作可审计，未授权时不得发送到硬件 |
-| Phase 7：产品化展示 | viewer、运行对比、关键帧、失败分析 | UI 只读消费 artifacts，不改变评测结果 |
+| Phase 1：Headless Core | 打通配置校验、runner、mock、logger、evaluator | 两个 MVP 可由 CLI 运行且可复现 |
+| Phase 2：真实训练证据 | 接入 LeRobot/FastWAM 训练 smoke/pilot 与 loss report | CUDA 节点可产生真实 loss summary、checkpoint 路径和 handoff |
+| Phase 3：任务覆盖扩展 | 扩充 R0/R1 家庭任务库，沉淀通用 mock primitives | 厨房、抽屉、衣物/清洁至少新增 2–3 个可校验任务规格 |
+| Phase 4：Replay / Offline Action | 接入 LeRobot/DROID/BridgeData 或 FastWAM 离线动作检查 | 不依赖仿真器完成 IO、shape、action、时间同步检查 |
+| Phase 5：NVIDIA 集群准备 | 容器化、作业 manifest、资源声明、任务分片、断点续跑 | 同一命令可通过 local/cluster launcher 提交 |
+| Phase 6：首个仿真闭环 | 接 RoboDojo、RoboCasa 或 RoboTwin 中的一个 | 至少一个任务完成 smoke、dev、release 三档评测 |
+| Phase 7：首个学习策略 | 接入一个开源 policy 并形成同协议对比 | scripted/replay/learned policy 结果可比较 |
+| Phase 8：真机准备 | shadow mode、安全过滤、标定、遥操作数据、真机 adapter | 预测动作可审计，未授权时不得发送到硬件 |
+| Phase 9：产品化展示 | viewer、运行对比、关键帧、失败分析 | UI 只读消费 artifacts，不改变评测结果 |
 
 ### 1.3 明确非目标
 
@@ -93,8 +104,11 @@
 | P0 | task/observation/action/run schema | 所有后端和模型共享的基础契约 | 立即 |
 | P0 | 确定性 runner、日志和 artifact manifest | 没有可复现产物就无法调试和评测 | 立即 |
 | P0 | smoke test、partial progress、success/failure | 防止只看“能启动”或单次成功视频 | 立即 |
+| P0 | training evidence importer | 回答真实训练、loss、checkpoint 与复现实验问题 | 已启动 |
+| P0 | demo readiness 标注 | 防止 mock、训练、仿真和真机结果混报 | 已启动 |
 | P1 | mock 与 replay 后端 | 无 GPU、无仿真、无真机时仍可开发核心 | 立即 |
 | P1 | policy adapter debug contract | 提前发现图像、状态、动作 shape 与坐标系问题 | 立即 |
+| P1 | 可扩展任务覆盖矩阵 | 让厨房、衣物、清洁、抽屉、灵巧操作都有排期 | 立即 |
 | P1 | 容器、配置覆盖、集群作业 manifest | 为 NVIDIA 集群迁移避免重写入口 | 核心稳定后 |
 | P2 | 首个仿真后端 | 提供物理闭环和并行评测 | 接口稳定后 |
 | P2 | 首个开源 VLA/IL policy | 验证 adapter 与真实推理资源 | 仿真 smoke 后 |
@@ -128,6 +142,9 @@ Task Plane
 Policy Plane
   policy adapter / model runtime / normalization / action chunk
 
+Training Evidence Plane
+  training backend wrapper / loss parser / checkpoint summary / handoff report
+
 Environment Plane
   mock / replay / simulator / real robot client
 
@@ -146,6 +163,7 @@ Presentation Plane
 - Viewer 依赖 artifacts，runner 不依赖 viewer。
 - Evaluator 可以读取 evaluator-only 真值，policy 不得读取。
 - Policy adapter 不直接 import 某个仿真器。
+- Training evidence importer 不直接控制环境或机器人，只读取训练产物并归一化报告。
 - Environment backend 不直接 import 某个模型。
 - 真机驱动只存在于 real backend，不能进入 core。
 
@@ -661,19 +679,43 @@ relative_drop = absolute_drop / max(standard_score, epsilon)
 
 ## 7. 任务库规划
 
-### 7.1 场景覆盖
+### 7.1 Readiness 分级
 
-| 类别 | 近期任务 | 中期扩展 | 主要能力 |
-|---|---|---|---|
-| 厨房 | 备菜物品归位、餐后台面整理 | 简化食物组装、倒取、柜内操作 | 抓放、分类、长时序 |
-| 衣物 | 叠毛巾、衣物分类 | T 恤展平、折叠、悬挂 | 双臂、柔性物体、重抓 |
-| 桌面 | 文具归位、杂乱桌面整理 | 按语言规则整理 | 多物体、开放指令 |
-| 清洁 | 垃圾分类 | 擦拭、扫入簸箕 | 工具使用、覆盖、接触 |
-| 抽屉/柜门 | 状态机 mock | 开抽屉取物、开柜取放 | 关节物体、接触、长时序 |
-| 找物/递送 | 拓扑图 mock | 多房间寻找和递送 | 记忆、导航、移动操作 |
-| 灵巧手 | 旋盖状态机、夹子 mock | 插拔、工具、小物体操作 | 精密、接触、手指协调 |
+后续所有 demo 任务都按 readiness 标注：
 
-### 7.2 首批任务的选择
+| 等级 | 名称 | 含义 |
+|---|---|---|
+| R0 | Task Spec | 任务语义、物体、阶段、成功条件明确 |
+| R1 | Mock Rollout | 同一 runner/logger/evaluator/report 可复现运行 |
+| R2 | Training Evidence | 真实训练入口、loss、checkpoint 和日志可追溯 |
+| R3 | Offline Action / Replay | 数据、动作、时间同步和离线 evaluator 对齐 |
+| R4 | Simulation | 仿真闭环和能力维度评测 |
+| R5 | Real Shadow | 真机观测下预测但不执行，可做动作审计 |
+| R6 | Real Closed-loop | 指定平台真实闭环 |
+
+详细任务覆盖矩阵维护在 [`DEMO_COVERAGE_ROADMAP.md`](DEMO_COVERAGE_ROADMAP.md)。主规划只保留优先级和原则。
+
+### 7.2 场景覆盖与近期优先级
+
+| 类别 | 当前/近期任务 | 后续扩展 | 主要能力 | 当前最高 readiness |
+|---|---|---|---|---|
+| 厨房 | `tabletop_sorting_v1`、`kitchen_counter_sorting_v1` | 简化食物组装、倒取、柜内/抽屉操作 | 抓放、分类、长时序 | R1 |
+| 衣物 | `towel_folding_v1`、`laundry_sorting_v1` | T 恤展平、折叠、悬挂 | 双臂、柔性物体、重抓 | R1 / R0 |
+| 桌面 | `tabletop_sorting_v1` | 按语言规则整理、杂乱桌面恢复 | 多物体、开放指令 | R1 |
+| 清洁 | `trash_sorting_v1` | 擦拭、扫入簸箕、工具使用 | 分类、覆盖、接触 | R0 |
+| 抽屉/柜门 | `drawer_pick_place_v1` | 开柜取放、柜内整理 | 关节物体、接触、长时序 | R1 |
+| 找物/递送 | `find_and_deliver_v1` | 多房间寻找和递送 | 记忆、导航、移动操作 | R0 |
+| 灵巧手 | `open_bottle_or_screw_cap_v1`、`clip_or_pinching_v1` | 插拔、工具、小物体操作 | 精密、接触、手指协调 | R0 |
+| 真实训练证据 | `fastwam_package_sorting_v0` | FastWAM offline action check、LeRobot 训练复刻 | CUDA 训练、loss、checkpoint | R2 |
+
+近期扩展不追求“多而全”。本轮已补两个能扩大能力空间但工程成本可控的 R1 任务：
+
+1. `kitchen_counter_sorting_v1`：厨房语义，复用桌面整理链路。
+2. `drawer_pick_place_v1`：加入关节物体和状态机。
+
+下一步再从 `laundry_sorting_v1` 或 `trash_sorting_v1` 中选择一个，扩到衣物/清洁，但避开完整柔性物理或复杂工具接触。
+
+### 7.3 首批任务的选择
 
 #### `tabletop_sorting_v1`
 
@@ -697,7 +739,18 @@ relative_drop = absolute_drop / max(standard_score, epsilon)
 
 首版能力标签：Precision/Long-Horizon 为主，Generalization 为辅。
 
-### 7.3 任务进入主库的门槛
+#### `fastwam_package_sorting_v0`
+
+入选原因：
+
+- 不是家庭任务能力证明，而是真实训练链路证明；
+- 可以在 NVIDIA/CUDA 环境中产出 loss summary、checkpoint 路径和 handoff；
+- 与 mock demo 共用 evidence/report 思想，形成“可交付证据链”；
+- 能回答团队当前最现实的问题：是否有可训练模型，loss 是否正常下降。
+
+首版能力标签：Training Evidence，不进入家庭任务能力榜。
+
+### 7.4 任务进入主库的门槛
 
 一个任务只有满足以下条件才从 `experimental` 升为 `supported`：
 
@@ -715,11 +768,14 @@ relative_drop = absolute_drop / max(standard_score, epsilon)
 
 ## 8. 开源资源接入路线
 
+完整的任务到开源生态映射见 [`DEMO_COVERAGE_ROADMAP.md`](DEMO_COVERAGE_ROADMAP.md)。本节只定义工程接入顺序。
+
 ### 8.1 数据与通用接口
 
 | 资源 | 用途 | 接入方式 | 优先级 |
 |---|---|---|---|
 | LeRobot | 轨迹格式、数据工具、基础 policy/robot interface | 独立 converter/adapter | P1 |
+| FastWAM realrobot pipeline | 真实 CUDA 训练、loss 和 checkpoint 证据 | 外部 backend wrapper/importer | P0 |
 | DROID | 桌面和多场景真实轨迹 | 先小样本 replay，再考虑训练 | P2 |
 | BridgeData | 多环境抓放参考 | 小样本 replay | P2 |
 | Open-X | RLDS 与跨 embodiment 元数据 | converter，不作为 core 格式 | P3 |
@@ -733,8 +789,9 @@ relative_drop = absolute_drop / max(standard_score, epsilon)
 1. `scripted_policy`：验证完整链路。
 2. `replay_policy`：验证 action 解码和 episode 对齐。
 3. LeRobot 中较轻的 IL policy：验证训练/推理闭环。
-4. OpenPI、GR00T、LingBot-VLA 中选择一个：验证 VLA adapter 和独立 policy runtime。
-5. InternVLA、DiT4DiT、Fast-WAM 等：在接口稳定后作为比较分支。
+4. FastWAM：当前作为 R2 真实训练证据后端，先验证 loss、checkpoint 和 handoff，不直接纳入家庭任务能力榜。
+5. OpenPI、GR00T、LingBot-VLA 中选择一个：验证 VLA adapter 和独立 policy runtime。
+6. InternVLA、DiT4DiT 等：在接口稳定后作为比较分支。
 
 同一时间只推进一个重量级 VLA 接入；每个 adapter 必须先通过 E0/E1，再进入仿真。
 
@@ -987,6 +1044,8 @@ GPU/simulator 测试放入 nightly 或手动 release pipeline。
 
 前置决策：M2 的 policy lifecycle、action validation 和 batch capability 需要贴合 ADR-0001 中的 XPolicyLab 基准，但仍使用本地 `inproc` 与 mock 后端。
 
+状态：**当前 demo runner 已具备最小闭环；通用 evaluator 抽象仍需继续收敛。**
+
 交付：
 
 - episode logger；
@@ -999,6 +1058,8 @@ GPU/simulator 测试放入 nightly 或手动 release pipeline。
 
 ### M3：两个 Mock Demo
 
+状态：**已完成第一版（2026-07-13）**，可通过 CLI 生成 artifacts 和 report。
+
 交付：
 
 - `tabletop_sorting_v1`；
@@ -1009,7 +1070,35 @@ GPU/simulator 测试放入 nightly 或手动 release pipeline。
 
 验收：一条 CLI 命令完成运行、评分和报告；注入失败可被正确归类。
 
-### M4：Replay 与数据样例
+### M4：真实训练证据链
+
+状态：**已完成第一版入口（2026-07-13 / 2026-07-14）**。LeRobot 和 FastWAM 均为 CUDA-only 外部训练入口，不提供 CPU toy fallback。
+
+交付：
+
+- LeRobot ACT/PushT training smoke；
+- FastWAM realrobot train/eval backend wrapper；
+- loss parser、checkpoint summary、training evidence schema；
+- `demo_chains/fastwam_realrobot_v0.yaml`；
+- `embodied-demo report-fastwam` handoff 报告。
+
+验收：在 NVIDIA/CUDA 环境中真实调用上游训练入口，保存 stdout、loss summary、checkpoint 路径和 handoff；`pilot` 模式用于观察 loss 下降。
+
+### M5：Demo Coverage Expansion
+
+状态：**已启动（2026-07-14）**。`kitchen_counter_sorting_v1` 和 `drawer_pick_place_v1` 已进入任务库并具备 R1 mock run；通用 mock primitives 和衣物/清洁任务仍待继续。
+
+交付：
+
+- `DEMO_COVERAGE_ROADMAP.md`；
+- `kitchen_counter_sorting_v1` TaskSpec；
+- `drawer_pick_place_v1` TaskSpec；
+- `laundry_sorting_v1` 或 `trash_sorting_v1` TaskSpec；
+- 通用 mock primitives：object-in-region、category routing、articulated state、stage predicates。
+
+验收：至少 2 个新增 R0/R1 任务通过 `embodied-demo validate`，其中 1 个可由 mock runner 产生 artifacts。
+
+### M6：Replay 与数据样例
 
 交付：
 
@@ -1020,7 +1109,7 @@ GPU/simulator 测试放入 nightly 或手动 release pipeline。
 
 验收：mock 与 replay 使用同一 evaluator/report 接口。
 
-### M5：NVIDIA Cluster Ready
+### M7：NVIDIA Cluster Ready
 
 交付：
 
@@ -1032,7 +1121,7 @@ GPU/simulator 测试放入 nightly 或手动 release pipeline。
 
 验收：容器内 headless smoke；集群命令可 dry-run 展开。
 
-### M6：首个仿真后端
+### M8：首个仿真后端
 
 交付：
 
@@ -1043,7 +1132,7 @@ GPU/simulator 测试放入 nightly 或手动 release pipeline。
 
 验收：至少一个任务 E4 通过，能报告能力、稳定性和效率。
 
-### M7：首个学习策略
+### M9：首个学习策略
 
 交付：
 
@@ -1054,7 +1143,7 @@ GPU/simulator 测试放入 nightly 或手动 release pipeline。
 
 验收：与 scripted baseline 在同一任务/seed/profile 下比较。
 
-### M8：Viewer
+### M10：Viewer
 
 交付：
 
@@ -1065,7 +1154,7 @@ GPU/simulator 测试放入 nightly 或手动 release pipeline。
 
 验收：Viewer 关闭时核心功能和结果完全不受影响。
 
-### M9：真机预备与闭环
+### M11：真机预备与闭环
 
 交付：
 
@@ -1208,3 +1297,18 @@ GPU/simulator 测试放入 nightly 或手动 release pipeline。
 - 将 RoboDojo 明确为后续 NVIDIA/Isaac 外部仿真评测目标。
 - 将 LeRobot 明确为后续 replay、converter 与轻量训练格式参考。
 - 冻结上游引用到 `references/upstreams.yaml`，避免文档决策漂移。
+
+### v0.5 — 2026-07-14
+
+- 接受 ADR-0002：FastWAM realrobot pipeline 作为第一条真实 CUDA 训练证据链。
+- 将项目格局更新为任务/工程链路、真实训练证据、后续仿真/真机能力三层证据。
+- 新增 demo readiness 分级 R0–R6，避免 mock、loss、仿真和真机结果混报。
+- 新增 [`DEMO_COVERAGE_ROADMAP.md`](DEMO_COVERAGE_ROADMAP.md)，扩展厨房、衣物、桌面、清洁、抽屉、递送和灵巧手任务覆盖。
+- `kitchen_counter_sorting_v1` 与 `drawer_pick_place_v1` 已进入 R1 mock demo，可通过 CLI 运行并生成 artifacts。
+- 将下一阶段重点调整为：补衣物/清洁 R0/R1 家庭任务规格、沉淀通用 mock primitives、在 NVIDIA 集群复跑 FastWAM pilot 并输出 loss 下降证据。
+
+### v0.6 — 2026-07-14
+
+- 新增 [`00_PROJECT_OVERVIEW.md`](00_PROJECT_OVERVIEW.md) 和 [`01_ARCHITECTURE.md`](01_ARCHITECTURE.md)，作为项目入口和架构入口。
+- 将 `demo_runner.py` 拆分为 `policies/`、`environments/`、`rollout/` 三层，并保留兼容入口。
+- 明确 household mock rollout 与 FastWAM training evidence 是两条证据线，不再在代码和文档入口中混讲。

@@ -1,0 +1,8 @@
+2026-07-13 20:00:00 INFO Starting training with max_steps=200.
+2026-07-13 20:01:00 INFO [train] epoch=0 step=5/200 loss=1.4862 loss_action=1.1472 loss_video=0.3390 lr=2.00e-05 speed=0.02 step/s, 0.16 samples/s eta=2:40:00
+2026-07-13 20:03:00 INFO [train] epoch=0 step=10/200 loss=1.2410 loss_action=0.9440 loss_video=0.2970 lr=2.00e-05 speed=0.05 step/s, 0.40 samples/s eta=1:02:00
+2026-07-13 20:05:00 INFO [eval] step=10 val_loss=1.2200 infer_psnr=19.3000 infer_ssim=0.6100 action_l1=0.0830
+2026-07-13 20:08:00 INFO [train] epoch=0 step=50/200 loss=0.9120 loss_action=0.7100 loss_video=0.2020 lr=1.90e-05 speed=0.08 step/s, 0.64 samples/s eta=0:31:00
+2026-07-13 20:08:10 INFO [ckpt] step=50 weights=./runs/real_robot_joint_2cam224_1e-4/20260713-200000/checkpoints/weights/step_000050.pt state=./runs/real_robot_joint_2cam224_1e-4/20260713-200000/checkpoints/state/step_000050
+2026-07-13 20:20:00 INFO [train] epoch=0 step=200/200 loss=0.7010 loss_action=0.5510 loss_video=0.1500 lr=1.00e-06 speed=0.10 step/s, 0.80 samples/s eta=0:00:00
+2026-07-13 20:20:10 INFO [done] max_steps reached step=200 weights=./runs/real_robot_joint_2cam224_1e-4/20260713-200000/checkpoints/weights/step_000200.pt state=./runs/real_robot_joint_2cam224_1e-4/20260713-200000/checkpoints/state/step_000200

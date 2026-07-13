@@ -2,18 +2,31 @@
 
 面向家庭与生活服务场景的具身智能 Demo 工程基座。项目采用 **contract-first、headless-first、evaluation-first、backend-switchable** 的路线：先稳定任务、观测、动作、运行和评测契约，再逐步接入 mock、离线回放、NVIDIA 仿真集群、VLA 和真实机器人。
 
-当前不以训练大模型、同时适配多个仿真器、搭建复杂可视化或立即接真机为目标。完整规划与优先级见 [`docs/MASTER_PLAN.md`](docs/MASTER_PLAN.md)，实际落地状态见 [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md)，本地与集群环境配置见 [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md)，复刻基准决策见 [`docs/REFERENCE_BASELINE.md`](docs/REFERENCE_BASELINE.md)。
+当前不以训练大模型、同时适配多个仿真器、搭建复杂可视化或立即接真机为目标。第一次看项目建议先读 [`docs/00_PROJECT_OVERVIEW.md`](docs/00_PROJECT_OVERVIEW.md) 和 [`docs/01_ARCHITECTURE.md`](docs/01_ARCHITECTURE.md)。完整规划与优先级见 [`docs/MASTER_PLAN.md`](docs/MASTER_PLAN.md)，demo 覆盖路线见 [`docs/DEMO_COVERAGE_ROADMAP.md`](docs/DEMO_COVERAGE_ROADMAP.md)，实际落地状态见 [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md)。
+
+## 如何理解这个项目
+
+项目分三条证据线，不混报：
+
+| 证据线 | 回答的问题 | 当前状态 |
+|---|---|---|
+| Household mock demo | 家庭任务 pipeline 能不能跑通？ | 4 个 R1 mock demo |
+| Training evidence | 真实训练链路和 loss 证据有没有？ | LeRobot / FastWAM CUDA 入口 |
+| Future capability | 仿真/真机是否真的完成任务？ | 后续接 RoboDojo / RoboCasa / RoboTwin / real |
 
 ## 当前状态
 
 - 版本：M1 Core Contract `v0.1.0`
 - Python：3.11+
-- 已实现：严格 schema、YAML 显式组合、两项任务定义、运行配置、CLI 校验/dry-run、JSON Schema 导出、单元测试
+- 已实现：严格 schema、YAML 显式组合、四项任务定义、运行配置、CLI 校验/dry-run、JSON Schema 导出、单元测试
 - 已预留：mock/replay/sim/real 模式，local/Slurm launcher，inproc/WebSocket policy transport，CPU/GPU 资源声明
 - 已固化：XPolicyLab `demo_policy`/debug flow 作为复刻基准，RoboDojo 作为后续外部仿真评测目标，LeRobot 作为后续数据/训练格式参考
 - 当前可运行：`embodied-demo run --config configs/runs/tabletop_sorting_mock.yaml` 可生成第一版 mock demo artifacts
 - 当前 LeRobot 复刻：`make lerobot-train-smoke` 在 CUDA 集群上调用真实 `lerobot-train` 训练 ACT/PushT smoke
-- 下一里程碑：M2 Evaluation Core 完整化与 M3 deterministic mock demo 扩展
+- 当前 FastWAM 集成：`make fastwam-train-smoke` 在 CUDA/FastWAM 环境中调用真实 FastWAM/DeepSpeed 训练入口；`pilot` 模式可生成 loss 下降报告
+- 当前 Demo Chain：`embodied-demo report-fastwam --run-dir <runs/fastwam/...>` 可把 FastWAM 训练产物归一化成 demo 交付报告
+- 当前规划格局：家庭任务 R0/R1 demo 与真实训练 R2 evidence 并行推进，不能把 mock 成功、loss 下降和仿真/真机能力混报
+- 下一里程碑：补 `laundry_sorting_v1` / `trash_sorting_v1` 等 R0/R1 任务规格，抽象通用 mock primitives，并在 NVIDIA 集群复跑 FastWAM `pilot`
 - 暂缓：Viewer、真实 simulator adapter、重量级模型、大数据下载、多节点运行、真机闭环
 
 ## 快速开始
@@ -27,12 +40,14 @@ make doctor
 
 `make setup` 创建 `.venv` 并使用 `requirements/constraints-py311.txt` 中经过验证的版本；不要在这个 core 环境里直接安装 CUDA、Isaac、VLA 或真机 SDK。macOS、Linux、离线节点和 NVIDIA 集群的准备方式见[环境配置指南](docs/ENVIRONMENT.md)。
 
-验证两项任务和运行配置：
+验证四项任务和运行配置：
 
 ```bash
 embodied-demo list-tasks
 embodied-demo validate --config configs/runs/tabletop_sorting_mock.yaml
 embodied-demo validate --config configs/runs/towel_folding_mock.yaml
+embodied-demo validate --config configs/runs/kitchen_counter_sorting_mock.yaml
+embodied-demo validate --config configs/runs/drawer_pick_place_mock.yaml
 ```
 
 展开完整配置但不执行 rollout：
@@ -56,6 +71,12 @@ embodied-demo run --config configs/runs/towel_folding_mock.yaml
 make demo
 ```
 
+扩展覆盖 demo 包含厨房台面整理和抽屉取放：
+
+```bash
+make demo-extended
+```
+
 在 CUDA 集群上运行真实 LeRobot 训练 smoke，观察 loss 是否下降：
 
 ```bash
@@ -64,6 +85,30 @@ make lerobot-train-smoke
 ```
 
 该入口不会 fallback 到 CPU，也不调用本仓库的 toy trainer。它会调用官方 `lerobot-train`，默认复刻 LeRobot 的 `lerobot/pusht` + `act` 训练路径，并在 `runs/lerobot/...` 下保存 stdout、loss summary、LeRobot 输出目录和 checkpoint。详细说明见 [`docs/LEROBOT_REPLICATION.md`](docs/LEROBOT_REPLICATION.md)。
+
+在 CUDA 集群上接入你已有的 FastWAM 真机训练/评测 pipeline：
+
+```bash
+bash scripts/fastwam/prepare_fastwam_overlay.sh
+FASTWAM_MODE=pilot FASTWAM_RECIPE=joint_base \
+bash scripts/fastwam/run_realrobot_train_eval.sh
+```
+
+该入口会把官方 FastWAM 与私有 realrobot overlay 组合为外部 backend，并在 `runs/fastwam/...` 下保存 stdout、`loss_summary.json` 和 FastWAM 原生 checkpoint 路径。详细说明见 [`docs/FASTWAM_REALROBOT_INTEGRATION.md`](docs/FASTWAM_REALROBOT_INTEGRATION.md)。
+
+把 FastWAM pilot 结果整理成第一版 demo chain 交付报告：
+
+```bash
+embodied-demo report-fastwam --run-dir runs/fastwam/<run_name>/<run_id>
+```
+
+或使用 Makefile：
+
+```bash
+FASTWAM_RUN_DIR=runs/fastwam/<run_name>/<run_id> make demo-chain-fastwam
+```
+
+产物会写到 `runs/demo_chains/fastwam_realrobot_v0/<run_id>/`，包括 `training_evidence.json`、`checkpoint_summary.json`、`report.md` 和 `handoff.md`。
 
 运行测试和导出公共 schema：
 
@@ -90,20 +135,32 @@ make reference-fetch
 │   ├── base.yaml                 # 本地、headless、低成本默认值
 │   ├── profiles/                 # smoke / dev / release，不允许混报
 │   └── runs/                     # 可直接校验和展开的运行入口
+├── demo_chains/                  # 可交付 demo/evidence 链路定义
 ├── docs/
 │   ├── ENVIRONMENT.md            # macOS/Linux/NVIDIA 集群环境配置
+│   ├── 00_PROJECT_OVERVIEW.md    # 新同事/汇报入口
+│   ├── 01_ARCHITECTURE.md        # Pipeline 分层与代码结构
+│   ├── DEMO_COVERAGE_ROADMAP.md  # demo 覆盖矩阵与 readiness 分级
+│   ├── FASTWAM_REALROBOT_INTEGRATION.md
 │   └── MASTER_PLAN.md            # 项目范围、架构、资源映射与路线图
 ├── requirements/                 # 经过验收的 Python 版本约束
 ├── references/                   # 上游复刻基准和引用 pin
+├── scripts/fastwam/              # FastWAM 外部 backend 准备、启动和日志解析
 ├── scenes/mock/                  # 轻量场景描述；不声称物理真实性
 ├── src/embodied_demo/
+│   ├── environments/             # mock/replay/sim/real backend 实现
+│   ├── policies/                 # scripted/learned/VLA policy adapter
+│   ├── rollout/                  # 执行循环与 artifact 生成
 │   ├── schemas/                  # Task/Observation/Action/Run/Evaluation 契约
 │   ├── config.py                 # YAML 组合、校验和 resolved config
-│   ├── demo_runner.py            # 第一版 deterministic mock demo runner
+│   ├── demo_runner.py            # 兼容入口，转发到 rollout.mock_runner
+│   ├── fastwam_report.py         # FastWAM 训练产物转 demo evidence/report
 │   ├── registry.py               # 任务注册表加载
-│   └── cli.py                    # validate/list-tasks/dry-run/run/export-schema
+│   └── cli.py                    # validate/list-tasks/dry-run/run/report/export-schema
 ├── tasks/
 │   ├── registry.yaml
+│   ├── drawer_pick_place_v1/
+│   ├── kitchen_counter_sorting_v1/
 │   ├── tabletop_sorting_v1/
 │   └── towel_folding_v1/
 └── tests/                        # schema、配置组合、CLI 回归测试
@@ -127,4 +184,4 @@ make reference-fetch
 
 本仓库只服务于 Demo 项目规划和工程落地。论文、模型与开源生态研究笔记继续由同级的 `EmbodiedAI-Research/` 知识库维护；这里只保留会影响接口、实现与验收的工程结论。
 
-当前两个任务仍标记为 `experimental`：它们的契约和配置可运行，但只有在 deterministic runner、evaluator、golden artifacts 和跨机器回归都落地后，才会升级为 `supported`。
+当前四个 household mock 任务仍标记为 `experimental`：它们的契约和配置可运行，但只有在 deterministic runner、evaluator、golden artifacts 和跨机器回归都落地后，才会升级为 `supported`。

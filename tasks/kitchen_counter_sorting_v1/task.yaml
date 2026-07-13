@@ -1,0 +1,95 @@
+schema_version: "1.0"
+id: kitchen_counter_sorting_v1
+version: "1.0.0"
+category: kitchen
+display_name: 厨房台面物品分类归位
+difficulty: L2
+
+capabilities:
+  primary: [long_horizon]
+  secondary: [generalization, open_instruction, stability]
+
+instruction:
+  canonical: 将厨房台面上的食材、餐具和调料分别放到备菜区、餐具区和调料收纳区。
+  variants:
+    - 整理厨房台面，把不同类别的物品放到对应区域。
+    - 帮我把食材、碗和调料瓶分别归位。
+
+scene:
+  scene_id: kitchen_counter_sorting_mock_v1
+  required_objects: [tomato, bowl, spice_jar, prep_tray, dish_rack, spice_caddy, counter]
+  optional_objects: [cutting_board, distractor_mug]
+
+observation:
+  required: [front_rgb, object_states, zone_states, instruction]
+  optional: [wrist_rgb, depth]
+  evaluator_only: [ground_truth_poses, category_to_zone_predicates]
+  debug_only: [mock_state]
+  restricted: []
+
+action:
+  supported: [semantic]
+
+stages:
+  - select_item
+  - grasp_item
+  - transport_item
+  - place_matching_zone
+  - repeat_counter_reset
+  - finalize
+
+termination:
+  max_steps: 40
+  success: all_kitchen_items_in_matching_zones
+  failure:
+    - object_out_of_workspace
+    - wrong_category_zone
+    - max_steps_exceeded
+    - unsafe_action
+
+backends:
+  supported: [mock_2d]
+  planned: [robocasa, robodojo, real]
+
+evaluation:
+  dimensions: [long_horizon, generalization, open_instruction]
+  progress_stages:
+    - id: select_item
+      description: 正确选择一个尚未归位的厨房目标物。
+      predicate: correct_unplaced_kitchen_item_selected
+      weight: 10
+    - id: grasp_item
+      description: 稳定抓取所选物体。
+      predicate: selected_kitchen_item_grasped
+      weight: 15
+    - id: transport_item
+      description: 运输过程中目标物未掉落或越界。
+      predicate: kitchen_item_transported_safely
+      weight: 10
+    - id: place_matching_zone
+      description: 首个目标物进入类别匹配区域。
+      predicate: first_kitchen_item_placed_correctly
+      weight: 20
+    - id: repeat_counter_reset
+      description: 其余厨房目标物全部正确归位。
+      predicate: remaining_kitchen_items_placed_correctly
+      weight: 30
+    - id: finalize
+      description: 所有目标满足且策略主动结束。
+      predicate: all_kitchen_items_placed_and_terminated
+      weight: 15
+  standard_layouts: [counter_layout_a, counter_layout_b]
+  randomization_factors: [object_position, category_mix, instruction_variant]
+
+mock:
+  realism: symbolic
+  limitations:
+    - 只验证类别到区域的任务链路，不模拟厨房物体几何、遮挡和抓取动力学。
+    - 不处理真实食材变形、液体、刀具或热源安全。
+
+safety:
+  labels: [workspace_boundary, food_safety_placeholder, sharp_tool_excluded]
+  real_execution_allowed: false
+  notes:
+    - 第一版明确排除刀具、热源、玻璃破碎和液体倾倒。
+    - 接 RoboCasa 或真机前必须补充碰撞、物体稳定性和人类安全约束。

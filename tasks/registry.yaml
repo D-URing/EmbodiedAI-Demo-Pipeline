@@ -6,3 +6,9 @@ tasks:
   - id: towel_folding_v1
     path: towel_folding_v1/task.yaml
     status: experimental
+  - id: kitchen_counter_sorting_v1
+    path: kitchen_counter_sorting_v1/task.yaml
+    status: experimental
+  - id: drawer_pick_place_v1
+    path: drawer_pick_place_v1/task.yaml
+    status: experimental

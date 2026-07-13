@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from embodied_demo.schemas import ActionChunk, EpisodeResult, Observation
+from embodied_demo.schemas import ActionChunk, EpisodeResult, Observation, TrainingEvidence
 
 
 def test_observation_contract() -> None:
@@ -72,3 +72,21 @@ def test_success_reason_is_consistent() -> None:
             episode_steps=8,
             wall_time_s=0.1,
         )
+
+
+def test_training_evidence_contract() -> None:
+    evidence = TrainingEvidence(
+        backend="fastwam-realrobot",
+        run_id="20260713-200000",
+        source_run_dir="runs/fastwam/demo/20260713-200000",
+        parsed_train_count=4,
+        initial_loss=1.4862,
+        final_loss=0.701,
+        loss_drop_ratio=0.5283,
+        loss_decreased=True,
+        final_step=200,
+        max_steps=200,
+        training_completed=True,
+        validation_status="passed",
+    )
+    assert evidence.schema_version == "1.0"

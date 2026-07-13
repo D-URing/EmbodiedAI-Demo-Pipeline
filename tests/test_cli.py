@@ -56,3 +56,4 @@ def test_export_schema_cli(tmp_path: Path, capsys) -> None:
     assert exit_code == 0
     assert (tmp_path / "task.schema.json").is_file()
     assert (tmp_path / "episode_result.schema.json").is_file()
+    assert (tmp_path / "training_evidence.schema.json").is_file()
