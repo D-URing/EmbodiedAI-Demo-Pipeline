@@ -12,6 +12,7 @@
 - 已预留：mock/replay/sim/real 模式，local/Slurm launcher，inproc/WebSocket policy transport，CPU/GPU 资源声明
 - 已固化：XPolicyLab `demo_policy`/debug flow 作为复刻基准，RoboDojo 作为后续外部仿真评测目标，LeRobot 作为后续数据/训练格式参考
 - 当前可运行：`embodied-demo run --config configs/runs/tabletop_sorting_mock.yaml` 可生成第一版 mock demo artifacts
+- 当前可训练：`embodied-demo train-demo --config configs/runs/tabletop_sorting_mock.yaml` 可生成 loss 下降日志和 checkpoint
 - 下一里程碑：M2 Evaluation Core 完整化与 M3 deterministic mock demo 扩展
 - 暂缓：Viewer、真实 simulator adapter、重量级模型、大数据下载、多节点运行、真机闭环
 
@@ -55,6 +56,21 @@ embodied-demo run --config configs/runs/towel_folding_mock.yaml
 make demo
 ```
 
+运行第一版训练 demo，观察 loss 是否下降：
+
+```bash
+embodied-demo train-demo --config configs/runs/tabletop_sorting_mock.yaml
+embodied-demo train-demo --config configs/runs/towel_folding_mock.yaml
+```
+
+运行完成后会在 `runs/training/<run_name>/<train_id>/` 下生成 `dataset.jsonl`、`train_log.jsonl`、`checkpoint.json`、`metrics.json` 和 `report.md`。也可以直接执行：
+
+```bash
+make train-demo
+```
+
+这是一条 LeRobot 风格的轻量行为克隆闭环：dataset -> policy -> train log -> checkpoint。它证明训练管线和 loss 日志可用，但不是大模型训练或仿真能力证明。
+
 运行测试和导出公共 schema：
 
 ```bash
@@ -90,8 +106,9 @@ make reference-fetch
 │   ├── schemas/                  # Task/Observation/Action/Run/Evaluation 契约
 │   ├── config.py                 # YAML 组合、校验和 resolved config
 │   ├── demo_runner.py            # 第一版 deterministic mock demo runner
+│   ├── training_demo.py          # 第一版轻量行为克隆训练 demo
 │   ├── registry.py               # 任务注册表加载
-│   └── cli.py                    # validate/list-tasks/dry-run/run/export-schema
+│   └── cli.py                    # validate/list-tasks/dry-run/run/train-demo/export-schema
 ├── tasks/
 │   ├── registry.yaml
 │   ├── tabletop_sorting_v1/

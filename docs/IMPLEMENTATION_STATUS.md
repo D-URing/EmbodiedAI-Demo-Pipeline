@@ -120,3 +120,28 @@ make dry-run
 - 当前 demo 证明工程链路可运行，不代表仿真或真机能力。
 - 当前 evaluator 只覆盖两个 MVP 的内置阶段谓词；M2 仍需抽象为通用 evaluator。
 - 当前 artifact 已足够汇报和调试，但还不是最终 release profile 聚合格式。
+
+## 2026-07-13：First Trainable Demo
+
+状态：已实现最小训练闭环。
+
+### 已落地
+
+| 规划项 | 实现位置 | 当前能力 |
+|---|---|---|
+| CLI train | `embodied-demo train-demo --config ...` | 单命令训练一个轻量行为克隆 policy |
+| Dataset artifact | `dataset.jsonl` | 保存 mock observation-feature/action-label 样本 |
+| Train log | `train_log.jsonl` | 逐 epoch 输出 `train_loss` |
+| Checkpoint | `checkpoint.json` | 保存 softmax BC 分类器权重和 action vocabulary |
+| Metrics/report | `metrics.json`、`report.md` | 记录 initial/final loss、下降比例和边界说明 |
+| 快速入口 | `make train-demo` | 连续训练两个 MVP 的最小 BC demo |
+
+### 当前结论
+
+这版已经可以回答“有没有 loss 正常下降”：有，训练 demo 会输出 `loss_decreased=true`、初始 loss、最终 loss 和下降比例。
+
+### 边界
+
+- 当前模型是纯 Python softmax behavior cloning demo，不依赖 PyTorch/CUDA。
+- 当前 dataset 是从 mock/scripted expert 生成的小样本，不是 LeRobot 真数据，也不是仿真/真机采集数据。
+- 当前目标是证明训练管线、日志、checkpoint 和报告闭环，不是追求模型能力。
