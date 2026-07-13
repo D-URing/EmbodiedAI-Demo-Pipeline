@@ -1,0 +1,105 @@
+schema_version: "1.0"
+freeze_date: "2026-07-13"
+purpose: >
+  Pin external projects that influence the demo pipeline architecture, evaluation
+  protocol, and future integration work. These pins are reference anchors, not
+  vendored dependencies.
+
+sources:
+  xpolicylab:
+    role: primary_replication_baseline
+    repository: https://github.com/XPolicyLab/XPolicyLab
+    default_branch: main
+    pinned_commit: fe71eb54675cef495fea817a637386a4f4529153
+    pinned_commit_date_utc: "2026-07-09T05:59:47Z"
+    license: Apache-2.0
+    referenced_paths:
+      - README.md
+      - model_template.py
+      - debug_env_client.py
+      - setup_policy_server.py
+      - client_server/ws/
+      - policy/demo_policy/README.md
+      - policy/demo_policy/model.py
+      - policy/demo_policy/deploy.py
+      - policy/demo_policy/deploy.yml
+      - policy/demo_policy/eval.sh
+      - policy/demo_policy/setup_eval_policy_server.sh
+      - policy/demo_policy/setup_eval_env_client.sh
+      - utils/run_debug_env_client.sh
+    in_scope:
+      - policy_environment_dependency_isolation
+      - policy_server_environment_client_boundary
+      - websocket_transport_as_future_remote_policy_target
+      - demo_policy_lifecycle_contract
+      - debug_mode_shape_and_action_key_smoke
+    out_of_scope:
+      - vendoring_upstream_code
+      - adopting_all_policy_zoo_dependencies
+      - requiring_simulator_for_m2_m3
+      - using_demo_policy_as_model_capability_claim
+
+  robodojo:
+    role: external_simulation_and_evaluation_target
+    repository: https://github.com/RoboDojo-Benchmark/RoboDojo
+    documentation:
+      - https://robodojo-benchmark.com/doc/
+      - https://robodojo-benchmark.com/doc/usage/install-and-download/
+      - https://robodojo-benchmark.com/doc/usage/quite-evaluation/
+    default_branch: main
+    pinned_commit: 9b4cc885e8f530ed3ab14a30a312ae70242771c4
+    pinned_commit_date_utc: "2026-07-12T15:41:53Z"
+    license: MIT
+    referenced_paths:
+      - README.md
+      - XPolicyLab/
+      - env_cfg/
+      - scripts/eval_policy.sh
+      - scripts/internal/smoke_all_tasks.sh
+      - src/eval_client/
+      - task/RoboDojo/config/fold_clothes.yml
+      - task/RoboDojo/config/fold_clothes_random.yml
+      - task/RoboDojo/config/organize_table.yml
+      - task/RoboDojo/config/classify_objects.yml
+      - task/RoboDojo/tasks/fold_clothes.py
+      - task/RoboDojo/tasks/organize_table.py
+      - task/RoboDojo/tasks/classify_objects.py
+    in_scope:
+      - evaluation_dimensions
+      - smoke_single_benchmark_summary_flow
+      - standard_random_task_pairing
+      - fold_clothes_mapping_for_towel_folding
+      - organize_table_classify_objects_mapping_for_tabletop_sorting
+      - future_nvidia_isaac_sim_acceptance_target
+    out_of_scope:
+      - running_robo_dojo_on_macos
+      - making_robo_dojo_a_core_dependency
+      - blocking_m2_m3_on_isaac_installation
+      - remote_submission_as_current_requirement
+
+  lerobot:
+    role: gpu_training_replication_target
+    repository: https://github.com/huggingface/lerobot
+    default_branch: main
+    pinned_commit: e40b58a8dfa9e7b86918c374791599d070518d11
+    pinned_commit_date_utc: "2026-07-08T11:25:54Z"
+    license: Apache-2.0
+    referenced_paths:
+      - README.md
+      - docs/source/installation.mdx
+      - docs/source/multi_gpu_training.mdx
+      - docs/source/lerobot-dataset-v3.mdx
+      - src/lerobot/scripts/lerobot_train.py
+      - src/lerobot/configs/train.py
+      - examples/training/train_policy.py
+    in_scope:
+      - trajectory_dataset_format_reference
+      - real_lerobot_train_cli
+      - gpu_required_training_smoke
+      - act_policy_on_pusht_dataset
+      - train_log_checkpoint_artifact_flow
+    out_of_scope:
+      - replacing_core_task_schema
+      - cpu_toy_training
+      - vendoring_lerobot_code
+      - requiring_lerobot_in_core_python_environment

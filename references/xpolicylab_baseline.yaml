@@ -1,0 +1,82 @@
+schema_version: "1.0"
+baseline_id: xpolicylab_demo_policy_debug_v1
+status: accepted
+decision_date: "2026-07-13"
+upstream_source: xpolicylab
+upstream_commit: fe71eb54675cef495fea817a637386a4f4529153
+
+intent:
+  summary: >
+    Use XPolicyLab demo_policy and debug-mode evaluation as the first
+    interface-level replication baseline. The goal is to match lifecycle,
+    process boundary, action chunk, batch, and artifact expectations before
+    integrating heavyweight VLA models or simulators.
+  not_a_goal:
+    - train_or_score_a_real_model
+    - run_robo_dojo_simulator_in_m2_m3
+    - vendor_xpolicylab_into_this_repository
+    - make_websocket_required_for_local_mock
+
+lifecycle_mapping:
+  upstream:
+    reset: Model.reset
+    update_obs: Model.update_obs
+    update_obs_batch: Model.update_obs_batch
+    get_action: Model.get_action
+    get_action_batch: Model.get_action_batch
+  local_target:
+    reset: PolicyAdapter.reset
+    update_obs: PolicyAdapter.update_observation
+    update_obs_batch: PolicyAdapter.update_observation_batch
+    get_action: PolicyAdapter.get_action
+    get_action_batch: PolicyAdapter.get_action_batch
+
+transport_mapping:
+  m2_m3_default: inproc
+  future_remote_target: websocket
+  reason: >
+    In-process policy calls keep deterministic mock development simple. The
+    WebSocket boundary remains the compatibility target for NVIDIA cluster,
+    split-process simulator, and model-runtime isolation.
+
+canonical_upstream_debug_command:
+  working_directory: XPolicyLab/policy/demo_policy
+  command: >
+    EVAL_ENV_TYPE=debug bash eval.sh RoboDojo stack_bowls demo arx_x5 joint
+    0 0 0 <policy_conda_env> <eval_env_conda_env>
+
+local_acceptance_checks:
+  - id: lifecycle_contract
+    description: reset -> observe -> update -> get_action -> step -> terminate is explicit and testable.
+  - id: action_chunk_contract
+    description: semantic, joint, ee_delta, and hand action outputs are schema-validated before execution.
+  - id: batch_capability
+    description: batch calls are disabled unless the policy declares supports_batch.
+  - id: debug_mode
+    description: shape, action-key, serialization, and exit checks run without simulator or real robot.
+  - id: artifact_manifest
+    description: every run records task, policy, environment, seed, commit, and evaluator version.
+
+mvp_task_mapping:
+  tabletop_sorting_v1:
+    robodojo_reference_tasks:
+      - organize_table
+      - classify_objects
+    current_backend: mock_2d
+    future_backend_target: robodojo
+  towel_folding_v1:
+    robodojo_reference_tasks:
+      - fold_clothes
+      - fold_clothes_random
+    current_backend: mock_2d
+    future_backend_target: robodojo
+
+milestone_impact:
+  m2:
+    - implement_local_policy_lifecycle_matching_this_contract
+    - emit_artifacts_that_can_later_compare_to_xpolicylab_debug_logs
+  m3:
+    - scripted_policies_follow_the_same_reset_update_action_shape
+    - deterministic_mock_backends_exercise_same_runner_loop
+  m5_m6:
+    - add_websocket_transport_and_robo_dojo_smoke_after_nvidia_environment_exists

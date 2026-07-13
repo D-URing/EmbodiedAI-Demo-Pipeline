@@ -29,6 +29,8 @@
 5. **通过开关表达可变能力。** mock、回放、仿真、真机、不同 policy transport、不同 observation 字段和不同 evaluator profile 均由配置选择。
 6. **不把泛用性写成口号。** 当前只保证接口层泛用；任务资产、动作空间、相机布置、模型权重和真机控制仍然是 embodiment-specific。
 
+2026-07-13 的补充决策：本项目以 XPolicyLab 的 `demo_policy` 与 `debug` evaluation flow 作为第一复刻基准，以 RoboDojo 作为后续 NVIDIA/Isaac 外部评测目标，以 LeRobot 作为后续数据和轻量训练格式参考。该决策只影响接口和验收锚点，不把 XPolicyLab、RoboDojo、Isaac 或 LeRobot 变成 core 依赖。详见 [`REFERENCE_BASELINE.md`](REFERENCE_BASELINE.md) 与 [`adr/0001-reference-baseline.md`](adr/0001-reference-baseline.md)。
+
 第一阶段的两个纵向 Demo 为：
 
 - `tabletop_sorting_v1`：桌面/厨房物品分类归位，验证刚性多物体、语言条件、阶段进度和抓放链路。
@@ -747,7 +749,8 @@ relative_drop = absolute_drop / max(standard_score, epsilon)
 
 建议：
 
-- **工程评测接口对齐 RoboDojo/XPolicyLab。** 这是当前即可执行的方向。
+- **工程复刻基准对齐 XPolicyLab `demo_policy`/debug flow。** 这是当前即可执行的方向，先复刻 lifecycle、debug smoke、action key、batch capability 和 policy/environment 边界。
+- **外部仿真评测目标对齐 RoboDojo。** 在 NVIDIA/Isaac 环境具备后，优先用 `fold_clothes`、`organize_table`、`classify_objects` 映射两个 MVP。
 - **首个物理仿真后端在硬件和场景优先级确认后再选。** 若 NVIDIA/Isaac 集群优先，则 RoboDojo 优先；若厨房场景资产优先，则 RoboCasa 可能更快。
 - 不强行让多个 simulator 共享内部对象模型；它们只需要满足 EnvironmentContract 和 artifact contract。
 
@@ -982,6 +985,8 @@ GPU/simulator 测试放入 nightly 或手动 release pipeline。
 
 ### M2：Evaluation Core
 
+前置决策：M2 的 policy lifecycle、action validation 和 batch capability 需要贴合 ADR-0001 中的 XPolicyLab 基准，但仍使用本地 `inproc` 与 mock 后端。
+
 交付：
 
 - episode logger；
@@ -1106,6 +1111,7 @@ GPU/simulator 测试放入 nightly 或手动 release pipeline。
 | 配置组合 | 先 YAML + 显式 merge；复杂后再引入 Hydra | M1 前 |
 | 核心轨迹 | Parquet + JSONL + MP4 | M2 前 |
 | 首个仿真器 | NVIDIA/Isaac 优先时选 RoboDojo；厨房资产优先时选 RoboCasa | M6 前 |
+| 首个复刻基准 | XPolicyLab `demo_policy` + debug evaluation flow；RoboDojo 作为后续外部评测目标 | 已决定，见 ADR-0001 |
 | 首个 VLA | OpenPI/GR00T/LingBot 三选一 | M7 前 |
 | Policy transport | 本地 inproc；分进程 WebSocket | M5 前 |
 | 集群调度器 | 待集群确认；优先写 adapter | M5 前 |
@@ -1132,14 +1138,13 @@ GPU/simulator 测试放入 nightly 或手动 release pipeline。
 
 在不等待仿真器、模型和集群信息的情况下，下一轮可以安全开始：
 
-1. 创建 M1 最小 Python package 和 schema。
-2. 固化 `tabletop_sorting_v1`、`towel_folding_v1` 的 TaskSpec。
-3. 实现 `dry-run`、config validation 和 resolved config。
+1. 实现 episode artifacts、progress/success 和 failure taxonomy。
+2. 建立 smoke/dev/release profile 的真实运行产物。
+3. 实现贴合 XPolicyLab lifecycle 的 `PolicyAdapter` debug contract。
 4. 实现 deterministic mock runner。
-5. 实现 episode artifacts、progress/success 和 failure taxonomy。
-6. 建立 smoke/dev/release profile。
-7. 为 PolicyAdapter 建立 debug contract 和 batch capability declaration。
-8. 在上述内容通过后，再确认首个 simulator 和首个重量级 policy。
+5. 实现两个 MVP 的 scripted policy 和 mock backend。
+6. 为 batch capability、action validation 和 reference baseline manifest 建立 contract tests。
+7. 在上述内容通过后，再确认首个 simulator 和首个重量级 policy。
 
 暂不开始：
 
@@ -1163,6 +1168,9 @@ GPU/simulator 测试放入 nightly 或手动 release pipeline。
 - [RoboDojo 环境配置拆分](https://robodojo-benchmark.com/doc/usage/configurations/)
 - [RoboDojo Isaac Sim 并行环境原则](https://robodojo-benchmark.com/doc/sim-tasks/parallel-environments/)
 - [RoboDojo 论文](https://arxiv.org/abs/2607.04434)
+- [XPolicyLab GitHub 仓库](https://github.com/XPolicyLab/XPolicyLab)
+- [RoboDojo GitHub 仓库](https://github.com/RoboDojo-Benchmark/RoboDojo)
+- [LeRobot GitHub 仓库](https://github.com/huggingface/lerobot)
 
 注意：RoboDojo 于 2026-07 发布，仍处于快速变化期。本项目引用其评测思想和接口边界，但第三方集成时必须固定 commit、记录冻结日期并运行本项目自己的 contract tests。
 
@@ -1193,3 +1201,10 @@ GPU/simulator 测试放入 nightly 或手动 release pipeline。
 - 增加 Python 3.11 已验证 constraints 和 `make doctor` 自检入口。
 - 明确 core、policy、simulator、real robot 必须隔离环境维护。
 - 记录 macOS 系统代理不会自动传递给 shell 的处理方式。
+
+### v0.4 — 2026-07-13
+
+- 接受 ADR-0001：以 XPolicyLab `demo_policy` + debug flow 作为第一复刻基准。
+- 将 RoboDojo 明确为后续 NVIDIA/Isaac 外部仿真评测目标。
+- 将 LeRobot 明确为后续 replay、converter 与轻量训练格式参考。
+- 冻结上游引用到 `references/upstreams.yaml`，避免文档决策漂移。

@@ -58,6 +58,28 @@ make dry-run
 
 环境复现入口为 `make setup && make doctor`；core 环境不包含 CUDA、Isaac、VLA 或真机 SDK。
 
+## 2026-07-13：Reference Baseline Decision
+
+状态：已接受并固化为 R0 基线。
+
+### 已落地
+
+| 规划项 | 实现位置 | 当前能力 |
+|---|---|---|
+| 上游 pin | `references/upstreams.yaml` | 固定 XPolicyLab、RoboDojo、LeRobot 的 commit、许可、冻结日期和引用范围 |
+| 复刻基准 | `references/xpolicylab_baseline.yaml` | 明确 XPolicyLab `demo_policy`/debug flow 的生命周期、transport 和验收映射 |
+| 决策文档 | `docs/REFERENCE_BASELINE.md` | 用中文说明为什么选 XPolicyLab、RoboDojo 和 LeRobot，以及当前不做什么 |
+| ADR | `docs/adr/0001-reference-baseline.md` | 记录 accepted decision、影响和非目标 |
+| 上游源码锚点工具 | `make reference-fetch` | 将 XPolicyLab 固定 commit 拉到用户 cache；不安装依赖、不下载数据、不启动仿真 |
+
+### 决策影响
+
+- M2/M3 仍然优先做本仓库的 logger、evaluator、runner 和 deterministic mock demo。
+- `PolicyAdapter` 的生命周期需要贴合 XPolicyLab：`reset`、`update_obs`、`get_action`、batch 变体和 capability declaration。
+- WebSocket 是 M5/M6 的兼容目标；第一阶段继续使用 `inproc`，避免网络栈影响 mock 开发。
+- RoboDojo 进入后续外部仿真评测目标，重点映射 `fold_clothes`、`organize_table`、`classify_objects`。
+- LeRobot 进入 M4 之后的数据、replay、converter 和轻量训练格式参考。
+
 ### 明确未实现
 
 - 没有 rollout loop、scripted policy 或 deterministic mock backend；这些属于 M2/M3。
@@ -72,8 +94,52 @@ make dry-run
 
 1. 定义 episode artifact 目录、run id 与原子写入规则。
 2. 实现 logger、manifest writer 和系统失败/任务失败分流。
-3. 实现 stage predicate、partial progress、success evaluator 与 task aggregate。
-4. 为结果建立 golden fixtures，验证 seed 固定时跨运行一致。
-5. 之后进入 M3，实现两个 scripted policy 和 deterministic mock backend。
+3. 实现贴合 XPolicyLab lifecycle 的本地 `PolicyAdapter` contract tests。
+4. 实现 stage predicate、partial progress、success evaluator 与 task aggregate。
+5. 为结果建立 golden fixtures，验证 seed 固定时跨运行一致。
+6. 之后进入 M3，实现两个 scripted policy 和 deterministic mock backend。
 
 在确认 NVIDIA 集群的 GPU、CUDA、调度器、容器和共享存储前，不安装本机 CUDA/Isaac 依赖，也不把 Slurm 或容器实现绑定到某一种集群假设。
+
+## 2026-07-13：First Runnable Mock Demo
+
+状态：已实现最小可交付闭环。
+
+### 已落地
+
+| 规划项 | 实现位置 | 当前能力 |
+|---|---|---|
+| CLI run | `embodied-demo run --config ...` | 单命令执行 deterministic mock rollout |
+| Scripted policy | `src/embodied_demo/demo_runner.py` | 贴合 `reset -> update_observation -> get_action` 生命周期 |
+| Mock backend | `src/embodied_demo/demo_runner.py` | 支持 `tabletop_sorting_v1` 和 `towel_folding_v1` 的符号/运动学状态推进 |
+| Artifact writer | `runs/<run>/<episode>/` | 输出 `manifest.yaml`、`events.jsonl`、`result.json`、`metrics.json`、`report.md` |
+| 快速入口 | `make demo` | 连续运行两个 MVP mock demo |
+
+### 边界
+
+- 当前 demo 证明工程链路可运行，不代表仿真或真机能力。
+- 当前 evaluator 只覆盖两个 MVP 的内置阶段谓词；M2 仍需抽象为通用 evaluator。
+- 当前 artifact 已足够汇报和调试，但还不是最终 release profile 聚合格式。
+
+## 2026-07-13：LeRobot GPU Training Replication
+
+### 已落地
+
+| 规划项 | 实现位置 | 当前能力 |
+|---|---|---|
+| 安装脚本 | `scripts/lerobot/install_lerobot_cluster.sh` | 安装 Python 3.12 环境中的 CUDA PyTorch 与 pinned LeRobot 源码 |
+| 训练脚本 | `scripts/lerobot/run_pusht_act_gpu_smoke.sh` | 检查 CUDA 后调用官方 `lerobot-train` |
+| 训练配置 | `configs/lerobot/pusht_act_gpu_smoke.sh` | 默认 `lerobot/pusht`、`policy.type=act`、`policy.device=cuda` |
+| 日志解析 | `scripts/lerobot/parse_train_log.py` | 从 `lerobot-train` stdout 中提取 loss summary |
+| Slurm 样例 | `scripts/lerobot/slurm_pusht_act_gpu_smoke.sbatch` | 给未知集群一个可改的提交模板 |
+| 快速入口 | `make lerobot-train-smoke` | 在已安装 LeRobot 的 CUDA 节点上启动真实训练 smoke |
+
+### 当前结论
+
+这版不再使用 CPU toy trainer。loss 是否下降由集群上的真实 `lerobot-train` 日志和 `loss_summary.json` 证明。
+
+### 边界
+
+- 本地 macOS core 环境不安装 LeRobot、PyTorch CUDA 或仿真依赖。
+- `make lerobot-train-smoke` 必须在有 CUDA 的 LeRobot 环境中运行；没有 GPU 会失败。
+- 默认任务是官方轻量 `lerobot/pusht` + ACT smoke，用于验证训练链路和 loss 下降，不代表家庭任务最终模型能力。
