@@ -2,7 +2,7 @@
 
 > 状态：Accepted<br>
 > 日期：2026-07-13<br>
-> 关联文件：`references/upstreams.yaml`、`references/xpolicylab_baseline.yaml`、`docs/adr/0001-reference-baseline.md`
+> 关联文件：`references/upstreams.yaml`、`references/xpolicylab_baseline.yaml`、`docs/adr/0001-reference-baseline.md`、`docs/adr/0002-fastwam-evidence-chain.md`、`docs/DEMO_COVERAGE_ROADMAP.md`
 
 ## 1. 更新后的结论
 

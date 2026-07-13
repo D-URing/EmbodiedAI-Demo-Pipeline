@@ -2,7 +2,7 @@ PYTHON ?= python3.11
 VENV ?= .venv
 CONSTRAINTS ?= requirements/constraints-py311.txt
 
-.PHONY: setup doctor test validate dry-run demo lerobot-check-scripts lerobot-train-smoke fastwam-check-scripts fastwam-train-smoke demo-chain-fastwam schemas reference-fetch clean
+.PHONY: setup doctor test validate dry-run demo demo-extended lerobot-check-scripts lerobot-train-smoke fastwam-check-scripts fastwam-train-smoke demo-chain-fastwam schemas reference-fetch clean
 
 setup:
 	$(PYTHON) -m venv $(VENV)
@@ -19,6 +19,8 @@ validate:
 	$(VENV)/bin/embodied-demo list-tasks
 	$(VENV)/bin/embodied-demo validate --config configs/runs/tabletop_sorting_mock.yaml
 	$(VENV)/bin/embodied-demo validate --config configs/runs/towel_folding_mock.yaml
+	$(VENV)/bin/embodied-demo validate --config configs/runs/kitchen_counter_sorting_mock.yaml
+	$(VENV)/bin/embodied-demo validate --config configs/runs/drawer_pick_place_mock.yaml
 
 dry-run:
 	$(VENV)/bin/embodied-demo dry-run --config configs/runs/tabletop_sorting_mock.yaml --output runs/tabletop_sorting/resolved.yaml
@@ -26,6 +28,10 @@ dry-run:
 demo:
 	$(VENV)/bin/embodied-demo run --config configs/runs/tabletop_sorting_mock.yaml
 	$(VENV)/bin/embodied-demo run --config configs/runs/towel_folding_mock.yaml
+
+demo-extended: demo
+	$(VENV)/bin/embodied-demo run --config configs/runs/kitchen_counter_sorting_mock.yaml
+	$(VENV)/bin/embodied-demo run --config configs/runs/drawer_pick_place_mock.yaml
 
 lerobot-check-scripts:
 	bash -n scripts/lerobot/install_lerobot_cluster.sh

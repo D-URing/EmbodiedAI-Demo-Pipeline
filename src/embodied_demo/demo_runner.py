@@ -117,6 +117,28 @@ class ScriptedPolicy:
                 {"skill": "place", "object_id": "blue_block", "target_id": "blue_zone"},
                 {"skill": "finish"},
             ]
+        if task_id == "kitchen_counter_sorting_v1":
+            return [
+                {"skill": "select", "object_id": "tomato"},
+                {"skill": "grasp", "object_id": "tomato"},
+                {"skill": "place", "object_id": "tomato", "target_id": "prep_tray"},
+                {"skill": "select", "object_id": "bowl"},
+                {"skill": "grasp", "object_id": "bowl"},
+                {"skill": "place", "object_id": "bowl", "target_id": "dish_rack"},
+                {"skill": "select", "object_id": "spice_jar"},
+                {"skill": "grasp", "object_id": "spice_jar"},
+                {"skill": "place", "object_id": "spice_jar", "target_id": "spice_caddy"},
+                {"skill": "finish"},
+            ]
+        if task_id == "drawer_pick_place_v1":
+            return [
+                {"skill": "locate_handle", "handle_id": "drawer_handle"},
+                {"skill": "open_drawer", "drawer_id": "drawer"},
+                {"skill": "select", "object_id": "spoon"},
+                {"skill": "grasp", "object_id": "spoon"},
+                {"skill": "place", "object_id": "spoon", "target_id": "counter_tray"},
+                {"skill": "finish"},
+            ]
         if task_id == "towel_folding_v1":
             return [
                 {"skill": "select_corners", "corners": ["top_left", "top_right"]},
@@ -159,6 +181,10 @@ class MockEnvironment:
         task_id = self._resolved.task_spec.id
         if task_id == "tabletop_sorting_v1":
             self._apply_tabletop(skill, action_payload)
+        elif task_id == "kitchen_counter_sorting_v1":
+            self._apply_kitchen(skill, action_payload)
+        elif task_id == "drawer_pick_place_v1":
+            self._apply_drawer(skill, action_payload)
         elif task_id == "towel_folding_v1":
             self._apply_towel(skill, action_payload)
         else:
@@ -187,12 +213,52 @@ class MockEnvironment:
                 item["id"]: {
                     "kind": item.get("kind"),
                     "color": item.get("color"),
+                    "category": item.get("category"),
+                    "accepts_categories": item.get("accepts_categories", []),
+                    "location": item.get("location"),
                     "position": item.get("position"),
-                    "placed": False,
+                    "placed": item.get("placed", False),
                 }
                 for item in scene.get("objects", [])
             }
             return {"objects": objects, "selected": None, "held": None, "safe_transport": True}
+        if task_id == "kitchen_counter_sorting_v1":
+            objects = {
+                item["id"]: {
+                    "kind": item.get("kind"),
+                    "category": item.get("category"),
+                    "accepts_categories": item.get("accepts_categories", []),
+                    "location": item.get("location", "counter"),
+                    "position": item.get("position"),
+                    "placed": item.get("placed", False),
+                }
+                for item in scene.get("objects", [])
+            }
+            return {"objects": objects, "selected": None, "held": None, "safe_transport": True}
+        if task_id == "drawer_pick_place_v1":
+            objects = {
+                item["id"]: {
+                    "kind": item.get("kind"),
+                    "category": item.get("category"),
+                    "accepts_categories": item.get("accepts_categories", []),
+                    "location": item.get("location"),
+                    "position": item.get("position"),
+                    "placed": item.get("placed", False),
+                }
+                for item in scene.get("objects", [])
+            }
+            drawer = scene.get("drawer", {})
+            return {
+                "drawer": {
+                    "id": drawer.get("id", "drawer"),
+                    "state": drawer.get("state", "closed"),
+                    "handle_id": drawer.get("handle_id", "drawer_handle"),
+                    "position": drawer.get("position"),
+                },
+                "objects": objects,
+                "selected": None,
+                "held": None,
+            }
         if task_id == "towel_folding_v1":
             towel = scene.get("towel", {})
             return {
@@ -255,6 +321,87 @@ class MockEnvironment:
             self._success = True
             self._termination_reason = TerminationReason.SUCCESS
 
+    def _apply_kitchen(self, skill: str | None, action: JsonObject) -> None:
+        objects = self._state["objects"]
+        if skill == "select":
+            object_id = action.get("object_id")
+            if (
+                object_id in objects
+                and objects[object_id]["kind"] == "movable"
+                and not objects[object_id]["placed"]
+            ):
+                self._state["selected"] = object_id
+                self._stage_progress["select_item"] = True
+        elif skill == "grasp":
+            object_id = action.get("object_id")
+            if object_id == self._state.get("selected"):
+                self._state["held"] = object_id
+                self._stage_progress["grasp_item"] = True
+                self._stage_progress["transport_item"] = True
+        elif skill == "place":
+            object_id = action.get("object_id")
+            target_id = action.get("target_id")
+            if object_id == self._state.get("held") and self._is_matching_zone(object_id, target_id):
+                objects[object_id]["placed"] = True
+                objects[object_id]["location"] = target_id
+                objects[object_id]["position"] = objects[target_id]["position"]
+                self._state["held"] = None
+                self._stage_progress["place_matching_zone"] = True
+                if self._all_movable_objects_placed():
+                    self._stage_progress["repeat_counter_reset"] = True
+        elif skill == "finish" and self._all_movable_objects_placed():
+            self._stage_progress["finalize"] = True
+            self._done = True
+            self._success = True
+            self._termination_reason = TerminationReason.SUCCESS
+
+    def _apply_drawer(self, skill: str | None, action: JsonObject) -> None:
+        drawer = self._state["drawer"]
+        objects = self._state["objects"]
+        if skill == "locate_handle" and action.get("handle_id") == drawer.get("handle_id"):
+            self._stage_progress["locate_drawer_handle"] = True
+        elif (
+            skill == "open_drawer"
+            and action.get("drawer_id") == drawer.get("id")
+            and self._stage_progress["locate_drawer_handle"]
+        ):
+            drawer["state"] = "open"
+            self._stage_progress["open_drawer"] = True
+        elif skill == "select":
+            object_id = action.get("object_id")
+            if (
+                drawer.get("state") == "open"
+                and object_id in objects
+                and objects[object_id].get("kind") == "movable"
+                and objects[object_id].get("location") == drawer.get("id")
+            ):
+                self._state["selected"] = object_id
+                self._stage_progress["select_target_object"] = True
+        elif skill == "grasp":
+            object_id = action.get("object_id")
+            if (
+                object_id == self._state.get("selected")
+                and drawer.get("state") == "open"
+                and objects[object_id].get("location") == drawer.get("id")
+            ):
+                self._state["held"] = object_id
+                objects[object_id]["location"] = "gripper"
+                self._stage_progress["grasp_from_drawer"] = True
+        elif skill == "place":
+            object_id = action.get("object_id")
+            target_id = action.get("target_id")
+            if object_id == self._state.get("held") and self._is_matching_zone(object_id, target_id):
+                objects[object_id]["placed"] = True
+                objects[object_id]["location"] = target_id
+                objects[object_id]["position"] = objects[target_id]["position"]
+                self._state["held"] = None
+                self._stage_progress["place_on_target"] = True
+        elif skill == "finish" and self._stage_progress["place_on_target"]:
+            self._stage_progress["finalize"] = True
+            self._done = True
+            self._success = True
+            self._termination_reason = TerminationReason.SUCCESS
+
     def _apply_towel(self, skill: str | None, action: JsonObject) -> None:
         towel = self._state["towel"]
         if skill == "select_corners" and action.get("corners") == ["top_left", "top_right"]:
@@ -278,12 +425,18 @@ class MockEnvironment:
 
     def _is_matching_zone(self, object_id: str, target_id: str | None) -> bool:
         objects = self._state["objects"]
-        return (
-            object_id in objects
-            and target_id in objects
-            and objects[object_id].get("color") == objects[target_id].get("color")
-            and objects[target_id].get("kind") == "target"
-        )
+        if object_id not in objects or target_id not in objects:
+            return False
+        target = objects[target_id]
+        if target.get("kind") != "target":
+            return False
+        source = objects[object_id]
+        if source.get("color") is not None and source.get("color") == target.get("color"):
+            return True
+        if source.get("category") is not None and source.get("category") == target.get("category"):
+            return True
+        accepted_categories = target.get("accepts_categories", [])
+        return source.get("category") in accepted_categories
 
     def _all_movable_objects_placed(self) -> bool:
         return all(

@@ -15,6 +15,8 @@ ROOT = Path(__file__).resolve().parents[1]
     [
         ("tabletop_sorting_mock.yaml", 7),
         ("towel_folding_mock.yaml", 5),
+        ("kitchen_counter_sorting_mock.yaml", 10),
+        ("drawer_pick_place_mock.yaml", 6),
     ],
 )
 def test_run_cli_writes_successful_mock_artifacts(

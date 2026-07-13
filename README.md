@@ -2,20 +2,21 @@
 
 面向家庭与生活服务场景的具身智能 Demo 工程基座。项目采用 **contract-first、headless-first、evaluation-first、backend-switchable** 的路线：先稳定任务、观测、动作、运行和评测契约，再逐步接入 mock、离线回放、NVIDIA 仿真集群、VLA 和真实机器人。
 
-当前不以训练大模型、同时适配多个仿真器、搭建复杂可视化或立即接真机为目标。完整规划与优先级见 [`docs/MASTER_PLAN.md`](docs/MASTER_PLAN.md)，实际落地状态见 [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md)，本地与集群环境配置见 [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md)，复刻基准决策见 [`docs/REFERENCE_BASELINE.md`](docs/REFERENCE_BASELINE.md)。
+当前不以训练大模型、同时适配多个仿真器、搭建复杂可视化或立即接真机为目标。完整规划与优先级见 [`docs/MASTER_PLAN.md`](docs/MASTER_PLAN.md)，demo 覆盖路线见 [`docs/DEMO_COVERAGE_ROADMAP.md`](docs/DEMO_COVERAGE_ROADMAP.md)，实际落地状态见 [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md)，本地与集群环境配置见 [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md)，复刻基准决策见 [`docs/REFERENCE_BASELINE.md`](docs/REFERENCE_BASELINE.md)。
 
 ## 当前状态
 
 - 版本：M1 Core Contract `v0.1.0`
 - Python：3.11+
-- 已实现：严格 schema、YAML 显式组合、两项任务定义、运行配置、CLI 校验/dry-run、JSON Schema 导出、单元测试
+- 已实现：严格 schema、YAML 显式组合、四项任务定义、运行配置、CLI 校验/dry-run、JSON Schema 导出、单元测试
 - 已预留：mock/replay/sim/real 模式，local/Slurm launcher，inproc/WebSocket policy transport，CPU/GPU 资源声明
 - 已固化：XPolicyLab `demo_policy`/debug flow 作为复刻基准，RoboDojo 作为后续外部仿真评测目标，LeRobot 作为后续数据/训练格式参考
 - 当前可运行：`embodied-demo run --config configs/runs/tabletop_sorting_mock.yaml` 可生成第一版 mock demo artifacts
 - 当前 LeRobot 复刻：`make lerobot-train-smoke` 在 CUDA 集群上调用真实 `lerobot-train` 训练 ACT/PushT smoke
 - 当前 FastWAM 集成：`make fastwam-train-smoke` 在 CUDA/FastWAM 环境中调用真实 FastWAM/DeepSpeed 训练入口；`pilot` 模式可生成 loss 下降报告
 - 当前 Demo Chain：`embodied-demo report-fastwam --run-dir <runs/fastwam/...>` 可把 FastWAM 训练产物归一化成 demo 交付报告
-- 下一里程碑：M2 Evaluation Core 完整化与 M3 deterministic mock demo 扩展
+- 当前规划格局：家庭任务 R0/R1 demo 与真实训练 R2 evidence 并行推进，不能把 mock 成功、loss 下降和仿真/真机能力混报
+- 下一里程碑：补 `laundry_sorting_v1` / `trash_sorting_v1` 等 R0/R1 任务规格，抽象通用 mock primitives，并在 NVIDIA 集群复跑 FastWAM `pilot`
 - 暂缓：Viewer、真实 simulator adapter、重量级模型、大数据下载、多节点运行、真机闭环
 
 ## 快速开始
@@ -35,6 +36,8 @@ make doctor
 embodied-demo list-tasks
 embodied-demo validate --config configs/runs/tabletop_sorting_mock.yaml
 embodied-demo validate --config configs/runs/towel_folding_mock.yaml
+embodied-demo validate --config configs/runs/kitchen_counter_sorting_mock.yaml
+embodied-demo validate --config configs/runs/drawer_pick_place_mock.yaml
 ```
 
 展开完整配置但不执行 rollout：
@@ -56,6 +59,12 @@ embodied-demo run --config configs/runs/towel_folding_mock.yaml
 
 ```bash
 make demo
+```
+
+扩展覆盖 demo 包含厨房台面整理和抽屉取放：
+
+```bash
+make demo-extended
 ```
 
 在 CUDA 集群上运行真实 LeRobot 训练 smoke，观察 loss 是否下降：
@@ -119,6 +128,7 @@ make reference-fetch
 ├── demo_chains/                  # 可交付 demo/evidence 链路定义
 ├── docs/
 │   ├── ENVIRONMENT.md            # macOS/Linux/NVIDIA 集群环境配置
+│   ├── DEMO_COVERAGE_ROADMAP.md  # demo 覆盖矩阵与 readiness 分级
 │   ├── FASTWAM_REALROBOT_INTEGRATION.md
 │   └── MASTER_PLAN.md            # 项目范围、架构、资源映射与路线图
 ├── requirements/                 # 经过验收的 Python 版本约束
@@ -134,6 +144,8 @@ make reference-fetch
 │   └── cli.py                    # validate/list-tasks/dry-run/run/report/export-schema
 ├── tasks/
 │   ├── registry.yaml
+│   ├── drawer_pick_place_v1/
+│   ├── kitchen_counter_sorting_v1/
 │   ├── tabletop_sorting_v1/
 │   └── towel_folding_v1/
 └── tests/                        # schema、配置组合、CLI 回归测试
