@@ -1,12 +1,16 @@
 PYTHON ?= python3.11
 VENV ?= .venv
+CONSTRAINTS ?= requirements/constraints-py311.txt
 
-.PHONY: setup test validate dry-run schemas clean
+.PHONY: setup doctor test validate dry-run schemas clean
 
 setup:
 	$(PYTHON) -m venv $(VENV)
 	$(VENV)/bin/python -m pip install --upgrade pip
-	$(VENV)/bin/python -m pip install -e ".[dev]"
+	$(VENV)/bin/python -m pip install -c $(CONSTRAINTS) -e ".[dev]"
+
+doctor:
+	VENV=$(VENV) PYTHON_BIN=$(PYTHON) bash scripts/doctor.sh
 
 test:
 	$(VENV)/bin/python -m pytest
@@ -20,7 +24,7 @@ dry-run:
 	$(VENV)/bin/embodied-demo dry-run --config configs/runs/tabletop_sorting_mock.yaml --output runs/tabletop_sorting/resolved.yaml
 
 schemas:
-	$(VENV)/bin/embodied-demo export-schema --output-dir schemas
+	$(VENV)/bin/embodied-demo export-schema --output-dir build/schemas
 
 clean:
 	rm -rf .pytest_cache build dist htmlcov

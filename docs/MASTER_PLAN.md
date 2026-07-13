@@ -1186,3 +1186,9 @@ GPU/simulator 测试放入 nightly 或手动 release pipeline。
 - 固化 Python 3.11、Pydantic v2、argparse 和显式 YAML merge。
 - 增加 RoboDojo 风格的 EpisodeResult、失败分类、评测 manifest 与 JSON Schema 导出。
 - 两个 MVP 任务进入 `experimental` 注册表，等待 M2/M3 运行闭环后升级。
+
+### v0.3 — 2026-07-13
+
+- 增加 macOS、Linux 与 NVIDIA 集群环境配置指南。
+- 增加 Python 3.11 已验证 constraints 和 `make doctor` 自检入口。
+- 明确 core、policy、simulator、real robot 必须隔离环境维护。

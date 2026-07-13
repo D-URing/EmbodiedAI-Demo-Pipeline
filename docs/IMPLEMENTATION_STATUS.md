@@ -21,6 +21,7 @@
 | 两项 MVP TaskSpec | `tasks/*/task.yaml` | 桌面分类归位、矩形毛巾两次对折 |
 | CLI | `cli.py` | `validate`、`list-tasks`、`dry-run`、`export-schema` |
 | 自动测试 | `tests/` | schema、错误配置、组合循环、CLI 和 resolved config 落盘 |
+| 环境基线 | `docs/ENVIRONMENT.md` | 本地/集群分层、精确 constraints、doctor 自检与 NVIDIA 接入边界 |
 
 ### 已冻结的 M1 技术默认值
 
@@ -54,6 +55,8 @@ make dry-run
 验收标准：错误字段和组合循环返回明确错误；两个任务及运行配置全部通过；resolved config 可持久化并包含所有来源、RunSpec 和 TaskSpec。
 
 本次验收结果：Python `3.11.15`；`14 passed`；两个 run config 均返回 `VALID`；dry-run 产物包含 4 个来源；成功导出 7 份 JSON Schema。
+
+环境复现入口为 `make setup && make doctor`；core 环境不包含 CUDA、Isaac、VLA 或真机 SDK。
 
 ### 明确未实现
 

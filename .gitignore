@@ -1,5 +1,10 @@
 .DS_Store
-.venv/
+.env
+.env.*
+!.env.example
+.venv*/
+.wheel-builder/
+wheelhouse/
 __pycache__/
 *.py[cod]
 *.egg-info/

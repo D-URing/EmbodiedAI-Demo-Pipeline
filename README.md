@@ -2,7 +2,7 @@
 
 面向家庭与生活服务场景的具身智能 Demo 工程基座。项目采用 **contract-first、headless-first、evaluation-first、backend-switchable** 的路线：先稳定任务、观测、动作、运行和评测契约，再逐步接入 mock、离线回放、NVIDIA 仿真集群、VLA 和真实机器人。
 
-当前不以训练大模型、同时适配多个仿真器、搭建复杂可视化或立即接真机为目标。完整规划与优先级见 [`docs/MASTER_PLAN.md`](docs/MASTER_PLAN.md)，实际落地状态见 [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md)。
+当前不以训练大模型、同时适配多个仿真器、搭建复杂可视化或立即接真机为目标。完整规划与优先级见 [`docs/MASTER_PLAN.md`](docs/MASTER_PLAN.md)，实际落地状态见 [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md)，本地与集群环境配置见 [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md)。
 
 ## 当前状态
 
@@ -15,13 +15,14 @@
 
 ## 快速开始
 
-macOS 开发环境：
+推荐使用仓库提供的受约束环境：
 
 ```bash
-python3.11 -m venv .venv
-source .venv/bin/activate
-python -m pip install -e ".[dev]"
+make setup
+make doctor
 ```
+
+`make setup` 创建 `.venv` 并使用 `requirements/constraints-py311.txt` 中经过验证的版本；不要在这个 core 环境里直接安装 CUDA、Isaac、VLA 或真机 SDK。macOS、Linux、离线节点和 NVIDIA 集群的准备方式见[环境配置指南](docs/ENVIRONMENT.md)。
 
 验证两项任务和运行配置：
 
@@ -43,10 +44,10 @@ embodied-demo dry-run \
 
 ```bash
 pytest
-embodied-demo export-schema --output-dir schemas
+embodied-demo export-schema --output-dir build/schemas
 ```
 
-也可以使用 `make setup`、`make test`、`make validate` 和 `make dry-run`。
+也可以使用 `make test`、`make validate`、`make dry-run` 和 `make schemas`。
 
 ## 目录结构
 
@@ -57,7 +58,9 @@ embodied-demo export-schema --output-dir schemas
 │   ├── profiles/                 # smoke / dev / release，不允许混报
 │   └── runs/                     # 可直接校验和展开的运行入口
 ├── docs/
+│   ├── ENVIRONMENT.md            # macOS/Linux/NVIDIA 集群环境配置
 │   └── MASTER_PLAN.md            # 项目范围、架构、资源映射与路线图
+├── requirements/                 # 经过验收的 Python 版本约束
 ├── scenes/mock/                  # 轻量场景描述；不声称物理真实性
 ├── src/embodied_demo/
 │   ├── schemas/                  # Task/Observation/Action/Run/Evaluation 契约
