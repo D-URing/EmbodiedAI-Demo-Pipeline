@@ -1,0 +1,18 @@
+extends:
+  - ../base.yaml
+  - ../profiles/smoke.yaml
+
+name: towel_folding_mock
+task:
+  file: ../../tasks/towel_folding_v1/task.yaml
+
+policy:
+  name: scripted_towel_fold
+  action_type: semantic
+  config:
+    strategy: corner_sequence
+
+environment:
+  backend: mock_2d
+  config:
+    scene_file: scenes/mock/towel_folding_v1/scene.yaml

@@ -2,7 +2,7 @@
 
 面向家庭与生活服务场景的具身智能 Demo 工程基座。项目采用 **contract-first、headless-first、evaluation-first、backend-switchable** 的路线：先稳定任务、观测、动作、运行和评测契约，再逐步接入 mock、离线回放、NVIDIA 仿真集群、VLA 和真实机器人。
 
-当前不以训练大模型、同时适配多个仿真器、搭建复杂可视化或立即接真机为目标。完整规划与优先级见 [`docs/MASTER_PLAN.md`](docs/MASTER_PLAN.md)，实际落地状态见 [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md)，本地与集群环境配置见 [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md)。
+当前不以训练大模型、同时适配多个仿真器、搭建复杂可视化或立即接真机为目标。完整规划与优先级见 [`docs/MASTER_PLAN.md`](docs/MASTER_PLAN.md)，实际落地状态见 [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md)，本地与集群环境配置见 [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md)，复刻基准决策见 [`docs/REFERENCE_BASELINE.md`](docs/REFERENCE_BASELINE.md)。
 
 ## 当前状态
 
@@ -10,6 +10,7 @@
 - Python：3.11+
 - 已实现：严格 schema、YAML 显式组合、两项任务定义、运行配置、CLI 校验/dry-run、JSON Schema 导出、单元测试
 - 已预留：mock/replay/sim/real 模式，local/Slurm launcher，inproc/WebSocket policy transport，CPU/GPU 资源声明
+- 已固化：XPolicyLab `demo_policy`/debug flow 作为复刻基准，RoboDojo 作为后续外部仿真评测目标，LeRobot 作为后续数据/训练格式参考
 - 下一里程碑：M2 Evaluation Core 与 M3 deterministic mock demo
 - 暂缓：Viewer、真实 simulator adapter、重量级模型、大数据下载、多节点运行、真机闭环
 
@@ -49,6 +50,14 @@ embodied-demo export-schema --output-dir build/schemas
 
 也可以使用 `make test`、`make validate`、`make dry-run` 和 `make schemas`。
 
+复核外部复刻基准时，可以只拉取固定 commit 到本机 cache：
+
+```bash
+make reference-fetch
+```
+
+该命令不会安装 XPolicyLab 依赖、下载数据或启动仿真器，只准备上游源码锚点。
+
 ## 目录结构
 
 ```text
@@ -61,6 +70,7 @@ embodied-demo export-schema --output-dir build/schemas
 │   ├── ENVIRONMENT.md            # macOS/Linux/NVIDIA 集群环境配置
 │   └── MASTER_PLAN.md            # 项目范围、架构、资源映射与路线图
 ├── requirements/                 # 经过验收的 Python 版本约束
+├── references/                   # 上游复刻基准和引用 pin
 ├── scenes/mock/                  # 轻量场景描述；不声称物理真实性
 ├── src/embodied_demo/
 │   ├── schemas/                  # Task/Observation/Action/Run/Evaluation 契约

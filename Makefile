@@ -2,7 +2,7 @@ PYTHON ?= python3.11
 VENV ?= .venv
 CONSTRAINTS ?= requirements/constraints-py311.txt
 
-.PHONY: setup doctor test validate dry-run schemas clean
+.PHONY: setup doctor test validate dry-run schemas reference-fetch clean
 
 setup:
 	$(PYTHON) -m venv $(VENV)
@@ -25,6 +25,9 @@ dry-run:
 
 schemas:
 	$(VENV)/bin/embodied-demo export-schema --output-dir build/schemas
+
+reference-fetch:
+	bash scripts/reference/fetch_xpolicylab.sh
 
 clean:
 	rm -rf .pytest_cache build dist htmlcov
