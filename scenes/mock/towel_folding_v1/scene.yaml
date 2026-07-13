@@ -1,0 +1,8 @@
+schema_version: "1.0"
+scene_id: towel_folding_mock_v1
+coordinate_system: normalized_tabletop_2d
+workspace: { width: 1.0, height: 0.8 }
+towel:
+  id: rectangular_towel
+  polygon: [[0.20, 0.20], [0.80, 0.20], [0.80, 0.60], [0.20, 0.60]]
+  corner_order: [top_left, top_right, bottom_right, bottom_left]

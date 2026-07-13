@@ -1,0 +1,5 @@
+evaluation:
+  profile: smoke
+  episodes_per_seed: 1
+  seeds: [0]
+  save_video: failure

@@ -1,0 +1,93 @@
+schema_version: "1.0"
+id: tabletop_sorting_v1
+version: "1.0.0"
+category: tabletop
+display_name: 桌面物品分类归位
+difficulty: L2
+
+capabilities:
+  primary: [long_horizon]
+  secondary: [generalization, open_instruction, stability]
+
+instruction:
+  canonical: 将桌面上的物品按颜色放到对应收纳区，并在全部归位后结束任务。
+  variants:
+    - 把不同颜色的物品整理到同色区域。
+    - 清理桌面，把红色和蓝色物品分别归位。
+
+scene:
+  scene_id: tabletop_sorting_mock_v1
+  required_objects: [red_block, blue_block, red_zone, blue_zone, table]
+  optional_objects: [distractor_block]
+
+observation:
+  required: [front_rgb, object_states, zone_states]
+  optional: [wrist_rgb]
+  evaluator_only: [ground_truth_poses, placement_predicates]
+  debug_only: [mock_state]
+  restricted: []
+
+action:
+  supported: [semantic]
+
+stages:
+  - select_target
+  - grasp_target
+  - transport_target
+  - place_correct_region
+  - repeat_sorting
+  - finalize
+
+termination:
+  max_steps: 30
+  success: all_target_objects_in_matching_zones
+  failure:
+    - object_out_of_workspace
+    - max_steps_exceeded
+    - unsafe_action
+
+backends:
+  supported: [mock_2d]
+  planned: [robodojo, robocasa, real]
+
+evaluation:
+  dimensions: [long_horizon, generalization, open_instruction]
+  progress_stages:
+    - id: select_target
+      description: 正确选择一个尚未归位的目标物。
+      predicate: correct_unplaced_target_selected
+      weight: 10
+    - id: grasp_target
+      description: 稳定抓取所选目标物。
+      predicate: selected_target_grasped
+      weight: 15
+    - id: transport_target
+      description: 运输过程中目标物未掉落或越界。
+      predicate: target_transported_safely
+      weight: 10
+    - id: place_correct_region
+      description: 首个目标物进入正确收纳区。
+      predicate: first_target_placed_correctly
+      weight: 20
+    - id: repeat_sorting
+      description: 其余目标物全部正确归位。
+      predicate: remaining_targets_placed_correctly
+      weight: 30
+    - id: finalize
+      description: 所有目标满足且策略主动结束。
+      predicate: all_targets_placed_and_terminated
+      weight: 15
+  standard_layouts: [layout_a, layout_b]
+  randomization_factors: [object_position, distractor_count, instruction_variant]
+
+mock:
+  realism: symbolic
+  limitations:
+    - 不模拟抓取动力学、碰撞力和遮挡。
+    - 抓取与放置由离散谓词决定，不能代表真机成功率。
+
+safety:
+  labels: [workspace_boundary, collision_placeholder]
+  real_execution_allowed: false
+  notes:
+    - 接真机前必须补充速度、碰撞和急停约束。

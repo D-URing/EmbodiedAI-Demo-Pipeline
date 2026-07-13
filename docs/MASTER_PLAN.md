@@ -969,6 +969,8 @@ GPU/simulator 测试放入 nightly 或手动 release pipeline。
 
 ### M1：Core Contract
 
+状态：**已完成（2026-07-13）**。实现与验收证据见 [`IMPLEMENTATION_STATUS.md`](IMPLEMENTATION_STATUS.md)。
+
 交付：
 
 - Python package；
@@ -1177,3 +1179,10 @@ GPU/simulator 测试放入 nightly 或手动 release pipeline。
 - 面向 NVIDIA 集群设计 inproc/split-process/multi-node 三种形态。
 - 将 Viewer 后置到 artifacts 和 evaluator 稳定之后。
 - 选择桌面/厨房归位和叠毛巾作为两个纵向 MVP。
+
+### v0.2 — 2026-07-13
+
+- M1 Core Contract 完成工程落地并通过 14 项自动测试。
+- 固化 Python 3.11、Pydantic v2、argparse 和显式 YAML merge。
+- 增加 RoboDojo 风格的 EpisodeResult、失败分类、评测 manifest 与 JSON Schema 导出。
+- 两个 MVP 任务进入 `experimental` 注册表，等待 M2/M3 运行闭环后升级。
