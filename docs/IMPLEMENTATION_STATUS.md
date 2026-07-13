@@ -145,3 +145,31 @@ make dry-run
 - 当前模型是纯 Python softmax behavior cloning demo，不依赖 PyTorch/CUDA。
 - 当前 dataset 是从 mock/scripted expert 生成的小样本，不是 LeRobot 真数据，也不是仿真/真机采集数据。
 - 当前目标是证明训练管线、日志、checkpoint 和报告闭环，不是追求模型能力。
+
+## 2026-07-13：First Train-Eval Closed Loop
+
+状态：已实现训练到执行的最小真闭环。
+
+### 已落地
+
+| 规划项 | 实现位置 | 当前能力 |
+|---|---|---|
+| CLI train-eval | `embodied-demo train-eval-demo --config ...` | 单命令完成训练、保存、加载 checkpoint 和 learned rollout |
+| Learned policy | `LearnedBehaviorCloningPolicy` | 从 `checkpoint.json` 读取权重并输出动作 |
+| Learned rollout artifacts | `learned_rollout/` | 输出 learned policy 的 `events.jsonl`、`result.json`、`metrics.json`、`report.md` |
+| True-flow metrics | `metrics.json` | 输出 `true_flow_complete`、loss 下降与 learned rollout 成功状态 |
+| 快速入口 | `make train-eval-demo` | 连续运行两个 MVP 的训练到执行闭环 |
+
+### 当前结论
+
+这版不仅能回答 loss 是否下降，还能证明训练出来的 checkpoint 被加载并实际参与执行。对外最推荐演示：
+
+```bash
+make train-eval-demo
+```
+
+### 边界
+
+- 这仍然是 CPU-only 的轻量 BC demo，用于证明工程闭环。
+- learned rollout 运行在 mock backend，不代表物理仿真或真机泛化。
+- 下一步若要更贴近开源生态，应把 dataset/checkpoint 格式进一步向 LeRobot adapter 对齐，并引入一个真实 PyTorch/LeRobot policy。

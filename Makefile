@@ -2,7 +2,7 @@ PYTHON ?= python3.11
 VENV ?= .venv
 CONSTRAINTS ?= requirements/constraints-py311.txt
 
-.PHONY: setup doctor test validate dry-run demo train-demo schemas reference-fetch clean
+.PHONY: setup doctor test validate dry-run demo train-demo train-eval-demo schemas reference-fetch clean
 
 setup:
 	$(PYTHON) -m venv $(VENV)
@@ -30,6 +30,10 @@ demo:
 train-demo:
 	$(VENV)/bin/embodied-demo train-demo --config configs/runs/tabletop_sorting_mock.yaml
 	$(VENV)/bin/embodied-demo train-demo --config configs/runs/towel_folding_mock.yaml
+
+train-eval-demo:
+	$(VENV)/bin/embodied-demo train-eval-demo --config configs/runs/tabletop_sorting_mock.yaml
+	$(VENV)/bin/embodied-demo train-eval-demo --config configs/runs/towel_folding_mock.yaml
 
 schemas:
 	$(VENV)/bin/embodied-demo export-schema --output-dir build/schemas

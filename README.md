@@ -13,6 +13,7 @@
 - 已固化：XPolicyLab `demo_policy`/debug flow 作为复刻基准，RoboDojo 作为后续外部仿真评测目标，LeRobot 作为后续数据/训练格式参考
 - 当前可运行：`embodied-demo run --config configs/runs/tabletop_sorting_mock.yaml` 可生成第一版 mock demo artifacts
 - 当前可训练：`embodied-demo train-demo --config configs/runs/tabletop_sorting_mock.yaml` 可生成 loss 下降日志和 checkpoint
+- 当前真闭环：`embodied-demo train-eval-demo --config configs/runs/tabletop_sorting_mock.yaml` 会训练、保存、加载 checkpoint，并用 learned policy 完成 rollout
 - 下一里程碑：M2 Evaluation Core 完整化与 M3 deterministic mock demo 扩展
 - 暂缓：Viewer、真实 simulator adapter、重量级模型、大数据下载、多节点运行、真机闭环
 
@@ -71,6 +72,21 @@ make train-demo
 
 这是一条 LeRobot 风格的轻量行为克隆闭环：dataset -> policy -> train log -> checkpoint。它证明训练管线和 loss 日志可用，但不是大模型训练或仿真能力证明。
 
+运行第一版训练到执行的完整闭环：
+
+```bash
+embodied-demo train-eval-demo --config configs/runs/tabletop_sorting_mock.yaml
+embodied-demo train-eval-demo --config configs/runs/towel_folding_mock.yaml
+```
+
+运行完成后会训练一个 checkpoint，再把 checkpoint 加载成 learned policy 跑一遍 mock rollout。产物会额外包含 `learned_rollout/result.json`、`learned_rollout/events.jsonl` 和 `learned_rollout/report.md`。也可以直接执行：
+
+```bash
+make train-eval-demo
+```
+
+这条命令是目前最适合对外说明的“真正流程”：mock expert dataset -> train BC policy -> save checkpoint -> load checkpoint -> learned rollout -> eval/report。
+
 运行测试和导出公共 schema：
 
 ```bash
@@ -108,7 +124,7 @@ make reference-fetch
 │   ├── demo_runner.py            # 第一版 deterministic mock demo runner
 │   ├── training_demo.py          # 第一版轻量行为克隆训练 demo
 │   ├── registry.py               # 任务注册表加载
-│   └── cli.py                    # validate/list-tasks/dry-run/run/train-demo/export-schema
+│   └── cli.py                    # validate/list-tasks/dry-run/run/train-demo/train-eval-demo/export-schema
 ├── tasks/
 │   ├── registry.yaml
 │   ├── tabletop_sorting_v1/
