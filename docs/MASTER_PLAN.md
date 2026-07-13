@@ -1192,3 +1192,4 @@ GPU/simulator 测试放入 nightly 或手动 release pipeline。
 - 增加 macOS、Linux 与 NVIDIA 集群环境配置指南。
 - 增加 Python 3.11 已验证 constraints 和 `make doctor` 自检入口。
 - 明确 core、policy、simulator、real robot 必须隔离环境维护。
+- 记录 macOS 系统代理不会自动传递给 shell 的处理方式。

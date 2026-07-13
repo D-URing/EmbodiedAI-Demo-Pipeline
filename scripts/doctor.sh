@@ -46,6 +46,12 @@ else
   printf 'INFO: gh is optional for runtime and required only for GitHub publishing.\n'
 fi
 
+if [[ -n "${HTTPS_PROXY:-${https_proxy:-}}" ]]; then
+  printf 'shell_proxy=configured\n'
+else
+  printf 'INFO: shell proxy is not configured; this is valid on direct-connect networks.\n'
+fi
+
 if command -v nvidia-smi >/dev/null 2>&1; then
   printf 'nvidia_smi=available\n'
 else

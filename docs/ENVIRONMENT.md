@@ -65,6 +65,47 @@ source .venv/bin/activate
 
 删除或重建 `.venv` 不影响仓库数据；`runs/`、`.venv/`、本地密钥和缓存均不会进入 Git。
 
+### 3.3 系统代理与 shell 代理
+
+macOS 的“系统设置 → 网络 → 代理”不会保证把代理自动导出为 shell 环境变量。浏览器可以访问 GitHub、但 `git push` 直连 443 超时时，先比较：
+
+```bash
+scutil --proxy
+env | grep -i proxy
+```
+
+如果本地代理监听 `127.0.0.1:7890`，可在个人 `~/.zprofile` 中加入以下可开关配置；端口应按个人代理软件调整，不要提交到项目文件：
+
+```bash
+proxy_on() {
+  export HTTP_PROXY="http://127.0.0.1:7890"
+  export HTTPS_PROXY="http://127.0.0.1:7890"
+  export ALL_PROXY="socks5h://127.0.0.1:7890"
+  export NO_PROXY="localhost,127.0.0.1,::1,*.local,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+  export http_proxy="$HTTP_PROXY"
+  export https_proxy="$HTTPS_PROXY"
+  export all_proxy="$ALL_PROXY"
+  export no_proxy="$NO_PROXY"
+}
+
+proxy_off() {
+  unset HTTP_PROXY HTTPS_PROXY ALL_PROXY NO_PROXY
+  unset http_proxy https_proxy all_proxy no_proxy
+}
+
+if nc -z 127.0.0.1 7890 2>/dev/null; then
+  proxy_on
+fi
+```
+
+保存后执行 `source ~/.zprofile`，再验证：
+
+```bash
+git ls-remote --heads origin
+```
+
+同时设置大写和小写变量是为了兼容不同 CLI。代理可能关闭时，优先使用上述可达性检测，不建议把带凭据的 proxy URL 写入 Git remote 或仓库 YAML。
+
 ## 4. Linux 工作站与 NVIDIA 集群
 
 ### 4.1 先收集集群事实
@@ -197,7 +238,7 @@ make schemas
 | `.venv` 不存在 | 运行 `make setup` |
 | 依赖冲突 | 不在 core 环境安装 simulator/VLA；重建 `.venv` 后按 constraints 安装 |
 | GitHub 登录失败 | `gh auth status`，必要时重新执行 `gh auth login` |
-| `github.com:443` 不通 | 检查 DNS/VPN/代理；本地运行不受影响，不要把 token 写进 remote URL |
+| 浏览器可访问但 `github.com:443` 超时 | 对比 `scutil --proxy` 与 `env | grep -i proxy`，让 shell 继承 HTTP/HTTPS proxy |
 | 集群没有公网 | 使用同平台 wheelhouse，或等待 M5 提供正式容器 |
 | 没有 `nvidia-smi` | core/mock 开发正常；只有 sim/policy GPU 环境才要求 NVIDIA runtime |
 
