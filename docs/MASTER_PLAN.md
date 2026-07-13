@@ -1306,3 +1306,9 @@ GPU/simulator 测试放入 nightly 或手动 release pipeline。
 - 新增 [`DEMO_COVERAGE_ROADMAP.md`](DEMO_COVERAGE_ROADMAP.md)，扩展厨房、衣物、桌面、清洁、抽屉、递送和灵巧手任务覆盖。
 - `kitchen_counter_sorting_v1` 与 `drawer_pick_place_v1` 已进入 R1 mock demo，可通过 CLI 运行并生成 artifacts。
 - 将下一阶段重点调整为：补衣物/清洁 R0/R1 家庭任务规格、沉淀通用 mock primitives、在 NVIDIA 集群复跑 FastWAM pilot 并输出 loss 下降证据。
+
+### v0.6 — 2026-07-14
+
+- 新增 [`00_PROJECT_OVERVIEW.md`](00_PROJECT_OVERVIEW.md) 和 [`01_ARCHITECTURE.md`](01_ARCHITECTURE.md)，作为项目入口和架构入口。
+- 将 `demo_runner.py` 拆分为 `policies/`、`environments/`、`rollout/` 三层，并保留兼容入口。
+- 明确 household mock rollout 与 FastWAM training evidence 是两条证据线，不再在代码和文档入口中混讲。

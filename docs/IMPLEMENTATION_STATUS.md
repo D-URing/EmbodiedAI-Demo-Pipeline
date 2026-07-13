@@ -80,17 +80,17 @@ make dry-run
 - RoboDojo 进入后续外部仿真评测目标，重点映射 `fold_clothes`、`organize_table`、`classify_objects`。
 - LeRobot 进入 M4 之后的数据、replay、converter 和轻量训练格式参考。
 
-### 明确未实现
+### 当时未实现，当前已更新
 
-- 没有 rollout loop、scripted policy 或 deterministic mock backend；这些属于 M2/M3。
+- rollout loop、scripted policy 和 deterministic mock backend 已在后续提交中落地，并在 2026-07-14 拆分为 `policies/`、`environments/`、`rollout/` 三层。
 - scene YAML 目前是轻量输入样例，尚未建立跨 backend 的 SceneSpec 公共合同。
 - launcher、remote transport、simulator、VLA、NVIDIA GPU 和真机仅有声明式开关，没有 adapter 实现。
-- 没有 episode artifact writer、JSONL logger、predicate evaluator 或聚合执行器。
+- episode artifact writer、JSONL events、result、metrics 和报告已落地；通用 predicate evaluator 和 release 聚合器仍需继续抽象。
 - 没有 Viewer；评测产物和回放合同稳定后再进入 M8。
 
-## 下一步：M2 Evaluation Core
+## 历史下一步：M2 Evaluation Core
 
-执行优先级保持为：
+以下是当时的执行优先级，当前已部分完成，最新下一步见文末 2026-07-14 状态：
 
 1. 定义 episode artifact 目录、run id 与原子写入规则。
 2. 实现 logger、manifest writer 和系统失败/任务失败分流。
@@ -110,8 +110,9 @@ make dry-run
 | 规划项 | 实现位置 | 当前能力 |
 |---|---|---|
 | CLI run | `embodied-demo run --config ...` | 单命令执行 deterministic mock rollout |
-| Scripted policy | `src/embodied_demo/demo_runner.py` | 贴合 `reset -> update_observation -> get_action` 生命周期 |
-| Mock backend | `src/embodied_demo/demo_runner.py` | 支持 `tabletop_sorting_v1` 和 `towel_folding_v1` 的符号/运动学状态推进 |
+| Scripted policy | `src/embodied_demo/policies/scripted.py` | 贴合 `reset -> update_observation -> get_action` 生命周期 |
+| Mock backend | `src/embodied_demo/environments/mock.py` | 支持四个 R1 household mock demo 的符号/运动学状态推进 |
+| Rollout runner | `src/embodied_demo/rollout/mock_runner.py` | 负责 reset/observe/action/step/log/finalize 与 artifact 写入 |
 | Artifact writer | `runs/<run>/<episode>/` | 输出 `manifest.yaml`、`events.jsonl`、`result.json`、`metrics.json`、`report.md` |
 | 快速入口 | `make demo` / `make demo-extended` | `demo` 运行两个 MVP；`demo-extended` 运行四个 R1 household mock demo |
 
@@ -202,3 +203,22 @@ FastWAM 接入改变的是项目构建格局：本项目可以同时推进“可
 2. 抽象通用 mock primitives：object-in-region、category routing、drawer/articulated state、stage predicates。
 3. 为 `make demo-extended` 补统一 summary，让四个 R1 household demo 的结果可以一页汇报。
 4. 在 NVIDIA 集群运行 FastWAM `pilot`，把真实日志交给 `embodied-demo report-fastwam` 生成 handoff。
+
+## 2026-07-14：Architecture Cleanup
+
+状态：已完成第一轮结构收敛，解决“mock demo、训练证据、未来仿真/真机叙事割裂”的问题。
+
+### 已落地
+
+| 规划项 | 实现位置 | 当前能力 |
+|---|---|---|
+| 项目总览入口 | `docs/00_PROJECT_OVERVIEW.md` | 用三条证据线解释项目：household mock、training evidence、future capability |
+| 架构说明 | `docs/01_ARCHITECTURE.md` | 说明 Task/Runtime/Evidence/Backend/Roadmap 分层和数据流 |
+| Policy 层拆分 | `src/embodied_demo/policies/scripted.py` | scripted action plan 从 `demo_runner.py` 中移出 |
+| Environment 层拆分 | `src/embodied_demo/environments/mock.py` | mock 状态推进从 `demo_runner.py` 中移出 |
+| Rollout 层拆分 | `src/embodied_demo/rollout/mock_runner.py` | 执行循环、artifact、report 形成独立入口 |
+| 兼容入口 | `src/embodied_demo/demo_runner.py` | 保留旧 import path，降低迁移成本 |
+
+### 当前结论
+
+项目现在更适合按 pipeline 分层继续扩展：新增任务优先进入 `tasks/`、`scenes/`、`configs/runs/`，任务专用 mock 行为先放在 `environments/mock.py`，后续再提取通用 primitives。FastWAM/LeRobot 属于 training evidence，不再和 household rollout 混在同一个代码入口里叙述。

@@ -2,7 +2,17 @@
 
 面向家庭与生活服务场景的具身智能 Demo 工程基座。项目采用 **contract-first、headless-first、evaluation-first、backend-switchable** 的路线：先稳定任务、观测、动作、运行和评测契约，再逐步接入 mock、离线回放、NVIDIA 仿真集群、VLA 和真实机器人。
 
-当前不以训练大模型、同时适配多个仿真器、搭建复杂可视化或立即接真机为目标。完整规划与优先级见 [`docs/MASTER_PLAN.md`](docs/MASTER_PLAN.md)，demo 覆盖路线见 [`docs/DEMO_COVERAGE_ROADMAP.md`](docs/DEMO_COVERAGE_ROADMAP.md)，实际落地状态见 [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md)，本地与集群环境配置见 [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md)，复刻基准决策见 [`docs/REFERENCE_BASELINE.md`](docs/REFERENCE_BASELINE.md)。
+当前不以训练大模型、同时适配多个仿真器、搭建复杂可视化或立即接真机为目标。第一次看项目建议先读 [`docs/00_PROJECT_OVERVIEW.md`](docs/00_PROJECT_OVERVIEW.md) 和 [`docs/01_ARCHITECTURE.md`](docs/01_ARCHITECTURE.md)。完整规划与优先级见 [`docs/MASTER_PLAN.md`](docs/MASTER_PLAN.md)，demo 覆盖路线见 [`docs/DEMO_COVERAGE_ROADMAP.md`](docs/DEMO_COVERAGE_ROADMAP.md)，实际落地状态见 [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md)。
+
+## 如何理解这个项目
+
+项目分三条证据线，不混报：
+
+| 证据线 | 回答的问题 | 当前状态 |
+|---|---|---|
+| Household mock demo | 家庭任务 pipeline 能不能跑通？ | 4 个 R1 mock demo |
+| Training evidence | 真实训练链路和 loss 证据有没有？ | LeRobot / FastWAM CUDA 入口 |
+| Future capability | 仿真/真机是否真的完成任务？ | 后续接 RoboDojo / RoboCasa / RoboTwin / real |
 
 ## 当前状态
 
@@ -30,7 +40,7 @@ make doctor
 
 `make setup` 创建 `.venv` 并使用 `requirements/constraints-py311.txt` 中经过验证的版本；不要在这个 core 环境里直接安装 CUDA、Isaac、VLA 或真机 SDK。macOS、Linux、离线节点和 NVIDIA 集群的准备方式见[环境配置指南](docs/ENVIRONMENT.md)。
 
-验证两项任务和运行配置：
+验证四项任务和运行配置：
 
 ```bash
 embodied-demo list-tasks
@@ -128,6 +138,8 @@ make reference-fetch
 ├── demo_chains/                  # 可交付 demo/evidence 链路定义
 ├── docs/
 │   ├── ENVIRONMENT.md            # macOS/Linux/NVIDIA 集群环境配置
+│   ├── 00_PROJECT_OVERVIEW.md    # 新同事/汇报入口
+│   ├── 01_ARCHITECTURE.md        # Pipeline 分层与代码结构
 │   ├── DEMO_COVERAGE_ROADMAP.md  # demo 覆盖矩阵与 readiness 分级
 │   ├── FASTWAM_REALROBOT_INTEGRATION.md
 │   └── MASTER_PLAN.md            # 项目范围、架构、资源映射与路线图
@@ -136,9 +148,12 @@ make reference-fetch
 ├── scripts/fastwam/              # FastWAM 外部 backend 准备、启动和日志解析
 ├── scenes/mock/                  # 轻量场景描述；不声称物理真实性
 ├── src/embodied_demo/
+│   ├── environments/             # mock/replay/sim/real backend 实现
+│   ├── policies/                 # scripted/learned/VLA policy adapter
+│   ├── rollout/                  # 执行循环与 artifact 生成
 │   ├── schemas/                  # Task/Observation/Action/Run/Evaluation 契约
 │   ├── config.py                 # YAML 组合、校验和 resolved config
-│   ├── demo_runner.py            # 第一版 deterministic mock demo runner
+│   ├── demo_runner.py            # 兼容入口，转发到 rollout.mock_runner
 │   ├── fastwam_report.py         # FastWAM 训练产物转 demo evidence/report
 │   ├── registry.py               # 任务注册表加载
 │   └── cli.py                    # validate/list-tasks/dry-run/run/report/export-schema
@@ -169,4 +184,4 @@ make reference-fetch
 
 本仓库只服务于 Demo 项目规划和工程落地。论文、模型与开源生态研究笔记继续由同级的 `EmbodiedAI-Research/` 知识库维护；这里只保留会影响接口、实现与验收的工程结论。
 
-当前两个任务仍标记为 `experimental`：它们的契约和配置可运行，但只有在 deterministic runner、evaluator、golden artifacts 和跨机器回归都落地后，才会升级为 `supported`。
+当前四个 household mock 任务仍标记为 `experimental`：它们的契约和配置可运行，但只有在 deterministic runner、evaluator、golden artifacts 和跨机器回归都落地后，才会升级为 `supported`。
