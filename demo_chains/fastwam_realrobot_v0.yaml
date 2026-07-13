@@ -1,0 +1,54 @@
+schema_version: "1.0"
+chain_id: fastwam_realrobot_v0
+name: FastWAM Real-Robot Evidence Chain v0
+status: experimental
+purpose: >
+  Turn the current demo project into a deliverable evidence chain: task/mock
+  pipeline remains lightweight, while FastWAM provides the real CUDA training
+  backend and loss/checkpoint proof.
+
+stages:
+  - id: task_contract_validation
+    command: make validate
+    required: true
+    evidence:
+      - task registry loads
+      - tabletop/towel run configs validate
+
+  - id: deterministic_mock_rollout
+    command: make demo
+    required: false
+    evidence:
+      - mock result.json
+      - mock report.md
+    note: >
+      Optional for the first FastWAM report, but recommended when handing the
+      demo to non-engineering stakeholders.
+
+  - id: fastwam_training_pilot
+    command: FASTWAM_MODE=pilot FASTWAM_RECIPE=joint_base bash scripts/fastwam/run_realrobot_train_eval.sh
+    required: true
+    evidence:
+      - runs/fastwam/*/backend_manifest.json
+      - runs/fastwam/*/loss_summary.json
+      - FastWAM native checkpoint path
+
+  - id: evidence_report
+    command: embodied-demo report-fastwam --run-dir <runs/fastwam/...>
+    required: true
+    evidence:
+      - training_evidence.json
+      - checkpoint_summary.json
+      - report.md
+      - handoff.md
+
+acceptance:
+  minimum:
+    - training_evidence.validation_status is passed or warning with explicit notes
+    - loss_summary.parsed_train_count >= 2
+    - loss_summary.loss_decreased is true
+    - latest checkpoint path is recorded
+  boundary:
+    - no claim of RoboDojo benchmark completion
+    - no claim of real-robot closed-loop household success
+    - no CPU fallback for FastWAM

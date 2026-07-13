@@ -12,6 +12,7 @@ from embodied_demo import __version__
 from embodied_demo.config import dump_yaml, load_registry, load_resolved_run, load_task
 from embodied_demo.demo_runner import run_mock_demo
 from embodied_demo.errors import PipelineError, SchemaValidationError
+from embodied_demo.fastwam_report import generate_fastwam_report
 from embodied_demo.registry import iter_registered_tasks
 from embodied_demo.schemas import (
     ActionChunk,
@@ -21,6 +22,7 @@ from embodied_demo.schemas import (
     RunSpec,
     TaskRegistry,
     TaskSpec,
+    TrainingEvidence,
 )
 
 
@@ -94,6 +96,7 @@ def _command_export_schema(args: argparse.Namespace) -> int:
         "episode_result.schema.json": EpisodeResult,
         "evaluation_manifest.schema.json": EvaluationManifest,
         "task_registry.schema.json": TaskRegistry,
+        "training_evidence.schema.json": TrainingEvidence,
     }
     for filename, model in schemas.items():
         content = json.dumps(model.model_json_schema(), ensure_ascii=False, indent=2) + "\n"
@@ -114,6 +117,30 @@ def _command_run(args: argparse.Namespace) -> int:
     )
     print(f"REPORT {artifact_dir / 'report.md'}")
     print(f"RESULT {artifact_dir / 'result.json'}")
+    return 0
+
+
+def _command_report_fastwam(args: argparse.Namespace) -> int:
+    artifact_dir = generate_fastwam_report(
+        args.run_dir,
+        output_dir=args.output_dir,
+        mock_run_dirs=args.mock_run_dir,
+        chain_config=args.chain_config,
+    )
+    evidence = json.loads((artifact_dir / "training_evidence.json").read_text(encoding="utf-8"))
+    loss_decreased = evidence["loss_decreased"]
+    loss_decreased_text = "unknown" if loss_decreased is None else str(loss_decreased).lower()
+    print(f"REPORT_FASTWAM_COMPLETE {artifact_dir}")
+    print(
+        "SUMMARY "
+        f"status={evidence['validation_status']} "
+        f"loss_decreased={loss_decreased_text} "
+        f"initial_loss={evidence['initial_loss']} "
+        f"final_loss={evidence['final_loss']} "
+        f"steps={evidence['final_step']}/{evidence['max_steps']}"
+    )
+    print(f"REPORT {artifact_dir / 'report.md'}")
+    print(f"EVIDENCE {artifact_dir / 'training_evidence.json'}")
     return 0
 
 
@@ -143,6 +170,25 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--config", required=True, type=Path)
     run.add_argument("--output-dir", type=Path)
     run.set_defaults(handler=_command_run)
+
+    report_fastwam = subparsers.add_parser(
+        "report-fastwam", help="normalize a FastWAM run into demo-chain evidence"
+    )
+    report_fastwam.add_argument("--run-dir", required=True, type=Path)
+    report_fastwam.add_argument("--output-dir", type=Path)
+    report_fastwam.add_argument(
+        "--mock-run-dir",
+        action="append",
+        type=Path,
+        default=[],
+        help="optional mock demo artifact directory containing result.json",
+    )
+    report_fastwam.add_argument(
+        "--chain-config",
+        type=Path,
+        default=Path("demo_chains/fastwam_realrobot_v0.yaml"),
+    )
+    report_fastwam.set_defaults(handler=_command_report_fastwam)
 
     export_schema = subparsers.add_parser(
         "export-schema", help="export public contracts as JSON Schema"

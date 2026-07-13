@@ -14,6 +14,7 @@
 - 当前可运行：`embodied-demo run --config configs/runs/tabletop_sorting_mock.yaml` 可生成第一版 mock demo artifacts
 - 当前 LeRobot 复刻：`make lerobot-train-smoke` 在 CUDA 集群上调用真实 `lerobot-train` 训练 ACT/PushT smoke
 - 当前 FastWAM 集成：`make fastwam-train-smoke` 在 CUDA/FastWAM 环境中调用真实 FastWAM/DeepSpeed 训练入口；`pilot` 模式可生成 loss 下降报告
+- 当前 Demo Chain：`embodied-demo report-fastwam --run-dir <runs/fastwam/...>` 可把 FastWAM 训练产物归一化成 demo 交付报告
 - 下一里程碑：M2 Evaluation Core 完整化与 M3 deterministic mock demo 扩展
 - 暂缓：Viewer、真实 simulator adapter、重量级模型、大数据下载、多节点运行、真机闭环
 
@@ -76,6 +77,20 @@ bash scripts/fastwam/run_realrobot_train_eval.sh
 
 该入口会把官方 FastWAM 与私有 realrobot overlay 组合为外部 backend，并在 `runs/fastwam/...` 下保存 stdout、`loss_summary.json` 和 FastWAM 原生 checkpoint 路径。详细说明见 [`docs/FASTWAM_REALROBOT_INTEGRATION.md`](docs/FASTWAM_REALROBOT_INTEGRATION.md)。
 
+把 FastWAM pilot 结果整理成第一版 demo chain 交付报告：
+
+```bash
+embodied-demo report-fastwam --run-dir runs/fastwam/<run_name>/<run_id>
+```
+
+或使用 Makefile：
+
+```bash
+FASTWAM_RUN_DIR=runs/fastwam/<run_name>/<run_id> make demo-chain-fastwam
+```
+
+产物会写到 `runs/demo_chains/fastwam_realrobot_v0/<run_id>/`，包括 `training_evidence.json`、`checkpoint_summary.json`、`report.md` 和 `handoff.md`。
+
 运行测试和导出公共 schema：
 
 ```bash
@@ -101,6 +116,7 @@ make reference-fetch
 │   ├── base.yaml                 # 本地、headless、低成本默认值
 │   ├── profiles/                 # smoke / dev / release，不允许混报
 │   └── runs/                     # 可直接校验和展开的运行入口
+├── demo_chains/                  # 可交付 demo/evidence 链路定义
 ├── docs/
 │   ├── ENVIRONMENT.md            # macOS/Linux/NVIDIA 集群环境配置
 │   ├── FASTWAM_REALROBOT_INTEGRATION.md
@@ -113,8 +129,9 @@ make reference-fetch
 │   ├── schemas/                  # Task/Observation/Action/Run/Evaluation 契约
 │   ├── config.py                 # YAML 组合、校验和 resolved config
 │   ├── demo_runner.py            # 第一版 deterministic mock demo runner
+│   ├── fastwam_report.py         # FastWAM 训练产物转 demo evidence/report
 │   ├── registry.py               # 任务注册表加载
-│   └── cli.py                    # validate/list-tasks/dry-run/run/export-schema
+│   └── cli.py                    # validate/list-tasks/dry-run/run/report/export-schema
 ├── tasks/
 │   ├── registry.yaml
 │   ├── tabletop_sorting_v1/

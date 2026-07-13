@@ -2,7 +2,7 @@ PYTHON ?= python3.11
 VENV ?= .venv
 CONSTRAINTS ?= requirements/constraints-py311.txt
 
-.PHONY: setup doctor test validate dry-run demo lerobot-check-scripts lerobot-train-smoke fastwam-check-scripts fastwam-train-smoke schemas reference-fetch clean
+.PHONY: setup doctor test validate dry-run demo lerobot-check-scripts lerobot-train-smoke fastwam-check-scripts fastwam-train-smoke demo-chain-fastwam schemas reference-fetch clean
 
 setup:
 	$(PYTHON) -m venv $(VENV)
@@ -44,6 +44,10 @@ fastwam-check-scripts:
 
 fastwam-train-smoke:
 	FASTWAM_MODE=smoke bash scripts/fastwam/run_realrobot_train_eval.sh
+
+demo-chain-fastwam:
+	test -n "$(FASTWAM_RUN_DIR)" || (echo "FASTWAM_RUN_DIR is required, e.g. FASTWAM_RUN_DIR=runs/fastwam/<run>/<id> make demo-chain-fastwam" >&2; exit 2)
+	$(VENV)/bin/embodied-demo report-fastwam --run-dir "$(FASTWAM_RUN_DIR)" $(if $(OUTPUT_DIR),--output-dir "$(OUTPUT_DIR)",) $(if $(MOCK_RUN_DIR),--mock-run-dir "$(MOCK_RUN_DIR)",)
 
 schemas:
 	$(VENV)/bin/embodied-demo export-schema --output-dir build/schemas

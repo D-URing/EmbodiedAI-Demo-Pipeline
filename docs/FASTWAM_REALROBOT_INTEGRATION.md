@@ -195,7 +195,44 @@ $FASTWAM_WORKDIR/runs/<task_name>/<run_id>/
 
 这就是给同事回答“loss 是否正常下降”的第一证据。smoke 只有 1 step 时 `loss_decreased=unknown` 是正常的；要证明下降，跑 pilot 或更长。
 
-## 8. 与 demo pipeline 的契约映射
+## 8. 生成 Demo Chain 报告
+
+FastWAM 训练完成后，用本仓库的统一 importer 把训练 run 变成交付 evidence：
+
+```bash
+embodied-demo report-fastwam --run-dir runs/fastwam/<run_name>/<run_id>
+```
+
+或者：
+
+```bash
+FASTWAM_RUN_DIR=runs/fastwam/<run_name>/<run_id> make demo-chain-fastwam
+```
+
+默认输出：
+
+```text
+runs/demo_chains/fastwam_realrobot_v0/<run_id>/
+├── chain_manifest.yaml
+├── training_evidence.json
+├── checkpoint_summary.json
+├── mock_summary.json
+├── report.md
+└── handoff.md
+```
+
+其中 `training_evidence.json` 是给工程侧消费的稳定摘要，`report.md` 是给团队同步/交差的可读报告，`handoff.md` 写明最小复现步骤和边界。
+
+如果已经跑过 mock demo，也可以把 mock artifact 一起挂进报告：
+
+```bash
+embodied-demo report-fastwam \
+  --run-dir runs/fastwam/<run_name>/<run_id> \
+  --mock-run-dir runs/tabletop_sorting_mock/tabletop_sorting_mock-seed0-episode000 \
+  --mock-run-dir runs/towel_folding_mock/towel_folding_mock-seed0-episode000
+```
+
+## 9. 与 demo pipeline 的契约映射
 
 | demo pipeline 概念 | FastWAM 当前对应 |
 |---|---|
@@ -209,7 +246,7 @@ $FASTWAM_WORKDIR/runs/<task_name>/<run_id>/
 | `evaluator` | loss/ckpt smoke、offline action check；后续扩展 RoboDojo-style stage score |
 | `viewer` | 暂缓；优先保证训练与评测产物稳定 |
 
-## 9. RoboDojo-style 评测分层
+## 10. RoboDojo-style 评测分层
 
 这里不急着声称已经跑 RoboDojo simulator，而是借用它的工程评测思想，把验收拆成可逐步通过的阶段：
 
@@ -225,7 +262,7 @@ $FASTWAM_WORKDIR/runs/<task_name>/<run_id>/
 
 当前本仓库已落地 E2/E3 的启动和日志归档；E1/E4 可复用 overlay 里的 `preflight_*` 和 `offline_action_check.py`，后续再包装成统一 evaluator。
 
-## 10. 当前边界
+## 11. 当前边界
 
 - 本仓库不包含官方 FastWAM、私有 overlay、权重、数据或 runs。
 - `prepare_fastwam_overlay.sh` 需要 GitHub 私有仓库权限。
