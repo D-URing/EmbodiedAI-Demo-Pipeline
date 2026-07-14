@@ -171,6 +171,12 @@ make download-fastwam-artifacts
 $EMBODIED_RUN_ROOT/artifact_manifests/fastwam_release_artifacts_manifest.json
 ```
 
+如果没有显式设置 `EMBODIED_MODEL_ROOT`，默认目标路径是：
+
+```text
+$HOME/.cache/embodied-demo/models/fastwam_release
+```
+
 后续 custom overlay 运行时：
 
 ```bash
@@ -182,7 +188,52 @@ FASTWAM_MODE=pilot FASTWAM_RECIPE=joint_base \
 bash scripts/fastwam/run_realrobot_train_eval.sh
 ```
 
-## 8. 生成第一版交付报告
+## 8. 下载网络问题排查
+
+如果遇到：
+
+```text
+Network is unreachable
+LocalEntryNotFoundError
+```
+
+说明当前节点不能访问 Hugging Face，且本地 cache 里也没有对应 snapshot。先检查：
+
+```bash
+which hf || which huggingface-cli
+curl -I "${HF_ENDPOINT:-https://huggingface.co}"
+env | grep -E '^(HTTP_PROXY|HTTPS_PROXY|ALL_PROXY|HF_ENDPOINT)='
+```
+
+常见处理方式：
+
+```bash
+# 方式一：集群有代理
+export HTTPS_PROXY=http://<proxy-host>:<proxy-port>
+export HTTP_PROXY=http://<proxy-host>:<proxy-port>
+
+# 方式二：集群提供 Hugging Face mirror
+export HF_ENDPOINT=https://<your-hf-mirror>
+
+# 方式三：显式指定新版 hf CLI
+export HF_CLI_BIN=/usr/local/bin/hf
+```
+
+如果集群完全没有外网，就在有外网的机器下载后，把以下文件拷贝到 `$EMBODIED_MODEL_ROOT/fastwam_release/`：
+
+```text
+libero_uncond_2cam224.pt
+libero_uncond_2cam224_dataset_stats.json
+```
+
+然后继续设置：
+
+```bash
+export FASTWAM_RELEASE_CKPT="$EMBODIED_MODEL_ROOT/fastwam_release/libero_uncond_2cam224.pt"
+export FASTWAM_RELEASE_DATASET_STATS="$EMBODIED_MODEL_ROOT/fastwam_release/libero_uncond_2cam224_dataset_stats.json"
+```
+
+## 9. 生成第一版交付报告
 
 LeRobot data-to-inference 链路：
 
@@ -200,7 +251,7 @@ FastWAM custom overlay 链路：
 FASTWAM_RUN_DIR="runs/fastwam/<run_name>/<run_id>" make demo-chain-fastwam
 ```
 
-## 9. 常见开关
+## 10. 常见开关
 
 | 变量 | 默认值 | 作用 |
 |---|---|---|
@@ -217,7 +268,7 @@ FASTWAM_RUN_DIR="runs/fastwam/<run_name>/<run_id>" make demo-chain-fastwam
 | `PYTHON_BIN` | `python3` | 写 manifest 用的 Python，可改成 venv/conda 里的解释器 |
 | `HF_CLI_BIN` | 自动检测 | 可显式指定 `/path/to/hf` 或 `/path/to/huggingface-cli` |
 
-## 10. 第一轮集群测试建议
+## 11. 第一轮集群测试建议
 
 最小测试顺序：
 
@@ -235,7 +286,7 @@ make lerobot-infer-smoke
 
 如果这四步跑通，第一阶段最关键的链路已经成立：公开数据能下载和读取，官方 LeRobot 训练入口能跑，loss 有 summary，checkpoint 能进入 offline inference。
 
-## 11. 上游链接
+## 12. 上游链接
 
 - LeRobot GitHub：https://github.com/huggingface/lerobot
 - LeRobot PushT dataset：https://huggingface.co/datasets/lerobot/pusht

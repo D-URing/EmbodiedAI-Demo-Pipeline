@@ -42,13 +42,48 @@ if [[ "${#release_files[@]}" -eq 0 ]]; then
   exit 2
 fi
 
+MANIFEST_PATH="$EMBODIED_RUN_ROOT/artifact_manifests/fastwam_release_artifacts_manifest.json"
+
+print_download_failure_help() {
+  cat >&2 <<EOF
+
+[error] FastWAM release download failed.
+[target] $FASTWAM_RELEASE_LOCAL_DIR
+[manifest-if-success] $MANIFEST_PATH
+
+This usually means the current cluster node cannot reach Hugging Face.
+Quick checks:
+  command -v curl >/dev/null 2>&1 && curl -I "\${HF_ENDPOINT:-https://huggingface.co}"
+  env | grep -E '^(HTTP_PROXY|HTTPS_PROXY|ALL_PROXY|HF_ENDPOINT)='
+
+Possible fixes:
+  1. Run this command on a login/compute node with outbound network.
+  2. Configure the cluster proxy, for example:
+       export HTTPS_PROXY=http://<proxy-host>:<proxy-port>
+       export HTTP_PROXY=http://<proxy-host>:<proxy-port>
+  3. If your cluster uses a Hugging Face mirror:
+       export HF_ENDPOINT=https://<your-hf-mirror>
+  4. Or download the files elsewhere and copy them into:
+       $FASTWAM_RELEASE_LOCAL_DIR
+EOF
+}
+
+echo "[artifact] family=fastwam_release"
+echo "[artifact] repo=$FASTWAM_RELEASE_REPO_ID"
+echo "[artifact] files=${release_files[*]}"
+echo "[artifact] local_dir=$FASTWAM_RELEASE_LOCAL_DIR"
+echo "[artifact] manifest=$MANIFEST_PATH"
+echo "[artifact] hf_cli=${HF_DOWNLOAD_CMD[*]}"
+echo "[artifact] hf_endpoint=${HF_ENDPOINT:-https://huggingface.co}"
 echo "[download] FastWAM release: $FASTWAM_RELEASE_REPO_ID -> $FASTWAM_RELEASE_LOCAL_DIR"
-HF_HUB_ENABLE_HF_TRANSFER="$HF_HUB_ENABLE_HF_TRANSFER" \
+if ! HF_HUB_ENABLE_HF_TRANSFER="$HF_HUB_ENABLE_HF_TRANSFER" \
   "${HF_DOWNLOAD_CMD[@]}" "$FASTWAM_RELEASE_REPO_ID" \
     "${release_files[@]}" \
-    --local-dir "$FASTWAM_RELEASE_LOCAL_DIR"
+    --local-dir "$FASTWAM_RELEASE_LOCAL_DIR"; then
+  print_download_failure_help
+  exit 1
+fi
 
-MANIFEST_PATH="$EMBODIED_RUN_ROOT/artifact_manifests/fastwam_release_artifacts_manifest.json"
 FASTWAM_RELEASE_REPO_ID="$FASTWAM_RELEASE_REPO_ID" \
 FASTWAM_RELEASE_LOCAL_DIR="$FASTWAM_RELEASE_LOCAL_DIR" \
 FASTWAM_RELEASE_FILES="$FASTWAM_RELEASE_FILES" \

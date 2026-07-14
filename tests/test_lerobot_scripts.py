@@ -54,6 +54,9 @@ def test_lerobot_artifact_download_script_uses_explicit_hf_targets() -> None:
     assert 'HF_CLI_BIN="${HF_CLI_BIN:-}"' in runner
     assert "HF_DOWNLOAD_CMD=(hf download)" in runner
     assert '"${HF_DOWNLOAD_CMD[@]}" "$LEROBOT_DATASET_REPO_ID"' in runner
+    assert "[artifact] dataset_local_dir=$LEROBOT_DATASET_LOCAL_DIR" in runner
+    assert "cannot reach Hugging Face" in runner
+    assert "HF_ENDPOINT" in runner
     assert "artifact_manifests/lerobot_artifacts_manifest.json" in runner
     assert "download-lerobot-artifacts" in makefile
 

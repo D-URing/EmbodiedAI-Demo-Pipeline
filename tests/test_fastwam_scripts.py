@@ -57,5 +57,8 @@ def test_fastwam_release_download_script_tracks_public_artifacts() -> None:
     assert 'HF_CLI_BIN="${HF_CLI_BIN:-}"' in runner
     assert "HF_DOWNLOAD_CMD=(hf download)" in runner
     assert '"${HF_DOWNLOAD_CMD[@]}" "$FASTWAM_RELEASE_REPO_ID"' in runner
+    assert "[artifact] local_dir=$FASTWAM_RELEASE_LOCAL_DIR" in runner
+    assert "cannot reach Hugging Face" in runner
+    assert "HF_ENDPOINT" in runner
     assert "artifact_manifests/fastwam_release_artifacts_manifest.json" in runner
     assert "download-fastwam-artifacts" in makefile
