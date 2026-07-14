@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import yaml
+
 from scripts.lerobot.parse_train_log import write_summary
 from scripts.lerobot.generate_data_to_inference_report import generate_report
 
@@ -66,3 +68,16 @@ def test_lerobot_chain_report_uses_dataset_and_inference_evidence(tmp_path: Path
     assert "lerobot_fastwam_data_to_inference_v0" in report
     assert "policy_type: act" in report
     assert "loss_decreased: True" in report
+
+
+def test_model_registry_tracks_current_lerobot_demo() -> None:
+    registry = yaml.safe_load((ROOT / "references/model_registry.yaml").read_text(encoding="utf-8"))
+
+    act = registry["models"]["lerobot_act_pusht"]
+    assert act["path_type"] == "lerobot_native"
+    assert act["policy_type"] == "act"
+    assert act["dataset_repo_id"] == "lerobot/pusht"
+
+    fastwam_overlay = registry["models"]["custom_fastwam_realrobot_overlay"]
+    assert fastwam_overlay["path_type"] == "custom_backend"
+    assert "not a from-scratch self-designed model" in " ".join(fastwam_overlay["notes"])

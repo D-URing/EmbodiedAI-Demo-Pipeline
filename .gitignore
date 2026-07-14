@@ -14,4 +14,8 @@ htmlcov/
 build/
 dist/
 /runs/
+/data/
+/models/
+/checkpoints/
+/artifacts/
 .external/
