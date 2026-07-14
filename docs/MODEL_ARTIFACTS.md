@@ -110,6 +110,40 @@ $EMBODIED_DATA_ROOT/
 
 ## 5. 当前 ACT/PushT 使用方式
 
+### 下载 PushT dataset
+
+集群上建议先显式下载公开 dataset：
+
+```bash
+export EMBODIED_DATA_ROOT="/root/paddlejob/share-storage/gpfs/system-public/dingxibo/Embodied_AI/data"
+export EMBODIED_MODEL_ROOT="/root/paddlejob/share-storage/gpfs/system-public/dingxibo/models"
+export EMBODIED_RUN_ROOT="/root/paddlejob/share-storage/gpfs/system-public/dingxibo/Embodied_AI/runs"
+
+make download-lerobot-artifacts
+```
+
+默认下载：
+
+```text
+repo: lerobot/pusht
+target: $EMBODIED_DATA_ROOT/lerobot/pusht
+manifest: $EMBODIED_RUN_ROOT/artifact_manifests/lerobot_artifacts_manifest.json
+```
+
+如果要下载一个确认过的 LeRobot policy repo：
+
+```bash
+export LEROBOT_POLICY_REPO_ID="<org>/<model-repo>"
+export LEROBOT_POLICY_TYPE="act"
+export LEROBOT_POLICY_LOCAL_DIR="$EMBODIED_MODEL_ROOT/lerobot/act/pusht/<model-repo>"
+
+DOWNLOAD_LEROBOT_DATASET=0 \
+DOWNLOAD_LEROBOT_POLICY=1 \
+make download-lerobot-artifacts
+```
+
+当前仓库不默认绑定 ACT/PushT 的预训练 policy repo；如果没有明确 checkpoint，优先通过 `make lerobot-train-smoke` 训练一个本地 checkpoint，再进入 inference smoke。
+
 ### Dataset smoke
 
 如果 dataset 已在本地/集群缓存中：
@@ -166,10 +200,7 @@ FastWAM 有两类资产：
 FastWAM release 权重按上游说明下载，例如：
 
 ```bash
-huggingface-cli download yuanty/fastwam \
-  libero_uncond_2cam224.pt \
-  libero_uncond_2cam224_dataset_stats.json \
-  --local-dir "$EMBODIED_MODEL_ROOT/fastwam_release"
+make download-fastwam-artifacts
 ```
 
 然后运行 custom overlay 时显式指定：
@@ -179,6 +210,15 @@ export FASTWAM_MODEL_BASE="$EMBODIED_MODEL_ROOT"
 export FASTWAM_RELEASE_CKPT="$EMBODIED_MODEL_ROOT/fastwam_release/libero_uncond_2cam224.pt"
 export FASTWAM_RELEASE_DATASET_STATS="$EMBODIED_MODEL_ROOT/fastwam_release/libero_uncond_2cam224_dataset_stats.json"
 ```
+
+如需下载其他 FastWAM release 文件：
+
+```bash
+FASTWAM_RELEASE_FILES="libero_uncond_2cam224.pt libero_uncond_2cam224_dataset_stats.json <another-file>" \
+make download-fastwam-artifacts
+```
+
+更完整的集群下载、cache 和 smoke 验证步骤见 [`CLUSTER_ARTIFACTS_RUNBOOK.md`](CLUSTER_ARTIFACTS_RUNBOOK.md)。
 
 ## 7. 新模型接入清单
 

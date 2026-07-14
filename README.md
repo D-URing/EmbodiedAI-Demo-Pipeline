@@ -2,7 +2,7 @@
 
 面向家庭与生活服务场景的具身智能 Demo 工程基座。项目采用 **contract-first、headless-first、evaluation-first、backend-switchable** 的路线：先稳定任务、观测、动作、运行和评测契约，再逐步接入 mock、离线回放、NVIDIA 仿真集群、VLA 和真实机器人。
 
-当前不以训练大模型、同时适配多个仿真器、搭建复杂可视化或立即接真机为目标。第一主线是 **LeRobot-first data-to-inference pipeline**：从 LeRobot 数据读取，到 policy 训练/加载，再到离线推理和证据报告。当前 LeRobot demo 默认模型是 **ACT on PushT**。第一次看项目建议先读 [`docs/00_PROJECT_OVERVIEW.md`](docs/00_PROJECT_OVERVIEW.md)、[`docs/LEROBOT_FIRST_PIPELINE.md`](docs/LEROBOT_FIRST_PIPELINE.md)、[`docs/MODEL_ARTIFACTS.md`](docs/MODEL_ARTIFACTS.md) 和 [`docs/01_ARCHITECTURE.md`](docs/01_ARCHITECTURE.md)。
+当前不以训练大模型、同时适配多个仿真器、搭建复杂可视化或立即接真机为目标。第一主线是 **LeRobot-first data-to-inference pipeline**：从 LeRobot 数据读取，到 policy 训练/加载，再到离线推理和证据报告。当前 LeRobot demo 默认模型是 **ACT on PushT**。第一次看项目建议先读 [`docs/00_PROJECT_OVERVIEW.md`](docs/00_PROJECT_OVERVIEW.md)、[`docs/LEROBOT_FIRST_PIPELINE.md`](docs/LEROBOT_FIRST_PIPELINE.md)、[`docs/MODEL_ARTIFACTS.md`](docs/MODEL_ARTIFACTS.md)、[`docs/CLUSTER_ARTIFACTS_RUNBOOK.md`](docs/CLUSTER_ARTIFACTS_RUNBOOK.md) 和 [`docs/01_ARCHITECTURE.md`](docs/01_ARCHITECTURE.md)。
 
 ## 如何理解这个项目
 
@@ -81,6 +81,7 @@ make demo-extended
 
 ```bash
 bash scripts/lerobot/install_lerobot_cluster.sh
+make download-lerobot-artifacts
 make lerobot-train-smoke
 ```
 
@@ -94,6 +95,18 @@ LEROBOT_POLICY_PATH=/path/to/local/checkpoint make lerobot-infer-smoke
 ```
 
 默认 `LEROBOT_ALLOW_DOWNLOAD=0`，不会下载大文件；如确实要在集群上下载，需显式设置 `LEROBOT_ALLOW_DOWNLOAD=1`。
+
+公开开源数据和权重下载已经封装为 Make target：
+
+```bash
+# 下载 LeRobot PushT dataset；可选下载 LeRobot policy repo
+make download-lerobot-artifacts
+
+# 下载 FastWAM release 权重和 stats
+make download-fastwam-artifacts
+```
+
+集群路径、Hugging Face cache、policy checkpoint 和 FastWAM release 的完整命令见 [`docs/CLUSTER_ARTIFACTS_RUNBOOK.md`](docs/CLUSTER_ARTIFACTS_RUNBOOK.md)。
 
 在 CUDA 集群上接入你已有的 FastWAM 真机训练/评测 pipeline：
 
@@ -149,6 +162,7 @@ make reference-fetch
 │   ├── ENVIRONMENT.md            # macOS/Linux/NVIDIA 集群环境配置
 │   ├── 00_PROJECT_OVERVIEW.md    # 新同事/汇报入口
 │   ├── 01_ARCHITECTURE.md        # Pipeline 分层与代码结构
+│   ├── CLUSTER_ARTIFACTS_RUNBOOK.md # 集群下载开源数据/模型和 smoke 验证
 │   ├── LEROBOT_FIRST_PIPELINE.md # LeRobot-first 主线
 │   ├── MODEL_ARTIFACTS.md        # 模型/数据/权重下载与存放规范
 │   ├── DEMO_COVERAGE_ROADMAP.md  # demo 覆盖矩阵与 readiness 分级

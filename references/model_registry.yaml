@@ -32,6 +32,9 @@ models:
       - make lerobot-data-smoke
       - make lerobot-train-smoke
       - make lerobot-infer-smoke
+    download_targets:
+      - make download-lerobot-artifacts
+      - DOWNLOAD_LEROBOT_DATASET=0 DOWNLOAD_LEROBOT_POLICY=1 LEROBOT_POLICY_REPO_ID=<org>/<repo> make download-lerobot-artifacts
     artifact_location:
       dataset_root: "$EMBODIED_DATA_ROOT/lerobot/pusht"
       policy_path: "$EMBODIED_MODEL_ROOT/lerobot/act/pusht/<checkpoint-or-pretrained-dir>"
@@ -50,6 +53,8 @@ models:
       - make lerobot-data-smoke
       - make lerobot-infer-smoke
       - make demo-chain-lerobot-fastwam
+    download_targets:
+      - DOWNLOAD_LEROBOT_DATASET=0 DOWNLOAD_LEROBOT_POLICY=1 LEROBOT_POLICY_REPO_ID=<fastwam-lerobot-repo> make download-lerobot-artifacts
     artifact_location:
       policy_path: "$EMBODIED_MODEL_ROOT/lerobot/fastwam/<checkpoint-or-pretrained-dir>"
     capability_claim: planned_offline_data_to_inference
@@ -67,6 +72,8 @@ models:
       - make fastwam-train-smoke
       - FASTWAM_MODE=pilot FASTWAM_RECIPE=joint_base bash scripts/fastwam/run_realrobot_train_eval.sh
       - make demo-chain-fastwam
+    download_targets:
+      - make download-fastwam-artifacts
     artifact_location:
       release_weights: "$EMBODIED_MODEL_ROOT/fastwam_release/"
       custom_outputs: "$EMBODIED_MODEL_ROOT/custom/fastwam_realrobot/<run>/"

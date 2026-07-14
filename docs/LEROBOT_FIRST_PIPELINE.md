@@ -91,6 +91,7 @@ demo_chains/lerobot_fastwam_data_to_inference_v0.yaml
 已新增：
 
 ```bash
+make download-lerobot-artifacts
 make lerobot-data-smoke
 ```
 
@@ -107,7 +108,7 @@ scripts/lerobot/inspect_dataset.py
 scripts/lerobot/run_dataset_smoke.sh
 ```
 
-默认 `LEROBOT_ALLOW_DOWNLOAD=0`，脚本会设置 Hugging Face offline 环境变量；如果本地没有 dataset 缓存或 `LEROBOT_DATASET_ROOT`，会明确失败，不会偷偷下载大文件。
+默认 `LEROBOT_ALLOW_DOWNLOAD=0`，脚本会设置 Hugging Face offline 环境变量；如果本地没有 dataset 缓存或 `LEROBOT_DATASET_ROOT`，会明确失败，不会偷偷下载大文件。需要在集群上下载公开 dataset 时，先运行 `make download-lerobot-artifacts`；完整下载流程见 [`CLUSTER_ARTIFACTS_RUNBOOK.md`](CLUSTER_ARTIFACTS_RUNBOOK.md)。
 
 ### Step 2：training/load smoke
 
@@ -217,7 +218,7 @@ Shared evidence/report contract above both paths
 
 ## 9. 模型和权重管理
 
-模型、dataset、checkpoint 下载和存放规范见 [`MODEL_ARTIFACTS.md`](MODEL_ARTIFACTS.md)。当前模型 registry 见 [`references/model_registry.yaml`](../references/model_registry.yaml)。
+模型、dataset、checkpoint 下载和存放规范见 [`MODEL_ARTIFACTS.md`](MODEL_ARTIFACTS.md)。集群下载 runbook 见 [`CLUSTER_ARTIFACTS_RUNBOOK.md`](CLUSTER_ARTIFACTS_RUNBOOK.md)。当前模型 registry 见 [`references/model_registry.yaml`](../references/model_registry.yaml)。
 
 关键原则：
 
