@@ -1,6 +1,6 @@
 # LeRobot-First Demo Pipeline
 
-> 状态：主线规划 v0.1<br>
+> 状态：主线规划 v0.2；data/inference/report scaffold 已落地<br>
 > 日期：2026-07-14<br>
 > 关联：[`adr/0003-lerobot-first-fastwam-pipeline.md`](adr/0003-lerobot-first-fastwam-pipeline.md)、[`LEROBOT_REPLICATION.md`](LEROBOT_REPLICATION.md)、[`FASTWAM_REALROBOT_INTEGRATION.md`](FASTWAM_REALROBOT_INTEGRATION.md)
 
@@ -78,7 +78,7 @@ demo_chains/lerobot_fastwam_data_to_inference_v0.yaml
 
 ### Step 1：dataset smoke
 
-新增：
+已新增：
 
 ```bash
 make lerobot-data-smoke
@@ -94,7 +94,10 @@ make lerobot-data-smoke
 
 ```text
 scripts/lerobot/inspect_dataset.py
+scripts/lerobot/run_dataset_smoke.sh
 ```
+
+默认 `LEROBOT_ALLOW_DOWNLOAD=0`，脚本会设置 Hugging Face offline 环境变量；如果本地没有 dataset 缓存或 `LEROBOT_DATASET_ROOT`，会明确失败，不会偷偷下载大文件。
 
 ### Step 2：training/load smoke
 
@@ -104,16 +107,19 @@ scripts/lerobot/inspect_dataset.py
 make lerobot-train-smoke
 ```
 
-需要扩展：
+已具备：
 
 - 默认仍可跑 ACT/PushT；
-- 增加 FastWAM policy config 分支；
-- 输出统一 `training_evidence.json`；
 - 记录 checkpoint 路径和 LeRobot output dir。
+
+仍待扩展：
+
+- 增加 LeRobot-native FastWAM policy config 分支；
+- 输出统一 `training_evidence.json`。
 
 ### Step 3：offline inference smoke
 
-新增：
+已新增：
 
 ```bash
 make lerobot-infer-smoke
@@ -131,11 +137,14 @@ make lerobot-infer-smoke
 
 ```text
 scripts/lerobot/run_policy_inference_smoke.py
+scripts/lerobot/run_inference_smoke.sh
 ```
+
+默认要求 `LEROBOT_POLICY_PATH` 指向本地 checkpoint/pretrained 目录，不会下载权重。默认 `LEROBOT_INFERENCE_DEVICE=cuda`，如果没有 CUDA 会明确失败。
 
 ### Step 4：demo-chain report
 
-新增：
+已新增本地报告生成入口：
 
 ```bash
 make demo-chain-lerobot-fastwam
@@ -146,6 +155,14 @@ make demo-chain-lerobot-fastwam
 - 把 dataset、training/loading、inference 三段结果汇总；
 - 形成可交付报告；
 - 明确标注这是 offline data-to-inference，不是真机闭环。
+
+最小用法：
+
+```bash
+LEROBOT_DATASET_PROFILE=runs/lerobot_native/<run>/dataset_profile.json \
+LEROBOT_INFERENCE_EVIDENCE=runs/lerobot_native/<run>/inference_evidence.json \
+make demo-chain-lerobot-fastwam
+```
 
 ## 6. 自建模型管线是否还需要？
 
@@ -171,7 +188,10 @@ Shared evidence/report contract above both paths
 
 | 已有工作 | 新定位 |
 |---|---|
+| `make lerobot-data-smoke` | LeRobot-first 主线的 dataset inspection |
 | `make lerobot-train-smoke` | LeRobot-first 主线的 training smoke |
+| `make lerobot-infer-smoke` | LeRobot-first 主线的 offline inference smoke |
+| `make demo-chain-lerobot-fastwam` | dataset/inference/training evidence 的报告入口 |
 | FastWAM realrobot overlay | custom FastWAM / future self-built model extension |
 | `embodied-demo report-fastwam` | training evidence importer，可复用到 LeRobot-native FastWAM |
 | 四个 household mock demo | application/evaluation layer，用于后续任务展示和报告，不是主线第一验收 |

@@ -2,7 +2,7 @@ PYTHON ?= python3.11
 VENV ?= .venv
 CONSTRAINTS ?= requirements/constraints-py311.txt
 
-.PHONY: setup doctor test validate dry-run demo demo-extended lerobot-check-scripts lerobot-train-smoke fastwam-check-scripts fastwam-train-smoke demo-chain-fastwam schemas reference-fetch clean
+.PHONY: setup doctor test validate dry-run demo demo-extended lerobot-check-scripts lerobot-data-smoke lerobot-train-smoke lerobot-infer-smoke demo-chain-lerobot-fastwam fastwam-check-scripts fastwam-train-smoke demo-chain-fastwam schemas reference-fetch clean
 
 setup:
 	$(PYTHON) -m venv $(VENV)
@@ -36,11 +36,25 @@ demo-extended: demo
 lerobot-check-scripts:
 	bash -n scripts/lerobot/install_lerobot_cluster.sh
 	bash -n scripts/lerobot/run_pusht_act_gpu_smoke.sh
+	bash -n scripts/lerobot/run_dataset_smoke.sh
+	bash -n scripts/lerobot/run_inference_smoke.sh
 	bash -n scripts/lerobot/slurm_pusht_act_gpu_smoke.sbatch
 	$(VENV)/bin/python scripts/lerobot/parse_train_log.py --log tests/fixtures/lerobot_train_stdout.log --output-dir build/lerobot-parser-test
+	$(VENV)/bin/python scripts/lerobot/generate_data_to_inference_report.py --dataset-profile tests/fixtures/lerobot_dataset_profile.json --inference-evidence tests/fixtures/lerobot_inference_evidence.json --training-summary build/lerobot-parser-test/loss_summary.json --output-dir build/lerobot-chain-report-test
+
+lerobot-data-smoke:
+	bash scripts/lerobot/run_dataset_smoke.sh
 
 lerobot-train-smoke:
 	bash scripts/lerobot/run_pusht_act_gpu_smoke.sh
+
+lerobot-infer-smoke:
+	bash scripts/lerobot/run_inference_smoke.sh
+
+demo-chain-lerobot-fastwam:
+	test -n "$(LEROBOT_DATASET_PROFILE)" || (echo "LEROBOT_DATASET_PROFILE is required" >&2; exit 2)
+	test -n "$(LEROBOT_INFERENCE_EVIDENCE)" || (echo "LEROBOT_INFERENCE_EVIDENCE is required" >&2; exit 2)
+	$(VENV)/bin/python scripts/lerobot/generate_data_to_inference_report.py --dataset-profile "$(LEROBOT_DATASET_PROFILE)" --inference-evidence "$(LEROBOT_INFERENCE_EVIDENCE)" $(if $(LEROBOT_TRAINING_SUMMARY),--training-summary "$(LEROBOT_TRAINING_SUMMARY)",) --output-dir "$(if $(OUTPUT_DIR),$(OUTPUT_DIR),build/lerobot-chain-report)"
 
 fastwam-check-scripts:
 	bash -n scripts/fastwam/prepare_fastwam_overlay.sh

@@ -234,8 +234,11 @@ FastWAM 接入改变的是项目构建格局：本项目可以同时推进“可
 | LeRobot-first 决策 | `docs/adr/0003-lerobot-first-fastwam-pipeline.md` | 将第一主线调整为 dataset read → train/load → offline inference → report |
 | 主线规划 | `docs/LEROBOT_FIRST_PIPELINE.md` | 明确 data smoke、train/load smoke、inference smoke、demo-chain report |
 | demo-chain 草案 | `demo_chains/lerobot_fastwam_data_to_inference_v0.yaml` | 定义 LeRobot/FastWAM data-to-inference 的验收阶段 |
+| dataset smoke | `scripts/lerobot/inspect_dataset.py`、`scripts/lerobot/run_dataset_smoke.sh`、`make lerobot-data-smoke` | 读取本地/缓存 LeRobot dataset，输出 `dataset_profile.json`；默认不下载 |
+| inference smoke | `scripts/lerobot/run_policy_inference_smoke.py`、`scripts/lerobot/run_inference_smoke.sh`、`make lerobot-infer-smoke` | 加载本地 checkpoint/pretrained policy，对 dataset sample 输出 action evidence |
+| LeRobot chain report | `scripts/lerobot/generate_data_to_inference_report.py`、`make demo-chain-lerobot-fastwam` | 汇总 dataset/inference/training 证据生成 report/handoff |
 | 入口文档同步 | `README.md`、`docs/00_PROJECT_OVERVIEW.md`、`docs/01_ARCHITECTURE.md` | 区分 LeRobot 主干、custom backend、household 应用层 |
 
 ### 当前结论
 
-下一步不应继续优先增加 household mock task，而应先补 LeRobot dataset inspection 和 offline inference smoke。私有 FastWAM overlay 不丢，作为 custom backend 和未来自建模型路径继续保留。
+下一步不应继续优先增加 household mock task。LeRobot dataset inspection、offline inference smoke 和报告入口已完成第一版封装；真实运行需要在集群/缓存环境提供 LeRobot dataset 和本地 checkpoint。私有 FastWAM overlay 不丢，作为 custom backend 和未来自建模型路径继续保留。

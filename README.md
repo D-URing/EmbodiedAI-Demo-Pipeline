@@ -22,7 +22,7 @@
 - 已预留：mock/replay/sim/real 模式，local/Slurm launcher，inproc/WebSocket policy transport，CPU/GPU 资源声明
 - 已固化：LeRobot-first 作为第一 demo 管线基准；FastWAM 是 LeRobot-native policy 路径和 custom overlay 双路径；RoboDojo 作为后续外部仿真评测目标
 - 当前可运行：`embodied-demo run --config configs/runs/tabletop_sorting_mock.yaml` 可生成第一版 mock demo artifacts
-- 当前 LeRobot 复刻：`make lerobot-train-smoke` 在 CUDA 集群上调用真实 `lerobot-train`；下一步补 `lerobot-data-smoke` 和 `lerobot-infer-smoke`
+- 当前 LeRobot 复刻：`make lerobot-data-smoke`、`make lerobot-train-smoke`、`make lerobot-infer-smoke` 已有入口；默认不下载大文件，真实运行需要集群/缓存里的 dataset 和 checkpoint
 - 当前 FastWAM 集成：官方 LeRobot-native FastWAM 作为优先 policy 路径；私有 FastWAM overlay 作为自建模型/真机数据扩展路径
 - 当前 Demo Chain：`embodied-demo report-fastwam --run-dir <runs/fastwam/...>` 可把 FastWAM 训练产物归一化成 demo 交付报告
 - 当前规划格局：LeRobot data-to-inference 是主线；household mock 是应用层；私有 FastWAM overlay 是 custom backend 扩展
@@ -85,6 +85,15 @@ make lerobot-train-smoke
 ```
 
 该入口不会 fallback 到 CPU，也不调用本仓库的 toy trainer。它会调用官方 `lerobot-train`，默认复刻 LeRobot 的 `lerobot/pusht` + `act` 训练路径，并在 `runs/lerobot/...` 下保存 stdout、loss summary、LeRobot 输出目录和 checkpoint。详细说明见 [`docs/LEROBOT_REPLICATION.md`](docs/LEROBOT_REPLICATION.md)。
+
+在已有 LeRobot dataset 缓存和本地 checkpoint 的环境里，跑 data-to-inference smoke：
+
+```bash
+make lerobot-data-smoke
+LEROBOT_POLICY_PATH=/path/to/local/checkpoint make lerobot-infer-smoke
+```
+
+默认 `LEROBOT_ALLOW_DOWNLOAD=0`，不会下载大文件；如确实要在集群上下载，需显式设置 `LEROBOT_ALLOW_DOWNLOAD=1`。
 
 在 CUDA 集群上接入你已有的 FastWAM 真机训练/评测 pipeline：
 

@@ -37,3 +37,41 @@ class TrainingEvidence(StrictModel):
     latest_checkpoint: TrainingCheckpointSummary | None = None
     validation_status: Literal["passed", "warning", "failed"]
     notes: list[str] = Field(default_factory=list)
+
+
+class DatasetEvidence(StrictModel):
+    """Normalized evidence that a LeRobot dataset was readable."""
+
+    schema_version: str = "1.0"
+    backend: str = "lerobot"
+    repo_id: str
+    root: str | None = None
+    split: str | None = None
+    sample_index: int | None = None
+    length: int | None = Field(default=None, ge=0)
+    fps: float | None = None
+    features: dict[str, object] = Field(default_factory=dict)
+    sample: dict[str, object] = Field(default_factory=dict)
+    metadata: dict[str, object] = Field(default_factory=dict)
+    allow_download: bool = False
+    validation_status: Literal["passed", "warning", "failed"]
+    notes: list[str] = Field(default_factory=list)
+
+
+class InferenceEvidence(StrictModel):
+    """Normalized evidence that a LeRobot policy produced an action."""
+
+    schema_version: str = "1.0"
+    backend: str = "lerobot"
+    policy_type: str
+    policy_class: str | None = None
+    policy_path: str
+    dataset_repo_id: str | None = None
+    dataset_root: str | None = None
+    sample_index: int | None = None
+    device: str
+    action: dict[str, object] = Field(default_factory=dict)
+    input_sample: dict[str, object] = Field(default_factory=dict)
+    latency_ms: float | None = None
+    validation_status: Literal["passed", "warning", "failed"]
+    notes: list[str] = Field(default_factory=list)
