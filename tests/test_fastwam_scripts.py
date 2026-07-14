@@ -54,5 +54,8 @@ def test_fastwam_release_download_script_tracks_public_artifacts() -> None:
     assert "libero_uncond_2cam224.pt" in runner
     assert "libero_uncond_2cam224_dataset_stats.json" in runner
     assert 'PYTHON_BIN="${PYTHON_BIN:-python3}"' in runner
+    assert 'HF_CLI_BIN="${HF_CLI_BIN:-}"' in runner
+    assert "HF_DOWNLOAD_CMD=(hf download)" in runner
+    assert '"${HF_DOWNLOAD_CMD[@]}" "$FASTWAM_RELEASE_REPO_ID"' in runner
     assert "artifact_manifests/fastwam_release_artifacts_manifest.json" in runner
     assert "download-fastwam-artifacts" in makefile

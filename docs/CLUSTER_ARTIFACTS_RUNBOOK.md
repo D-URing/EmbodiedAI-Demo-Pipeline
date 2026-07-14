@@ -51,7 +51,13 @@ bash scripts/lerobot/install_lerobot_cluster.sh
 如果只是预下载 Hugging Face 资产，至少需要：
 
 ```bash
-python -m pip install -U huggingface_hub hf_transfer
+python3 -m pip install -U huggingface_hub hf_transfer
+```
+
+下载脚本会自动寻找旧版 `huggingface-cli` 或新版 `hf`。如果集群把 `hf` 装在特殊位置，可以显式指定：
+
+```bash
+export HF_CLI_BIN=/usr/local/bin/hf
 ```
 
 ## 4. 下载 LeRobot PushT 数据
@@ -209,6 +215,7 @@ FASTWAM_RUN_DIR="runs/fastwam/<run_name>/<run_id>" make demo-chain-fastwam
 | `FASTWAM_RELEASE_REPO_ID` | `yuanty/fastwam` | FastWAM release repo |
 | `FASTWAM_RELEASE_FILES` | LIBERO 权重 + stats | 要下载的 FastWAM 文件 |
 | `PYTHON_BIN` | `python3` | 写 manifest 用的 Python，可改成 venv/conda 里的解释器 |
+| `HF_CLI_BIN` | 自动检测 | 可显式指定 `/path/to/hf` 或 `/path/to/huggingface-cli` |
 
 ## 10. 第一轮集群测试建议
 

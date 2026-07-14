@@ -11,9 +11,21 @@ FASTWAM_RELEASE_LOCAL_DIR="${FASTWAM_RELEASE_LOCAL_DIR:-$EMBODIED_MODEL_ROOT/fas
 FASTWAM_RELEASE_FILES="${FASTWAM_RELEASE_FILES:-libero_uncond_2cam224.pt libero_uncond_2cam224_dataset_stats.json}"
 HF_HUB_ENABLE_HF_TRANSFER="${HF_HUB_ENABLE_HF_TRANSFER:-1}"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
+HF_CLI_BIN="${HF_CLI_BIN:-}"
 
-if ! command -v huggingface-cli >/dev/null 2>&1; then
-  echo "huggingface-cli is required. Install with: python3 -m pip install -U huggingface_hub hf_transfer" >&2
+if [[ -n "$HF_CLI_BIN" ]]; then
+  if ! command -v "$HF_CLI_BIN" >/dev/null 2>&1; then
+    echo "HF_CLI_BIN=$HF_CLI_BIN is not executable or not on PATH." >&2
+    exit 127
+  fi
+  HF_DOWNLOAD_CMD=("$HF_CLI_BIN" download)
+elif command -v huggingface-cli >/dev/null 2>&1; then
+  HF_DOWNLOAD_CMD=(huggingface-cli download)
+elif command -v hf >/dev/null 2>&1; then
+  HF_DOWNLOAD_CMD=(hf download)
+else
+  echo "Hugging Face CLI is required. Install with: python3 -m pip install -U huggingface_hub hf_transfer" >&2
+  echo "Expected either 'huggingface-cli' or the newer 'hf' command on PATH." >&2
   exit 127
 fi
 
@@ -32,7 +44,7 @@ fi
 
 echo "[download] FastWAM release: $FASTWAM_RELEASE_REPO_ID -> $FASTWAM_RELEASE_LOCAL_DIR"
 HF_HUB_ENABLE_HF_TRANSFER="$HF_HUB_ENABLE_HF_TRANSFER" \
-  huggingface-cli download "$FASTWAM_RELEASE_REPO_ID" \
+  "${HF_DOWNLOAD_CMD[@]}" "$FASTWAM_RELEASE_REPO_ID" \
     "${release_files[@]}" \
     --local-dir "$FASTWAM_RELEASE_LOCAL_DIR"
 
