@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "backend": "lerobot",
+  "policy_type": "act",
+  "policy_class": "lerobot.policies.act.modeling_act.ACTPolicy",
+  "policy_path": "/models/lerobot/pusht_act/checkpoints/last/pretrained_model",
+  "dataset_repo_id": "lerobot/pusht",
+  "dataset_root": "/cache/lerobot/pusht",
+  "sample_index": 0,
+  "device": "cuda",
+  "action": {
+    "action": {"python_type": "Tensor", "shape": [1, 2], "dtype": "torch.float32"}
+  },
+  "input_sample": {
+    "observation.state": {"python_type": "Tensor", "shape": [2], "dtype": "torch.float32"}
+  },
+  "latency_ms": 4.2,
+  "validation_status": "passed",
+  "notes": []
+}

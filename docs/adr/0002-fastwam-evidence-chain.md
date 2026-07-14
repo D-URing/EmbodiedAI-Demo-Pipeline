@@ -4,6 +4,12 @@ Date: 2026-07-14
 
 Status: Accepted
 
+Superseded-in-part-by: [ADR-0003](0003-lerobot-first-fastwam-pipeline.md)
+
+Note: This ADR remains valid for the custom FastWAM overlay evidence path. ADR-0003
+reframes the first demo pipeline as LeRobot-first, with FastWAM preferred through
+the LeRobot-native policy path when possible.
+
 ## Context
 
 The project now has two different kinds of runnable evidence:

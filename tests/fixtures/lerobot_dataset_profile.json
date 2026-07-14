@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "backend": "lerobot",
+  "repo_id": "lerobot/pusht",
+  "root": "/cache/lerobot/pusht",
+  "split": null,
+  "sample_index": 0,
+  "length": 256,
+  "fps": 10,
+  "features": {
+    "observation.state": {"dtype": "float32", "shape": [2]},
+    "action": {"dtype": "float32", "shape": [2]}
+  },
+  "sample": {
+    "observation.state": {"python_type": "Tensor", "shape": [2], "dtype": "torch.float32"},
+    "action": {"python_type": "Tensor", "shape": [2], "dtype": "torch.float32"}
+  },
+  "metadata": {
+    "tasks": ["pusht"]
+  },
+  "allow_download": false,
+  "validation_status": "passed",
+  "notes": []
+}

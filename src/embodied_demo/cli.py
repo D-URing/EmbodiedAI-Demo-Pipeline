@@ -16,8 +16,10 @@ from embodied_demo.fastwam_report import generate_fastwam_report
 from embodied_demo.registry import iter_registered_tasks
 from embodied_demo.schemas import (
     ActionChunk,
+    DatasetEvidence,
     EpisodeResult,
     EvaluationManifest,
+    InferenceEvidence,
     Observation,
     RunSpec,
     TaskRegistry,
@@ -97,6 +99,8 @@ def _command_export_schema(args: argparse.Namespace) -> int:
         "evaluation_manifest.schema.json": EvaluationManifest,
         "task_registry.schema.json": TaskRegistry,
         "training_evidence.schema.json": TrainingEvidence,
+        "dataset_evidence.schema.json": DatasetEvidence,
+        "inference_evidence.schema.json": InferenceEvidence,
     }
     for filename, model in schemas.items():
         content = json.dumps(model.model_json_schema(), ensure_ascii=False, indent=2) + "\n"

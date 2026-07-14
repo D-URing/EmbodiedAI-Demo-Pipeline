@@ -1,11 +1,11 @@
 # LeRobot GPU Replication
 
-> 状态：cluster-ready scaffold<br>
-> 目标：在 CUDA 集群上复刻 LeRobot 的真实训练链路，而不是本仓库的 CPU toy trainer。
+> 状态：cluster-ready scaffold；正在升级为 LeRobot-first data-to-inference 主线<br>
+> 目标：在 CUDA 集群上复刻 LeRobot 的数据读取、训练/加载和推理链路，而不是本仓库的 CPU toy trainer。
 
 ## 结论
 
-当前 LeRobot 复刻入口是：
+当前已落地的 LeRobot 复刻入口是训练 smoke：
 
 ```bash
 bash scripts/lerobot/install_lerobot_cluster.sh
@@ -21,6 +21,16 @@ policy.device   = cuda
 ```
 
 如果没有 CUDA，脚本会失败；不会 fallback 到 CPU。
+
+新的主线目标见 [`LEROBOT_FIRST_PIPELINE.md`](LEROBOT_FIRST_PIPELINE.md)。下一步要补：
+
+```bash
+make lerobot-data-smoke
+make lerobot-infer-smoke
+make demo-chain-lerobot-fastwam
+```
+
+FastWAM 在新主线中优先走 LeRobot-native policy path；私有 `fastwam-realrobot-pipeline` 继续作为 custom overlay 保留。
 
 ## 集群安装
 
@@ -109,6 +119,7 @@ sbatch scripts/lerobot/slurm_pusht_act_gpu_smoke.sbatch
 - 这不是本仓库自写 softmax/BC toy trainer；
 - 这不是家庭任务最终模型；
 - 这是 LeRobot 官方数据格式、官方 policy 入口、官方训练 CLI 的 GPU smoke；
+- 它只是 LeRobot-first 主线的一段，还需要 dataset inspection 与 offline inference smoke 才算 data-to-inference 闭环；
 - 第一次成功标准是能下载/加载 LeRobot dataset、启动 ACT policy、记录真实 training loss、保存 LeRobot checkpoint。
 
 ## 官方依据

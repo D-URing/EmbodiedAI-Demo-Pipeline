@@ -1,10 +1,15 @@
 # FastWAM 真机训练/评测后端集成方案
 
-本文把 `D-URing/fastwam-realrobot-pipeline` 纳入当前 demo pipeline，定位是：外部 CUDA policy/training backend。本仓库不复制 FastWAM 大模型代码、不下载权重、不把 CUDA 依赖塞进 core 环境；它只负责稳定入口、配置开关、日志解析和结果归档。
+本文把 `D-URing/fastwam-realrobot-pipeline` 纳入当前 demo pipeline，定位是：**custom FastWAM / realrobot overlay**。项目主线已经调整为 LeRobot-first；FastWAM 分成两条路径：
+
+- **LeRobot-native FastWAM**：优先路径，通过 LeRobot 的 FastWAM policy 接入 data-to-inference 主线；
+- **Custom FastWAM overlay**：本文描述的内部扩展路径，用于私有真机数据、7D/10D recipe、集群训练和未来自建模型。
+
+本仓库不复制 FastWAM 大模型代码、不下载权重、不把 CUDA 依赖塞进 core 环境；它只负责稳定入口、配置开关、日志解析和结果归档。
 
 ## 1. 集成目标
 
-第一阶段目标不是“训练最强家庭机器人模型”，而是打通一条真实可训练链路：
+本文这条 overlay 路径的第一阶段目标不是“训练最强家庭机器人模型”，而是保留一条真实可训练、可扩展的内部模型链路：
 
 ```text
 demo pipeline config
@@ -21,18 +26,25 @@ demo pipeline config
 - FastWAM 私有仓库作为 overlay，不 vendor 到本仓库；
 - 第一版只做 headless 训练/离线评测，Viewer 和真机闭环靠后。
 
-## 2. 后端选择
+## 2. 双路径定位
 
-当前推荐把 FastWAM 后端作为 R3 训练评测基准：
+当前推荐把 FastWAM 拆成两条路径：
+
+| 路径 | 当前选择 | 作用 |
+|---|---|---|
+| LeRobot-native | LeRobot `policy.type=fastwam` | 第一 demo 主线，优先跑 dataset read → train/load → inference |
+| Custom overlay | `D-URing/fastwam-realrobot-pipeline` | 私有 realrobot 数据、内部 recipe、未来自建模型 |
+
+本文后续只描述 custom overlay：
 
 | 层级 | 当前选择 | 作用 |
 |---|---|---|
 | 上游模型基座 | `yuantianyuan01/FastWAM` | 官方 Fast-WAM 训练/推理代码基座 |
 | 内部 overlay | `D-URing/fastwam-realrobot-pipeline` | 真机 LeRobot v3 数据读取、7D/10D 配置、训练脚本、离线 probe |
-| demo pipeline | 本仓库 `scripts/fastwam/*` | 环境准备、统一启动、日志解析、结果归档 |
+| demo pipeline | 本仓库 `scripts/fastwam/*` | custom overlay 的环境准备、统一启动、日志解析、结果归档 |
 | 后续评测思想 | RoboDojo-style staged evaluation | 分阶段、partial progress、失败分类，不急着接完整 simulator |
 
-私有 overlay 已验证过真实八卡 smoke：`step=1/1 loss=1.4862 loss_action=1.1472 loss_video=0.3390`，并能落盘 weights/state checkpoint。这个事实让它比从零搭一个训练 demo 更适合作为第一条可交差路线。
+私有 overlay 已验证过真实八卡 smoke：`step=1/1 loss=1.4862 loss_action=1.1472 loss_video=0.3390`，并能落盘 weights/state checkpoint。这个事实让它适合作为 custom backend 和未来自建模型路线，而不是被 LeRobot-native 主线替代。
 
 ## 3. 环境准备
 
