@@ -106,7 +106,7 @@ make download-lerobot-artifacts
 make download-fastwam-artifacts
 ```
 
-集群路径、Hugging Face cache、policy checkpoint 和 FastWAM release 的完整命令见 [`docs/CLUSTER_ARTIFACTS_RUNBOOK.md`](docs/CLUSTER_ARTIFACTS_RUNBOOK.md)。
+在 SCUT 集群上，下载脚本会优先使用 `/home/scut/hfd.sh` + `hf-mirror.com` + `aria2c`，比 `hf download` 更适合大权重。集群路径、Hugging Face cache、policy checkpoint 和 FastWAM release 的完整命令见 [`docs/CLUSTER_ARTIFACTS_RUNBOOK.md`](docs/CLUSTER_ARTIFACTS_RUNBOOK.md)。
 
 在 CUDA 集群上接入你已有的 FastWAM 真机训练/评测 pipeline：
 

@@ -15,20 +15,34 @@ FASTWAM_RELEASE_FILES="${FASTWAM_RELEASE_FILES:-libero_uncond_2cam224.pt libero_
 HF_HUB_ENABLE_HF_TRANSFER="${HF_HUB_ENABLE_HF_TRANSFER:-1}"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 HF_CLI_BIN="${HF_CLI_BIN:-}"
+HFD_BIN_WAS_SET="${HFD_BIN+x}"
+HFD_BIN="${HFD_BIN:-/home/scut/hfd.sh}"
+HFD_THREADS="${HFD_THREADS:-10}"
+HFD_JOBS="${HFD_JOBS:-2}"
+HFD_TOOL="${HFD_TOOL:-aria2c}"
 
-if [[ -n "$HF_CLI_BIN" ]]; then
+if [[ -f "$HFD_BIN" ]]; then
+  DOWNLOADER_KIND="hfd"
+  HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
+elif [[ -n "$HFD_BIN_WAS_SET" ]]; then
+  echo "HFD_BIN=$HFD_BIN does not exist. Unset HFD_BIN to fall back to hf/huggingface-cli." >&2
+  exit 127
+elif [[ -n "$HF_CLI_BIN" ]]; then
   if ! command -v "$HF_CLI_BIN" >/dev/null 2>&1; then
     echo "HF_CLI_BIN=$HF_CLI_BIN is not executable or not on PATH." >&2
     exit 127
   fi
+  DOWNLOADER_KIND="hf_cli"
   HF_DOWNLOAD_CMD=("$HF_CLI_BIN" download)
 elif command -v huggingface-cli >/dev/null 2>&1; then
+  DOWNLOADER_KIND="hf_cli"
   HF_DOWNLOAD_CMD=(huggingface-cli download)
 elif command -v hf >/dev/null 2>&1; then
+  DOWNLOADER_KIND="hf_cli"
   HF_DOWNLOAD_CMD=(hf download)
 else
-  echo "Hugging Face CLI is required. Install with: python3 -m pip install -U huggingface_hub hf_transfer" >&2
-  echo "Expected either 'huggingface-cli' or the newer 'hf' command on PATH." >&2
+  echo "A Hugging Face downloader is required." >&2
+  echo "Expected /home/scut/hfd.sh, HFD_BIN=/path/to/hfd.sh, 'huggingface-cli', or the newer 'hf' command on PATH." >&2
   exit 127
 fi
 
@@ -76,17 +90,39 @@ echo "[artifact] repo=$FASTWAM_RELEASE_REPO_ID"
 echo "[artifact] files=${release_files[*]}"
 echo "[artifact] local_dir=$FASTWAM_RELEASE_LOCAL_DIR"
 echo "[artifact] manifest=$MANIFEST_PATH"
-echo "[artifact] hf_cli=${HF_DOWNLOAD_CMD[*]}"
+if [[ "$DOWNLOADER_KIND" == "hfd" ]]; then
+  echo "[artifact] downloader=hfd"
+  echo "[artifact] hfd_bin=$HFD_BIN"
+  echo "[artifact] hfd_tool=$HFD_TOOL"
+  echo "[artifact] hfd_threads=$HFD_THREADS"
+  echo "[artifact] hfd_jobs=$HFD_JOBS"
+else
+  echo "[artifact] downloader=hf_cli"
+  echo "[artifact] hf_cli=${HF_DOWNLOAD_CMD[*]}"
+fi
 echo "[artifact] hf_endpoint=${HF_ENDPOINT:-https://huggingface.co}"
 echo "[artifact] hf_home=$HF_HOME"
 echo "[artifact] hf_hub_cache=$HUGGINGFACE_HUB_CACHE"
 echo "[download] FastWAM release: $FASTWAM_RELEASE_REPO_ID -> $FASTWAM_RELEASE_LOCAL_DIR"
-if ! HF_HUB_ENABLE_HF_TRANSFER="$HF_HUB_ENABLE_HF_TRANSFER" \
-  "${HF_DOWNLOAD_CMD[@]}" "$FASTWAM_RELEASE_REPO_ID" \
-    "${release_files[@]}" \
-    --local-dir "$FASTWAM_RELEASE_LOCAL_DIR"; then
-  print_download_failure_help
-  exit 1
+if [[ "$DOWNLOADER_KIND" == "hfd" ]]; then
+  if ! HF_ENDPOINT="$HF_ENDPOINT" \
+    bash "$HFD_BIN" "$FASTWAM_RELEASE_REPO_ID" \
+      --include "${release_files[@]}" \
+      --local-dir "$FASTWAM_RELEASE_LOCAL_DIR" \
+      --tool "$HFD_TOOL" \
+      -x "$HFD_THREADS" \
+      -j "$HFD_JOBS"; then
+    print_download_failure_help
+    exit 1
+  fi
+else
+  if ! HF_HUB_ENABLE_HF_TRANSFER="$HF_HUB_ENABLE_HF_TRANSFER" \
+    "${HF_DOWNLOAD_CMD[@]}" "$FASTWAM_RELEASE_REPO_ID" \
+      "${release_files[@]}" \
+      --local-dir "$FASTWAM_RELEASE_LOCAL_DIR"; then
+    print_download_failure_help
+    exit 1
+  fi
 fi
 
 FASTWAM_RELEASE_REPO_ID="$FASTWAM_RELEASE_REPO_ID" \

@@ -24,20 +24,34 @@ DOWNLOAD_LEROBOT_POLICY="${DOWNLOAD_LEROBOT_POLICY:-0}"
 HF_HUB_ENABLE_HF_TRANSFER="${HF_HUB_ENABLE_HF_TRANSFER:-1}"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 HF_CLI_BIN="${HF_CLI_BIN:-}"
+HFD_BIN_WAS_SET="${HFD_BIN+x}"
+HFD_BIN="${HFD_BIN:-/home/scut/hfd.sh}"
+HFD_THREADS="${HFD_THREADS:-10}"
+HFD_JOBS="${HFD_JOBS:-4}"
+HFD_TOOL="${HFD_TOOL:-aria2c}"
 
-if [[ -n "$HF_CLI_BIN" ]]; then
+if [[ -f "$HFD_BIN" ]]; then
+  DOWNLOADER_KIND="hfd"
+  HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
+elif [[ -n "$HFD_BIN_WAS_SET" ]]; then
+  echo "HFD_BIN=$HFD_BIN does not exist. Unset HFD_BIN to fall back to hf/huggingface-cli." >&2
+  exit 127
+elif [[ -n "$HF_CLI_BIN" ]]; then
   if ! command -v "$HF_CLI_BIN" >/dev/null 2>&1; then
     echo "HF_CLI_BIN=$HF_CLI_BIN is not executable or not on PATH." >&2
     exit 127
   fi
+  DOWNLOADER_KIND="hf_cli"
   HF_DOWNLOAD_CMD=("$HF_CLI_BIN" download)
 elif command -v huggingface-cli >/dev/null 2>&1; then
+  DOWNLOADER_KIND="hf_cli"
   HF_DOWNLOAD_CMD=(huggingface-cli download)
 elif command -v hf >/dev/null 2>&1; then
+  DOWNLOADER_KIND="hf_cli"
   HF_DOWNLOAD_CMD=(hf download)
 else
-  echo "Hugging Face CLI is required. Install with: python3 -m pip install -U huggingface_hub hf_transfer" >&2
-  echo "Expected either 'huggingface-cli' or the newer 'hf' command on PATH." >&2
+  echo "A Hugging Face downloader is required." >&2
+  echo "Expected /home/scut/hfd.sh, HFD_BIN=/path/to/hfd.sh, 'huggingface-cli', or the newer 'hf' command on PATH." >&2
   exit 127
 fi
 
@@ -85,19 +99,41 @@ echo "[artifact] dataset_local_dir=$LEROBOT_DATASET_LOCAL_DIR"
 echo "[artifact] policy_repo=${LEROBOT_POLICY_REPO_ID:-<none>}"
 echo "[artifact] policy_local_dir=$LEROBOT_POLICY_LOCAL_DIR"
 echo "[artifact] manifest=$MANIFEST_PATH"
-echo "[artifact] hf_cli=${HF_DOWNLOAD_CMD[*]}"
+if [[ "$DOWNLOADER_KIND" == "hfd" ]]; then
+  echo "[artifact] downloader=hfd"
+  echo "[artifact] hfd_bin=$HFD_BIN"
+  echo "[artifact] hfd_tool=$HFD_TOOL"
+  echo "[artifact] hfd_threads=$HFD_THREADS"
+  echo "[artifact] hfd_jobs=$HFD_JOBS"
+else
+  echo "[artifact] downloader=hf_cli"
+  echo "[artifact] hf_cli=${HF_DOWNLOAD_CMD[*]}"
+fi
 echo "[artifact] hf_endpoint=${HF_ENDPOINT:-https://huggingface.co}"
 echo "[artifact] hf_home=$HF_HOME"
 echo "[artifact] hf_hub_cache=$HUGGINGFACE_HUB_CACHE"
 
 if [[ "$DOWNLOAD_LEROBOT_DATASET" == "1" ]]; then
   echo "[download] LeRobot dataset: $LEROBOT_DATASET_REPO_ID -> $LEROBOT_DATASET_LOCAL_DIR"
-  if ! HF_HUB_ENABLE_HF_TRANSFER="$HF_HUB_ENABLE_HF_TRANSFER" \
-    "${HF_DOWNLOAD_CMD[@]}" "$LEROBOT_DATASET_REPO_ID" \
-      --repo-type dataset \
-      --local-dir "$LEROBOT_DATASET_LOCAL_DIR"; then
-    print_download_failure_help "$LEROBOT_DATASET_REPO_ID" "$LEROBOT_DATASET_LOCAL_DIR"
-    exit 1
+  if [[ "$DOWNLOADER_KIND" == "hfd" ]]; then
+    if ! HF_ENDPOINT="$HF_ENDPOINT" \
+      bash "$HFD_BIN" "$LEROBOT_DATASET_REPO_ID" \
+        --dataset \
+        --local-dir "$LEROBOT_DATASET_LOCAL_DIR" \
+        --tool "$HFD_TOOL" \
+        -x "$HFD_THREADS" \
+        -j "$HFD_JOBS"; then
+      print_download_failure_help "$LEROBOT_DATASET_REPO_ID" "$LEROBOT_DATASET_LOCAL_DIR"
+      exit 1
+    fi
+  else
+    if ! HF_HUB_ENABLE_HF_TRANSFER="$HF_HUB_ENABLE_HF_TRANSFER" \
+      "${HF_DOWNLOAD_CMD[@]}" "$LEROBOT_DATASET_REPO_ID" \
+        --repo-type dataset \
+        --local-dir "$LEROBOT_DATASET_LOCAL_DIR"; then
+      print_download_failure_help "$LEROBOT_DATASET_REPO_ID" "$LEROBOT_DATASET_LOCAL_DIR"
+      exit 1
+    fi
   fi
   dataset_downloaded=true
 else
@@ -113,11 +149,23 @@ if [[ "$DOWNLOAD_LEROBOT_POLICY" == "1" ]]; then
 
   mkdir -p "$LEROBOT_POLICY_LOCAL_DIR"
   echo "[download] LeRobot policy: $LEROBOT_POLICY_REPO_ID -> $LEROBOT_POLICY_LOCAL_DIR"
-  if ! HF_HUB_ENABLE_HF_TRANSFER="$HF_HUB_ENABLE_HF_TRANSFER" \
-    "${HF_DOWNLOAD_CMD[@]}" "$LEROBOT_POLICY_REPO_ID" \
-      --local-dir "$LEROBOT_POLICY_LOCAL_DIR"; then
-    print_download_failure_help "$LEROBOT_POLICY_REPO_ID" "$LEROBOT_POLICY_LOCAL_DIR"
-    exit 1
+  if [[ "$DOWNLOADER_KIND" == "hfd" ]]; then
+    if ! HF_ENDPOINT="$HF_ENDPOINT" \
+      bash "$HFD_BIN" "$LEROBOT_POLICY_REPO_ID" \
+        --local-dir "$LEROBOT_POLICY_LOCAL_DIR" \
+        --tool "$HFD_TOOL" \
+        -x "$HFD_THREADS" \
+        -j "$HFD_JOBS"; then
+      print_download_failure_help "$LEROBOT_POLICY_REPO_ID" "$LEROBOT_POLICY_LOCAL_DIR"
+      exit 1
+    fi
+  else
+    if ! HF_HUB_ENABLE_HF_TRANSFER="$HF_HUB_ENABLE_HF_TRANSFER" \
+      "${HF_DOWNLOAD_CMD[@]}" "$LEROBOT_POLICY_REPO_ID" \
+        --local-dir "$LEROBOT_POLICY_LOCAL_DIR"; then
+      print_download_failure_help "$LEROBOT_POLICY_REPO_ID" "$LEROBOT_POLICY_LOCAL_DIR"
+      exit 1
+    fi
   fi
   policy_downloaded=true
 else

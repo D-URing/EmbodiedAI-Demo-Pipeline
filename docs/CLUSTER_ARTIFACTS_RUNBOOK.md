@@ -63,17 +63,28 @@ $PROJECT_ROOT/
 bash scripts/lerobot/install_lerobot_cluster.sh
 ```
 
-如果只是预下载 Hugging Face 资产，至少需要：
+管理节点已确认存在 `/home/scut/hfd.sh`，并且 `hf-mirror.com + aria2c` 明显快于 `hf download`。下载脚本会优先使用：
+
+```bash
+/home/scut/hfd.sh
+```
+
+默认参数：
+
+```text
+HF_ENDPOINT=https://hf-mirror.com
+HFD_THREADS=10
+HFD_JOBS=2   # FastWAM release
+HFD_JOBS=4   # LeRobot dataset/policy
+```
+
+如果某台机器没有 `/home/scut/hfd.sh`，脚本才会回退到旧版 `huggingface-cli` 或新版 `hf`。此时至少需要：
 
 ```bash
 python3 -m pip install -U huggingface_hub hf_transfer
 ```
 
-下载脚本会自动寻找旧版 `huggingface-cli` 或新版 `hf`。如果集群把 `hf` 装在特殊位置，可以显式指定：
-
-```bash
-export HF_CLI_BIN=/usr/local/bin/hf
-```
+如果 hfd 脚本在别的位置，可以显式指定：`export HFD_BIN=/path/to/hfd.sh`。
 
 ## 4. 下载 LeRobot PushT 数据
 
@@ -162,6 +173,17 @@ make lerobot-infer-smoke
 make download-fastwam-artifacts
 ```
 
+在 SCUT 管理节点上，脚本会自动等价于：
+
+```bash
+HF_ENDPOINT=https://hf-mirror.com \
+bash /home/scut/hfd.sh yuanty/fastwam \
+  --include libero_uncond_2cam224.pt libero_uncond_2cam224_dataset_stats.json \
+  --local-dir "$EMBODIED_MODEL_ROOT/fastwam_release" \
+  --tool aria2c \
+  -x 10 -j 2
+```
+
 默认下载：
 
 ```text
@@ -212,12 +234,13 @@ Network is unreachable
 LocalEntryNotFoundError
 ```
 
-说明当前节点不能访问 Hugging Face，且项目内 `hf_cache/` 里也没有对应 snapshot。先检查：
+说明当前节点不能访问所选 Hugging Face endpoint，或者 hfd/hf fallback 没有找到可用路径。先检查：
 
 ```bash
-which hf || which huggingface-cli
-curl -I "${HF_ENDPOINT:-https://huggingface.co}"
-env | grep -E '^(HTTP_PROXY|HTTPS_PROXY|ALL_PROXY|HF_ENDPOINT)='
+test -f /home/scut/hfd.sh && echo "hfd.sh OK"
+command -v aria2c
+curl -I "${HF_ENDPOINT:-https://hf-mirror.com}"
+env | grep -E '^(HTTP_PROXY|HTTPS_PROXY|ALL_PROXY|HF_ENDPOINT|HFD_BIN)='
 ```
 
 常见处理方式：
@@ -227,11 +250,11 @@ env | grep -E '^(HTTP_PROXY|HTTPS_PROXY|ALL_PROXY|HF_ENDPOINT)='
 export HTTPS_PROXY=http://<proxy-host>:<proxy-port>
 export HTTP_PROXY=http://<proxy-host>:<proxy-port>
 
-# 方式二：集群提供 Hugging Face mirror
-export HF_ENDPOINT=https://<your-hf-mirror>
+# 方式二：显式使用已验证的 mirror
+export HF_ENDPOINT=https://hf-mirror.com
 
-# 方式三：显式指定新版 hf CLI
-export HF_CLI_BIN=/usr/local/bin/hf
+# 方式三：显式指定 hfd 位置
+export HFD_BIN=/home/scut/hfd.sh
 ```
 
 如果集群完全没有外网，就在有外网的机器下载后，把以下文件拷贝到 `$EMBODIED_MODEL_ROOT/fastwam_release/`：
@@ -282,7 +305,12 @@ FASTWAM_RUN_DIR="runs/fastwam/<run_name>/<run_id>" make demo-chain-fastwam
 | `FASTWAM_RELEASE_REPO_ID` | `yuanty/fastwam` | FastWAM release repo |
 | `FASTWAM_RELEASE_FILES` | LIBERO 权重 + stats | 要下载的 FastWAM 文件 |
 | `PYTHON_BIN` | `python3` | 写 manifest 用的 Python，可改成 venv/conda 里的解释器 |
-| `HF_CLI_BIN` | 自动检测 | 可显式指定 `/path/to/hf` 或 `/path/to/huggingface-cli` |
+| `HFD_BIN` | `/home/scut/hfd.sh` | SCUT 集群推荐下载器，存在时优先使用 |
+| `HFD_THREADS` | `10` | hfd/aria2c 单文件线程数 |
+| `HFD_JOBS` | FastWAM `2`，LeRobot `4` | hfd 并发文件数 |
+| `HFD_TOOL` | `aria2c` | hfd 后端下载工具 |
+| `HF_ENDPOINT` | hfd 时默认 `https://hf-mirror.com` | Hugging Face endpoint / mirror |
+| `HF_CLI_BIN` | 自动检测 | fallback 时可显式指定 `/path/to/hf` 或 `/path/to/huggingface-cli` |
 
 ## 11. 第一轮集群测试建议
 
