@@ -1,0 +1,55 @@
+schema_version: "1.0"
+chain_id: lerobot_fastwam_data_to_inference_v0
+name: LeRobot FastWAM Data-to-Inference Chain v0
+status: planned
+purpose: >
+  Make LeRobot the primary demo-pipeline reference: read LeRobot data, train or
+  load a LeRobot policy, run offline inference, and normalize the evidence into
+  reports. FastWAM is treated as the first priority policy path, while the
+  internal FastWAM overlay remains available for custom real-robot extensions.
+
+stages:
+  - id: dataset_inspection
+    command: make lerobot-data-smoke
+    required: true
+    evidence:
+      - dataset_profile.json
+      - feature names and shapes
+      - fps and task metadata
+      - observation/action keys
+
+  - id: train_or_load_policy
+    command: make lerobot-train-smoke or make lerobot-fastwam-train-smoke
+    required: true
+    evidence:
+      - training_evidence.json or checkpoint_summary.json
+      - checkpoint path
+      - LeRobot output directory
+      - policy type and device
+
+  - id: offline_inference
+    command: make lerobot-infer-smoke
+    required: true
+    evidence:
+      - inference_evidence.json
+      - action shape, dtype, device, latency
+      - input batch metadata
+
+  - id: evidence_report
+    command: embodied-demo report-lerobot --run-dir <runs/lerobot/...>
+    required: true
+    evidence:
+      - report.md
+      - handoff.md
+
+acceptance:
+  minimum:
+    - dataset profile is generated from a real LeRobot dataset
+    - policy type and checkpoint/source are recorded
+    - inference produces at least one action tensor or action chunk
+    - report states offline data-to-inference boundary clearly
+  boundary:
+    - no claim of simulator benchmark completion
+    - no claim of real-robot closed-loop success
+    - no CPU toy trainer fallback
+    - custom FastWAM overlay is retained as an extension path

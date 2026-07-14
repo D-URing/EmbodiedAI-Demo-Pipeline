@@ -2,17 +2,17 @@
 
 面向家庭与生活服务场景的具身智能 Demo 工程基座。项目采用 **contract-first、headless-first、evaluation-first、backend-switchable** 的路线：先稳定任务、观测、动作、运行和评测契约，再逐步接入 mock、离线回放、NVIDIA 仿真集群、VLA 和真实机器人。
 
-当前不以训练大模型、同时适配多个仿真器、搭建复杂可视化或立即接真机为目标。第一次看项目建议先读 [`docs/00_PROJECT_OVERVIEW.md`](docs/00_PROJECT_OVERVIEW.md) 和 [`docs/01_ARCHITECTURE.md`](docs/01_ARCHITECTURE.md)。完整规划与优先级见 [`docs/MASTER_PLAN.md`](docs/MASTER_PLAN.md)，demo 覆盖路线见 [`docs/DEMO_COVERAGE_ROADMAP.md`](docs/DEMO_COVERAGE_ROADMAP.md)，实际落地状态见 [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md)。
+当前不以训练大模型、同时适配多个仿真器、搭建复杂可视化或立即接真机为目标。第一主线是 **LeRobot-first data-to-inference pipeline**：从 LeRobot 数据读取，到 policy 训练/加载，再到离线推理和证据报告。第一次看项目建议先读 [`docs/00_PROJECT_OVERVIEW.md`](docs/00_PROJECT_OVERVIEW.md)、[`docs/LEROBOT_FIRST_PIPELINE.md`](docs/LEROBOT_FIRST_PIPELINE.md) 和 [`docs/01_ARCHITECTURE.md`](docs/01_ARCHITECTURE.md)。
 
 ## 如何理解这个项目
 
-项目分三条证据线，不混报：
+项目现在按“一条主干 + 两个扩展层”理解：
 
-| 证据线 | 回答的问题 | 当前状态 |
+| 层级 | 回答的问题 | 当前状态 |
 |---|---|---|
-| Household mock demo | 家庭任务 pipeline 能不能跑通？ | 4 个 R1 mock demo |
-| Training evidence | 真实训练链路和 loss 证据有没有？ | LeRobot / FastWAM CUDA 入口 |
-| Future capability | 仿真/真机是否真的完成任务？ | 后续接 RoboDojo / RoboCasa / RoboTwin / real |
+| LeRobot 主干 | 数据读取到 policy 推理是否打通？ | 已有训练 smoke，下一步补 data/inference smoke |
+| Custom backend 扩展 | 私有 FastWAM、自建模型和特殊 recipe 如何保留？ | FastWAM overlay 已接入 |
+| Household 应用层 | 家庭任务如何展示、评测和后续接仿真/真机？ | 4 个 R1 mock demo |
 
 ## 当前状态
 
@@ -20,13 +20,13 @@
 - Python：3.11+
 - 已实现：严格 schema、YAML 显式组合、四项任务定义、运行配置、CLI 校验/dry-run、JSON Schema 导出、单元测试
 - 已预留：mock/replay/sim/real 模式，local/Slurm launcher，inproc/WebSocket policy transport，CPU/GPU 资源声明
-- 已固化：XPolicyLab `demo_policy`/debug flow 作为复刻基准，RoboDojo 作为后续外部仿真评测目标，LeRobot 作为后续数据/训练格式参考
+- 已固化：LeRobot-first 作为第一 demo 管线基准；FastWAM 是 LeRobot-native policy 路径和 custom overlay 双路径；RoboDojo 作为后续外部仿真评测目标
 - 当前可运行：`embodied-demo run --config configs/runs/tabletop_sorting_mock.yaml` 可生成第一版 mock demo artifacts
-- 当前 LeRobot 复刻：`make lerobot-train-smoke` 在 CUDA 集群上调用真实 `lerobot-train` 训练 ACT/PushT smoke
-- 当前 FastWAM 集成：`make fastwam-train-smoke` 在 CUDA/FastWAM 环境中调用真实 FastWAM/DeepSpeed 训练入口；`pilot` 模式可生成 loss 下降报告
+- 当前 LeRobot 复刻：`make lerobot-train-smoke` 在 CUDA 集群上调用真实 `lerobot-train`；下一步补 `lerobot-data-smoke` 和 `lerobot-infer-smoke`
+- 当前 FastWAM 集成：官方 LeRobot-native FastWAM 作为优先 policy 路径；私有 FastWAM overlay 作为自建模型/真机数据扩展路径
 - 当前 Demo Chain：`embodied-demo report-fastwam --run-dir <runs/fastwam/...>` 可把 FastWAM 训练产物归一化成 demo 交付报告
-- 当前规划格局：家庭任务 R0/R1 demo 与真实训练 R2 evidence 并行推进，不能把 mock 成功、loss 下降和仿真/真机能力混报
-- 下一里程碑：补 `laundry_sorting_v1` / `trash_sorting_v1` 等 R0/R1 任务规格，抽象通用 mock primitives，并在 NVIDIA 集群复跑 FastWAM `pilot`
+- 当前规划格局：LeRobot data-to-inference 是主线；household mock 是应用层；私有 FastWAM overlay 是 custom backend 扩展
+- 下一里程碑：实现 `lerobot-data-smoke`、`lerobot-infer-smoke` 和 LeRobot/FastWAM demo-chain report
 - 暂缓：Viewer、真实 simulator adapter、重量级模型、大数据下载、多节点运行、真机闭环
 
 ## 快速开始
@@ -140,6 +140,7 @@ make reference-fetch
 │   ├── ENVIRONMENT.md            # macOS/Linux/NVIDIA 集群环境配置
 │   ├── 00_PROJECT_OVERVIEW.md    # 新同事/汇报入口
 │   ├── 01_ARCHITECTURE.md        # Pipeline 分层与代码结构
+│   ├── LEROBOT_FIRST_PIPELINE.md # LeRobot-first 主线
 │   ├── DEMO_COVERAGE_ROADMAP.md  # demo 覆盖矩阵与 readiness 分级
 │   ├── FASTWAM_REALROBOT_INTEGRATION.md
 │   └── MASTER_PLAN.md            # 项目范围、架构、资源映射与路线图

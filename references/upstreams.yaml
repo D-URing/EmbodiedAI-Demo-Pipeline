@@ -78,8 +78,12 @@ sources:
       - remote_submission_as_current_requirement
 
   lerobot:
-    role: gpu_training_replication_target
+    role: primary_data_to_inference_pipeline_reference
     repository: https://github.com/huggingface/lerobot
+    documentation:
+      - https://huggingface.co/docs/lerobot/en/index
+      - https://huggingface.co/docs/lerobot/fastwam
+      - https://huggingface.co/docs/lerobot/lerobot-dataset-v3
     default_branch: main
     pinned_commit: e40b58a8dfa9e7b86918c374791599d070518d11
     pinned_commit_date_utc: "2026-07-08T11:25:54Z"
@@ -93,8 +97,11 @@ sources:
       - src/lerobot/configs/train.py
       - examples/training/train_policy.py
     in_scope:
+      - primary_dataset_to_policy_to_inference_pipeline
       - trajectory_dataset_format_reference
       - real_lerobot_train_cli
+      - lerobot_policy_api_reference
+      - fastwam_policy_type_reference
       - gpu_required_training_smoke
       - act_policy_on_pusht_dataset
       - train_log_checkpoint_artifact_flow
@@ -105,7 +112,7 @@ sources:
       - requiring_lerobot_in_core_python_environment
 
   fastwam:
-    role: world_action_model_backend_reference
+    role: world_action_model_policy_reference_and_custom_backend_base
     repository: https://github.com/yuantianyuan01/FastWAM
     default_branch: main
     pinned_commit: 45d8e1458921d83f8ad6cf9ce993d371208dabd0
@@ -120,6 +127,7 @@ sources:
       - scripts/preprocess_action_dit_backbone.py
       - src/fastwam/
     in_scope:
+      - lerobot_native_fastwam_policy_reference
       - world_action_model_training_backend
       - released_checkpoint_finetuning
       - wan22_video_expert_action_expert_recipe
@@ -130,7 +138,7 @@ sources:
       - claiming_household_demo_task_success_from_base_fastwam_alone
 
   fastwam_realrobot_pipeline:
-    role: internal_realrobot_training_eval_overlay
+    role: internal_custom_fastwam_realrobot_overlay
     repository: https://github.com/D-URing/fastwam-realrobot-pipeline.git
     private: true
     default_branch: main
@@ -155,6 +163,8 @@ sources:
       - src/fastwam/runtime.py
       - src/fastwam/datasets/lerobot/
     in_scope:
+      - custom_backend_extension_path
+      - future_self_built_model_development_path
       - private_overlay_workflow
       - realrobot_lerobot_v3_data_loading
       - seven_d_joint_and_ten_d_pose_training_configs

@@ -15,16 +15,17 @@ RunConfig
   -> Events / Result / Metrics / Manifest / Report
 ```
 
-训练证据链是旁路输入，不进入 mock/sim/real 控制闭环：
+LeRobot-first 训练/推理链路是当前主干：
 
 ```text
-External Training Run
-  -> stdout / loss summary / checkpoint path / backend manifest
-  -> TrainingEvidence
+LeRobotDataset
+  -> LeRobot policy train/load
+  -> offline inference
+  -> TrainingEvidence + InferenceEvidence
   -> Report / Handoff
 ```
 
-这就是现在最容易混淆的地方：household demo 走 rollout；FastWAM 走 training evidence importer。两者共用 evidence/report 思想，但不是同一个能力声明。
+私有 FastWAM overlay 是 custom backend extension，不进入 core `.venv`，也不替代 LeRobot-native 主线。household mock demo 走 rollout，用于应用层任务展示和后续评测，不作为 LeRobot data-to-inference 的第一验收。
 
 ## 2. 分层职责
 
@@ -37,7 +38,7 @@ External Training Run
 | Environment Layer | mock/replay/sim/real 后端状态推进 | `src/embodied_demo/environments/` |
 | Rollout Layer | reset/observe/action/step/log/finalize 主循环 | `src/embodied_demo/rollout/` |
 | Evidence Layer | result、metrics、manifest、report、handoff | `rollout/` 与 `fastwam_report.py` |
-| Integration Layer | 外部训练/评测生态接入 | `scripts/lerobot/`、`scripts/fastwam/`、`references/` |
+| Integration Layer | LeRobot-native、custom backend、外部评测生态接入 | `scripts/lerobot/`、`scripts/fastwam/`、`references/` |
 
 ## 3. 当前代码结构
 
@@ -87,9 +88,18 @@ report.md
 
 这些产物用于证明 pipeline 和 evaluator wiring，不用于声明真机成功率。
 
-## 5. FastWAM training evidence 的执行路径
+## 5. LeRobot / FastWAM training evidence 的执行路径
 
-FastWAM 不进入 `MockEnvironment`，它是外部训练后端：
+LeRobot-native 路径是第一优先级：
+
+```text
+scripts/lerobot/inspect_dataset.py              # planned
+  -> scripts/lerobot/run_*_train*.sh
+  -> scripts/lerobot/run_policy_inference_smoke.py   # planned
+  -> embodied-demo report-lerobot                    # planned
+```
+
+私有 FastWAM overlay 是 custom extension：
 
 ```text
 scripts/fastwam/prepare_fastwam_overlay.sh
@@ -99,12 +109,13 @@ scripts/fastwam/prepare_fastwam_overlay.sh
   -> training_evidence.json / report.md / handoff.md
 ```
 
-这个路径用于证明：
+这两个路径共同用于证明：
 
-- 是否调用真实 CUDA/DeepSpeed 训练；
+- 是否调用真实 LeRobot/FastWAM CUDA 训练或 checkpoint 加载；
 - loss 是否下降；
-- checkpoint 路径是否记录；
-- 使用了哪个官方 FastWAM commit 和私有 overlay commit。
+- policy inference 是否产生 action；
+- checkpoint、dataset、policy type 和版本是否记录；
+- 使用的是 LeRobot-native FastWAM 还是 custom FastWAM overlay。
 
 它不证明 household task 的 closed-loop capability。
 

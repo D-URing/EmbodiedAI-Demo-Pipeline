@@ -33,7 +33,7 @@
 
 2026-07-13 的补充决策：本项目以 XPolicyLab 的 `demo_policy` 与 `debug` evaluation flow 作为第一复刻基准，以 RoboDojo 作为后续 NVIDIA/Isaac 外部评测目标，以 LeRobot 作为后续数据和轻量训练格式参考。该决策只影响接口和验收锚点，不把 XPolicyLab、RoboDojo、Isaac 或 LeRobot 变成 core 依赖。详见 [`REFERENCE_BASELINE.md`](REFERENCE_BASELINE.md) 与 [`adr/0001-reference-baseline.md`](adr/0001-reference-baseline.md)。
 
-2026-07-14 的补充决策：FastWAM real-robot pipeline 已作为第一条真实 CUDA 训练证据链接入。本项目因此从“两个 mock MVP”升级为“三层证据链”：任务/工程链路证据、真实训练证据、后续仿真/真机能力证据。三者必须分别标注 readiness，不能把 loss 下降、mock 成功和真实家庭任务成功混报。详见 [`DEMO_COVERAGE_ROADMAP.md`](DEMO_COVERAGE_ROADMAP.md)、[`FASTWAM_REALROBOT_INTEGRATION.md`](FASTWAM_REALROBOT_INTEGRATION.md) 与 [`adr/0002-fastwam-evidence-chain.md`](adr/0002-fastwam-evidence-chain.md)。
+2026-07-14 的补充决策：需求已收敛为 **LeRobot-first demo pipeline**。第一主线不再是继续扩 household mock task，而是用 LeRobot 跑通 dataset read → policy train/load → offline inference → evidence report。FastWAM 作为 LeRobot-native policy path 优先接入，同时保留私有 FastWAM overlay 作为 custom backend 和未来自建模型路线。详见 [`LEROBOT_FIRST_PIPELINE.md`](LEROBOT_FIRST_PIPELINE.md) 与 [`adr/0003-lerobot-first-fastwam-pipeline.md`](adr/0003-lerobot-first-fastwam-pipeline.md)。
 
 第一阶段的两个纵向 Demo 为：
 
@@ -42,10 +42,11 @@
 
 第一阶段最重要的交付不是视频页面，而是：两个任务能够通过同一个 runner 在 mock/replay 后端执行，产生可复现 episode、部分进度分数、成功率、失败原因和完整 manifest。
 
-FastWAM 接入后，第一阶段交付拆成两条并行但不混报的线：
+LeRobot-first 调整后，第一阶段交付拆成一条主线和两个扩展层：
 
-- **家庭任务 demo 线**：继续扩展 `tabletop_sorting_v1`、`towel_folding_v1`，并新增少量 R0/R1 任务规格，例如厨房台面整理、抽屉取放、衣物/垃圾分类。
-- **真实训练证据线**：使用 LeRobot/FastWAM 在 NVIDIA 集群上产生真实 loss、checkpoint、训练配置和 handoff 报告，回答“模型训练链路是否打通”。
+- **LeRobot 主线**：dataset inspection、train/load smoke、offline inference、evidence report。
+- **Custom backend 扩展**：保留 FastWAM 私有 overlay 和未来自建模型路径。
+- **Household 应用层**：四个 R1 mock demo 用于任务展示和后续 replay/sim/real 映射，不再抢第一主线。
 
 ---
 
@@ -71,14 +72,15 @@ FastWAM 接入后，第一阶段交付拆成两条并行但不混报的线：
 |---|---|---|
 | Phase 0：规划与契约 | 固化工程边界、目录、schema、评测分层与优先级 | 本文通过评审，关键未决项被记录 |
 | Phase 1：Headless Core | 打通配置校验、runner、mock、logger、evaluator | 两个 MVP 可由 CLI 运行且可复现 |
-| Phase 2：真实训练证据 | 接入 LeRobot/FastWAM 训练 smoke/pilot 与 loss report | CUDA 节点可产生真实 loss summary、checkpoint 路径和 handoff |
-| Phase 3：任务覆盖扩展 | 扩充 R0/R1 家庭任务库，沉淀通用 mock primitives | 厨房、抽屉、衣物/清洁至少新增 2–3 个可校验任务规格 |
-| Phase 4：Replay / Offline Action | 接入 LeRobot/DROID/BridgeData 或 FastWAM 离线动作检查 | 不依赖仿真器完成 IO、shape、action、时间同步检查 |
-| Phase 5：NVIDIA 集群准备 | 容器化、作业 manifest、资源声明、任务分片、断点续跑 | 同一命令可通过 local/cluster launcher 提交 |
-| Phase 6：首个仿真闭环 | 接 RoboDojo、RoboCasa 或 RoboTwin 中的一个 | 至少一个任务完成 smoke、dev、release 三档评测 |
-| Phase 7：首个学习策略 | 接入一个开源 policy 并形成同协议对比 | scripted/replay/learned policy 结果可比较 |
-| Phase 8：真机准备 | shadow mode、安全过滤、标定、遥操作数据、真机 adapter | 预测动作可审计，未授权时不得发送到硬件 |
-| Phase 9：产品化展示 | viewer、运行对比、关键帧、失败分析 | UI 只读消费 artifacts，不改变评测结果 |
+| Phase 2：LeRobot Data Smoke | 按 LeRobot 原生格式读取 dataset 和 batch | 输出 dataset_profile、features、shape、fps、metadata |
+| Phase 3：LeRobot Train/Load | 使用 LeRobot 训练或加载 policy，FastWAM 是优先 policy path | 输出 loss/checkpoint 或 checkpoint_summary |
+| Phase 4：LeRobot Inference Smoke | 对 dataset sample 做离线 policy inference | 输出 action shape、latency、device、policy metadata |
+| Phase 5：任务覆盖扩展 | 扩充 R0/R1 家庭任务库，沉淀通用 mock primitives | 厨房、抽屉、衣物/清洁至少新增 2–3 个可校验任务规格 |
+| Phase 6：NVIDIA 集群准备 | 容器化、作业 manifest、资源声明、任务分片、断点续跑 | 同一命令可通过 local/cluster launcher 提交 |
+| Phase 7：首个仿真闭环 | 接 RoboDojo、RoboCasa 或 RoboTwin 中的一个 | 至少一个任务完成 smoke、dev、release 三档评测 |
+| Phase 8：自建模型扩展 | 接入一个非 LeRobot-native custom policy/backend | 与 LeRobot-native path 共享 evidence/report |
+| Phase 9：真机准备 | shadow mode、安全过滤、标定、遥操作数据、真机 adapter | 预测动作可审计，未授权时不得发送到硬件 |
+| Phase 10：产品化展示 | viewer、运行对比、关键帧、失败分析 | UI 只读消费 artifacts，不改变评测结果 |
 
 ### 1.3 明确非目标
 
@@ -104,11 +106,12 @@ FastWAM 接入后，第一阶段交付拆成两条并行但不混报的线：
 | P0 | task/observation/action/run schema | 所有后端和模型共享的基础契约 | 立即 |
 | P0 | 确定性 runner、日志和 artifact manifest | 没有可复现产物就无法调试和评测 | 立即 |
 | P0 | smoke test、partial progress、success/failure | 防止只看“能启动”或单次成功视频 | 立即 |
+| P0 | LeRobot dataset/inference smoke | 当前第一主线是 data-to-inference，不是继续堆 mock task | 立即 |
 | P0 | training evidence importer | 回答真实训练、loss、checkpoint 与复现实验问题 | 已启动 |
 | P0 | demo readiness 标注 | 防止 mock、训练、仿真和真机结果混报 | 已启动 |
 | P1 | mock 与 replay 后端 | 无 GPU、无仿真、无真机时仍可开发核心 | 立即 |
 | P1 | policy adapter debug contract | 提前发现图像、状态、动作 shape 与坐标系问题 | 立即 |
-| P1 | 可扩展任务覆盖矩阵 | 让厨房、衣物、清洁、抽屉、灵巧操作都有排期 | 立即 |
+| P1 | 可扩展任务覆盖矩阵 | 让厨房、衣物、清洁、抽屉、灵巧操作都有排期 | LeRobot 主线后 |
 | P1 | 容器、配置覆盖、集群作业 manifest | 为 NVIDIA 集群迁移避免重写入口 | 核心稳定后 |
 | P2 | 首个仿真后端 | 提供物理闭环和并行评测 | 接口稳定后 |
 | P2 | 首个开源 VLA/IL policy | 验证 adapter 与真实推理资源 | 仿真 smoke 后 |
@@ -1312,3 +1315,10 @@ GPU/simulator 测试放入 nightly 或手动 release pipeline。
 - 新增 [`00_PROJECT_OVERVIEW.md`](00_PROJECT_OVERVIEW.md) 和 [`01_ARCHITECTURE.md`](01_ARCHITECTURE.md)，作为项目入口和架构入口。
 - 将 `demo_runner.py` 拆分为 `policies/`、`environments/`、`rollout/` 三层，并保留兼容入口。
 - 明确 household mock rollout 与 FastWAM training evidence 是两条证据线，不再在代码和文档入口中混讲。
+
+### v0.7 — 2026-07-14
+
+- 接受 ADR-0003：项目第一主线调整为 LeRobot-first data-to-inference pipeline。
+- FastWAM 改为双路径定位：LeRobot-native policy path 优先，私有 overlay 作为 custom backend / 自建模型扩展。
+- 新增 [`LEROBOT_FIRST_PIPELINE.md`](LEROBOT_FIRST_PIPELINE.md) 和 `demo_chains/lerobot_fastwam_data_to_inference_v0.yaml`。
+- 下一步优先实现 `lerobot-data-smoke`、`lerobot-infer-smoke` 和 LeRobot/FastWAM evidence report。
