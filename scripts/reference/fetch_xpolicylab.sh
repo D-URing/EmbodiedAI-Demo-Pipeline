@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
 XPOLICYLAB_REPO="${XPOLICYLAB_REPO:-https://github.com/XPolicyLab/XPolicyLab.git}"
 XPOLICYLAB_COMMIT="${XPOLICYLAB_COMMIT:-fe71eb54675cef495fea817a637386a4f4529153}"
-REFERENCE_CACHE_DIR="${REFERENCE_CACHE_DIR:-$HOME/.cache/embodied-demo/upstreams}"
+REFERENCE_CACHE_DIR="${REFERENCE_CACHE_DIR:-$REPO_ROOT/upstreams}"
 TARGET_DIR="${TARGET_DIR:-$REFERENCE_CACHE_DIR/XPolicyLab}"
 
 mkdir -p "$(dirname "$TARGET_DIR")"

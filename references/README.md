@@ -9,5 +9,5 @@ datasets, simulator assets, or generated benchmark results.
 - `xpolicylab_baseline.yaml` defines the first replication target at the
   interface level.
 
-Large upstream checkouts should live outside the repository, for example under
-`$HOME/.cache/embodied-demo/upstreams`.
+Large upstream checkouts should live in the repo-local ignored directory
+`upstreams/` when the whole project is placed on shared storage.

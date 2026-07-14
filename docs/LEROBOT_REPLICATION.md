@@ -44,7 +44,7 @@ e40b58a8dfa9e7b86918c374791599d070518d11
 
 - 检查 Python >= 3.12；
 - 安装 CUDA PyTorch，默认 `cu128` index；
-- clone Hugging Face LeRobot 到 `$HOME/.cache/embodied-demo/upstreams/lerobot`；
+- clone Hugging Face LeRobot 到项目内 `upstreams/lerobot`；
 - checkout pinned commit；
 - 安装 `.[training,pusht]`；
 - 检查 `lerobot-train` 可用。

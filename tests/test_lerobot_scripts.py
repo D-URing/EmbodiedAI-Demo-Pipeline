@@ -46,6 +46,9 @@ def test_lerobot_artifact_download_script_uses_explicit_hf_targets() -> None:
     runner = (ROOT / "scripts/lerobot/download_artifacts.sh").read_text(encoding="utf-8")
     makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
 
+    assert 'EMBODIED_DATA_ROOT="${EMBODIED_DATA_ROOT:-$REPO_ROOT/data}"' in runner
+    assert 'EMBODIED_MODEL_ROOT="${EMBODIED_MODEL_ROOT:-$REPO_ROOT/models}"' in runner
+    assert 'HF_HOME="${HF_HOME:-$REPO_ROOT/hf_cache}"' in runner
     assert "LEROBOT_DATASET_REPO_ID:-lerobot/pusht" in runner
     assert "--repo-type dataset" in runner
     assert "DOWNLOAD_LEROBOT_POLICY" in runner
@@ -54,8 +57,19 @@ def test_lerobot_artifact_download_script_uses_explicit_hf_targets() -> None:
     assert 'HF_CLI_BIN="${HF_CLI_BIN:-}"' in runner
     assert "HF_DOWNLOAD_CMD=(hf download)" in runner
     assert '"${HF_DOWNLOAD_CMD[@]}" "$LEROBOT_DATASET_REPO_ID"' in runner
+    assert "[artifact] dataset_local_dir=$LEROBOT_DATASET_LOCAL_DIR" in runner
+    assert "cannot reach Hugging Face" in runner
+    assert "HF_ENDPOINT" in runner
     assert "artifact_manifests/lerobot_artifacts_manifest.json" in runner
     assert "download-lerobot-artifacts" in makefile
+
+
+def test_lerobot_cluster_install_uses_repo_local_upstreams() -> None:
+    installer = (ROOT / "scripts/lerobot/install_lerobot_cluster.sh").read_text(encoding="utf-8")
+    config = (ROOT / "configs/lerobot/pusht_act_gpu_smoke.sh").read_text(encoding="utf-8")
+
+    assert 'LEROBOT_SOURCE_DIR="${LEROBOT_SOURCE_DIR:-$REPO_ROOT/upstreams/lerobot}"' in installer
+    assert 'LEROBOT_RUN_ROOT="${LEROBOT_RUN_ROOT:-$EMBODIED_REPO_ROOT/runs/lerobot}"' in config
 
 
 def test_lerobot_inference_smoke_requires_local_policy_path() -> None:
@@ -88,6 +102,11 @@ def test_lerobot_chain_report_uses_dataset_and_inference_evidence(tmp_path: Path
 
 def test_model_registry_tracks_current_lerobot_demo() -> None:
     registry = yaml.safe_load((ROOT / "references/model_registry.yaml").read_text(encoding="utf-8"))
+
+    storage = registry["storage"]["repo_local_default"]
+    assert storage["model_root"] == "$PROJECT_ROOT/models"
+    assert storage["data_root"] == "$PROJECT_ROOT/data"
+    assert storage["hf_home"] == "$PROJECT_ROOT/hf_cache"
 
     act = registry["models"]["lerobot_act_pusht"]
     assert act["path_type"] == "lerobot_native"

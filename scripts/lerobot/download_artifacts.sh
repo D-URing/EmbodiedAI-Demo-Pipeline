@@ -3,9 +3,12 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
-EMBODIED_DATA_ROOT="${EMBODIED_DATA_ROOT:-$HOME/.cache/embodied-demo/data}"
-EMBODIED_MODEL_ROOT="${EMBODIED_MODEL_ROOT:-$HOME/.cache/embodied-demo/models}"
+EMBODIED_DATA_ROOT="${EMBODIED_DATA_ROOT:-$REPO_ROOT/data}"
+EMBODIED_MODEL_ROOT="${EMBODIED_MODEL_ROOT:-$REPO_ROOT/models}"
 EMBODIED_RUN_ROOT="${EMBODIED_RUN_ROOT:-$REPO_ROOT/runs}"
+export HF_HOME="${HF_HOME:-$REPO_ROOT/hf_cache}"
+export HUGGINGFACE_HUB_CACHE="${HUGGINGFACE_HUB_CACHE:-$HF_HOME/hub}"
+export HF_DATASETS_CACHE="${HF_DATASETS_CACHE:-$HF_HOME/datasets}"
 
 LEROBOT_DATASET_REPO_ID="${LEROBOT_DATASET_REPO_ID:-lerobot/pusht}"
 LEROBOT_DATASET_NAME="${LEROBOT_DATASET_NAME:-${LEROBOT_DATASET_REPO_ID#*/}}"
@@ -47,13 +50,55 @@ mkdir -p "$LEROBOT_DATASET_LOCAL_DIR" "$EMBODIED_MODEL_ROOT" "$EMBODIED_RUN_ROOT
 
 dataset_downloaded=false
 policy_downloaded=false
+MANIFEST_PATH="$EMBODIED_RUN_ROOT/artifact_manifests/lerobot_artifacts_manifest.json"
+
+print_download_failure_help() {
+  local artifact_name="$1"
+  local local_dir="$2"
+
+  cat >&2 <<EOF
+
+[error] LeRobot artifact download failed: $artifact_name
+[target] $local_dir
+[manifest-if-success] $MANIFEST_PATH
+
+This usually means the current cluster node cannot reach Hugging Face.
+Quick checks:
+  command -v curl >/dev/null 2>&1 && curl -I "\${HF_ENDPOINT:-https://huggingface.co}"
+  env | grep -E '^(HTTP_PROXY|HTTPS_PROXY|ALL_PROXY|HF_ENDPOINT)='
+
+Possible fixes:
+  1. Run this command on a login/compute node with outbound network.
+  2. Configure the cluster proxy, for example:
+       export HTTPS_PROXY=http://<proxy-host>:<proxy-port>
+       export HTTP_PROXY=http://<proxy-host>:<proxy-port>
+  3. If your cluster uses a Hugging Face mirror:
+       export HF_ENDPOINT=https://<your-hf-mirror>
+  4. Or download the files elsewhere and copy them into:
+       $local_dir
+EOF
+}
+
+echo "[artifact] family=lerobot"
+echo "[artifact] dataset_repo=$LEROBOT_DATASET_REPO_ID"
+echo "[artifact] dataset_local_dir=$LEROBOT_DATASET_LOCAL_DIR"
+echo "[artifact] policy_repo=${LEROBOT_POLICY_REPO_ID:-<none>}"
+echo "[artifact] policy_local_dir=$LEROBOT_POLICY_LOCAL_DIR"
+echo "[artifact] manifest=$MANIFEST_PATH"
+echo "[artifact] hf_cli=${HF_DOWNLOAD_CMD[*]}"
+echo "[artifact] hf_endpoint=${HF_ENDPOINT:-https://huggingface.co}"
+echo "[artifact] hf_home=$HF_HOME"
+echo "[artifact] hf_hub_cache=$HUGGINGFACE_HUB_CACHE"
 
 if [[ "$DOWNLOAD_LEROBOT_DATASET" == "1" ]]; then
   echo "[download] LeRobot dataset: $LEROBOT_DATASET_REPO_ID -> $LEROBOT_DATASET_LOCAL_DIR"
-  HF_HUB_ENABLE_HF_TRANSFER="$HF_HUB_ENABLE_HF_TRANSFER" \
+  if ! HF_HUB_ENABLE_HF_TRANSFER="$HF_HUB_ENABLE_HF_TRANSFER" \
     "${HF_DOWNLOAD_CMD[@]}" "$LEROBOT_DATASET_REPO_ID" \
       --repo-type dataset \
-      --local-dir "$LEROBOT_DATASET_LOCAL_DIR"
+      --local-dir "$LEROBOT_DATASET_LOCAL_DIR"; then
+    print_download_failure_help "$LEROBOT_DATASET_REPO_ID" "$LEROBOT_DATASET_LOCAL_DIR"
+    exit 1
+  fi
   dataset_downloaded=true
 else
   echo "[skip] DOWNLOAD_LEROBOT_DATASET=$DOWNLOAD_LEROBOT_DATASET"
@@ -68,15 +113,17 @@ if [[ "$DOWNLOAD_LEROBOT_POLICY" == "1" ]]; then
 
   mkdir -p "$LEROBOT_POLICY_LOCAL_DIR"
   echo "[download] LeRobot policy: $LEROBOT_POLICY_REPO_ID -> $LEROBOT_POLICY_LOCAL_DIR"
-  HF_HUB_ENABLE_HF_TRANSFER="$HF_HUB_ENABLE_HF_TRANSFER" \
+  if ! HF_HUB_ENABLE_HF_TRANSFER="$HF_HUB_ENABLE_HF_TRANSFER" \
     "${HF_DOWNLOAD_CMD[@]}" "$LEROBOT_POLICY_REPO_ID" \
-      --local-dir "$LEROBOT_POLICY_LOCAL_DIR"
+      --local-dir "$LEROBOT_POLICY_LOCAL_DIR"; then
+    print_download_failure_help "$LEROBOT_POLICY_REPO_ID" "$LEROBOT_POLICY_LOCAL_DIR"
+    exit 1
+  fi
   policy_downloaded=true
 else
   echo "[skip] DOWNLOAD_LEROBOT_POLICY=$DOWNLOAD_LEROBOT_POLICY"
 fi
 
-MANIFEST_PATH="$EMBODIED_RUN_ROOT/artifact_manifests/lerobot_artifacts_manifest.json"
 LEROBOT_DATASET_REPO_ID="$LEROBOT_DATASET_REPO_ID" \
 LEROBOT_DATASET_LOCAL_DIR="$LEROBOT_DATASET_LOCAL_DIR" \
 LEROBOT_POLICY_REPO_ID="$LEROBOT_POLICY_REPO_ID" \

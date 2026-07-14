@@ -6,23 +6,25 @@
 # environment. It is not sourced by the lightweight core demo environment.
 
 # Official FastWAM base repository plus the private internal real-robot overlay.
+export EMBODIED_REPO_ROOT="${EMBODIED_REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 export FASTWAM_OFFICIAL_REPO="${FASTWAM_OFFICIAL_REPO:-https://github.com/yuantianyuan01/FastWAM.git}"
 export FASTWAM_OFFICIAL_REF="${FASTWAM_OFFICIAL_REF:-45d8e1458921d83f8ad6cf9ce993d371208dabd0}"
 export FASTWAM_OVERLAY_REPO="${FASTWAM_OVERLAY_REPO:-https://github.com/D-URing/fastwam-realrobot-pipeline.git}"
 export FASTWAM_OVERLAY_REF="${FASTWAM_OVERLAY_REF:-5b9791f7d49956b96e0694786f46ff94e8214eca}"
 
-# Source/cache layout. FASTWAM_WORKDIR is the overlaid runnable FastWAM tree.
-export FASTWAM_CACHE_ROOT="${FASTWAM_CACHE_ROOT:-$HOME/.cache/embodied-demo/upstreams}"
+# Source layout. FASTWAM_WORKDIR is the overlaid runnable FastWAM tree.
+export FASTWAM_CACHE_ROOT="${FASTWAM_CACHE_ROOT:-$EMBODIED_REPO_ROOT/upstreams}"
 export FASTWAM_WORKDIR="${FASTWAM_WORKDIR:-$FASTWAM_CACHE_ROOT/FastWAM-realrobot}"
 export FASTWAM_OVERLAY_DIR="${FASTWAM_OVERLAY_DIR:-$FASTWAM_CACHE_ROOT/fastwam-realrobot-pipeline}"
 export FASTWAM_RESET_WORKDIR="${FASTWAM_RESET_WORKDIR:-0}"
 
-# Model/checkpoint locations. Override these on the NVIDIA cluster.
-export FASTWAM_MODEL_BASE="${FASTWAM_MODEL_BASE:-/root/paddlejob/share-storage/gpfs/system-public/dingxibo/models}"
+# Model/checkpoint locations. Defaults are repo-local because the project itself
+# is expected to live on shared storage during early cluster testing.
+export FASTWAM_MODEL_BASE="${FASTWAM_MODEL_BASE:-$EMBODIED_REPO_ROOT/models}"
 export FASTWAM_RELEASE_DIR="${FASTWAM_RELEASE_DIR:-$FASTWAM_MODEL_BASE/fastwam_release}"
 export FASTWAM_RELEASE_CKPT="${FASTWAM_RELEASE_CKPT:-$FASTWAM_RELEASE_DIR/libero_uncond_2cam224.pt}"
 export FASTWAM_RELEASE_DATASET_STATS="${FASTWAM_RELEASE_DATASET_STATS:-$FASTWAM_RELEASE_DIR/libero_uncond_2cam224_dataset_stats.json}"
-export FASTWAM_ACTION_DIT_BACKBONE="${FASTWAM_ACTION_DIT_BACKBONE:-$FASTWAM_WORKDIR/checkpoints/ActionDiT_linear_interp_Wan22_alphascale_1024hdim.pt}"
+export FASTWAM_ACTION_DIT_BACKBONE="${FASTWAM_ACTION_DIT_BACKBONE:-$EMBODIED_REPO_ROOT/checkpoints/fastwam/ActionDiT_linear_interp_Wan22_alphascale_1024hdim.pt}"
 
 # Optional pinned normalization stats for V6 multi-node recipes. Leave empty for
 # non-V6 smoke/pilot runs or when the FastWAM config should compute/read its own.
@@ -48,7 +50,7 @@ export FASTWAM_MASTER_PORT="${FASTWAM_MASTER_PORT:-${MASTER_PORT:-29500}}"
 
 # Run artifact mirror owned by this demo pipeline. FastWAM still writes its native
 # checkpoints under FASTWAM_WORKDIR/runs/<task>/<run_id>/.
-export FASTWAM_RUN_ROOT="${FASTWAM_RUN_ROOT:-runs/fastwam}"
+export FASTWAM_RUN_ROOT="${FASTWAM_RUN_ROOT:-$EMBODIED_REPO_ROOT/runs/fastwam}"
 export FASTWAM_RUN_NAME="${FASTWAM_RUN_NAME:-realrobot_${FASTWAM_RECIPE}_${FASTWAM_MODE}}"
 export FASTWAM_RUN_ID="${FASTWAM_RUN_ID:-}"
 

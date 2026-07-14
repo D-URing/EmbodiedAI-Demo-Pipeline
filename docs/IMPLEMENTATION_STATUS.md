@@ -70,7 +70,7 @@ make dry-run
 | 复刻基准 | `references/xpolicylab_baseline.yaml` | 明确 XPolicyLab `demo_policy`/debug flow 的生命周期、transport 和验收映射 |
 | 决策文档 | `docs/REFERENCE_BASELINE.md` | 用中文说明为什么选 XPolicyLab、RoboDojo 和 LeRobot，以及当前不做什么 |
 | ADR | `docs/adr/0001-reference-baseline.md` | 记录 accepted decision、影响和非目标 |
-| 上游源码锚点工具 | `make reference-fetch` | 将 XPolicyLab 固定 commit 拉到用户 cache；不安装依赖、不下载数据、不启动仿真 |
+| 上游源码锚点工具 | `make reference-fetch` | 将 XPolicyLab 固定 commit 拉到项目内 `upstreams/`；不安装依赖、不下载数据、不启动仿真 |
 
 ### 决策影响
 

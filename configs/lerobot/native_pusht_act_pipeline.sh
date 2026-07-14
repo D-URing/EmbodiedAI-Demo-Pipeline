@@ -4,6 +4,7 @@
 # Defaults avoid large downloads: scripts run with HF offline flags unless
 # LEROBOT_ALLOW_DOWNLOAD=1 is explicitly set by the caller.
 
+export EMBODIED_REPO_ROOT="${EMBODIED_REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 export LEROBOT_UPSTREAM_COMMIT="${LEROBOT_UPSTREAM_COMMIT:-e40b58a8dfa9e7b86918c374791599d070518d11}"
 
 export LEROBOT_DATASET_REPO_ID="${LEROBOT_DATASET_REPO_ID:-lerobot/pusht}"
@@ -18,4 +19,4 @@ export LEROBOT_POLICY_PATH="${LEROBOT_POLICY_PATH:-}"
 export LEROBOT_INFERENCE_DEVICE="${LEROBOT_INFERENCE_DEVICE:-cuda}"
 
 export LEROBOT_RUN_NAME="${LEROBOT_RUN_NAME:-lerobot_native_pusht_act}"
-export LEROBOT_RUN_ROOT="${LEROBOT_RUN_ROOT:-runs/lerobot_native}"
+export LEROBOT_RUN_ROOT="${LEROBOT_RUN_ROOT:-$EMBODIED_REPO_ROOT/runs/lerobot_native}"

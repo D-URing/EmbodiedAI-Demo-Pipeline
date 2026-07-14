@@ -22,23 +22,38 @@
 
 ## 2. 集群路径约定
 
-先在每个作业或登录节点上设置这些变量：
+本项目默认假设整个仓库目录已经放在共享盘上，因此所有公开数据、模型权重、Hugging Face cache、上游源码和运行输出都落在项目内。先进入项目根目录：
 
 ```bash
+cd /path/to/shared/EmbodiedAI-Demo-Pipeline
+
 export PROJECT_ROOT="$PWD"
 
-export EMBODIED_MODEL_ROOT="/root/paddlejob/share-storage/gpfs/system-public/dingxibo/models"
-export EMBODIED_DATA_ROOT="/root/paddlejob/share-storage/gpfs/system-public/dingxibo/Embodied_AI/data"
-export EMBODIED_RUN_ROOT="/root/paddlejob/share-storage/gpfs/system-public/dingxibo/Embodied_AI/runs"
+export EMBODIED_MODEL_ROOT="$PROJECT_ROOT/models"
+export EMBODIED_DATA_ROOT="$PROJECT_ROOT/data"
+export EMBODIED_RUN_ROOT="$PROJECT_ROOT/runs"
 
-export HF_HOME="/root/paddlejob/share-storage/gpfs/system-public/dingxibo/hf_home"
+export HF_HOME="$PROJECT_ROOT/hf_cache"
 export HUGGINGFACE_HUB_CACHE="$HF_HOME/hub"
 export HF_DATASETS_CACHE="$HF_HOME/datasets"
 export HF_HUB_ENABLE_HF_TRANSFER=1
 export PYTHON_BIN=python3
 ```
 
-如果集群路径不同，只需要替换上面的三个 root。建议所有节点共享同一套 `EMBODIED_*` 和 `HF_*` 路径，避免每次作业重复下载。
+如果你不设置这些变量，仓库脚本也会默认使用相同的项目内目录。显式 export 的好处是 shell 里更容易看清当前路径。
+
+项目内目录规划：
+
+```text
+$PROJECT_ROOT/
+├── data/
+├── models/
+├── checkpoints/
+├── runs/
+├── artifacts/
+├── upstreams/
+└── hf_cache/
+```
 
 ## 3. 准备 Python / LeRobot 环境
 
@@ -171,6 +186,12 @@ make download-fastwam-artifacts
 $EMBODIED_RUN_ROOT/artifact_manifests/fastwam_release_artifacts_manifest.json
 ```
 
+如果没有显式设置 `EMBODIED_MODEL_ROOT`，默认目标路径是：
+
+```text
+$PROJECT_ROOT/models/fastwam_release
+```
+
 后续 custom overlay 运行时：
 
 ```bash
@@ -182,7 +203,52 @@ FASTWAM_MODE=pilot FASTWAM_RECIPE=joint_base \
 bash scripts/fastwam/run_realrobot_train_eval.sh
 ```
 
-## 8. 生成第一版交付报告
+## 8. 下载网络问题排查
+
+如果遇到：
+
+```text
+Network is unreachable
+LocalEntryNotFoundError
+```
+
+说明当前节点不能访问 Hugging Face，且项目内 `hf_cache/` 里也没有对应 snapshot。先检查：
+
+```bash
+which hf || which huggingface-cli
+curl -I "${HF_ENDPOINT:-https://huggingface.co}"
+env | grep -E '^(HTTP_PROXY|HTTPS_PROXY|ALL_PROXY|HF_ENDPOINT)='
+```
+
+常见处理方式：
+
+```bash
+# 方式一：集群有代理
+export HTTPS_PROXY=http://<proxy-host>:<proxy-port>
+export HTTP_PROXY=http://<proxy-host>:<proxy-port>
+
+# 方式二：集群提供 Hugging Face mirror
+export HF_ENDPOINT=https://<your-hf-mirror>
+
+# 方式三：显式指定新版 hf CLI
+export HF_CLI_BIN=/usr/local/bin/hf
+```
+
+如果集群完全没有外网，就在有外网的机器下载后，把以下文件拷贝到 `$EMBODIED_MODEL_ROOT/fastwam_release/`：
+
+```text
+libero_uncond_2cam224.pt
+libero_uncond_2cam224_dataset_stats.json
+```
+
+然后继续设置：
+
+```bash
+export FASTWAM_RELEASE_CKPT="$EMBODIED_MODEL_ROOT/fastwam_release/libero_uncond_2cam224.pt"
+export FASTWAM_RELEASE_DATASET_STATS="$EMBODIED_MODEL_ROOT/fastwam_release/libero_uncond_2cam224_dataset_stats.json"
+```
+
+## 9. 生成第一版交付报告
 
 LeRobot data-to-inference 链路：
 
@@ -200,13 +266,14 @@ FastWAM custom overlay 链路：
 FASTWAM_RUN_DIR="runs/fastwam/<run_name>/<run_id>" make demo-chain-fastwam
 ```
 
-## 9. 常见开关
+## 10. 常见开关
 
 | 变量 | 默认值 | 作用 |
 |---|---|---|
-| `EMBODIED_DATA_ROOT` | `$HOME/.cache/embodied-demo/data` | 开源/私有数据根目录 |
-| `EMBODIED_MODEL_ROOT` | `$HOME/.cache/embodied-demo/models` | 权重、checkpoint 根目录 |
-| `EMBODIED_RUN_ROOT` | `$PWD/runs` | manifest 和运行输出 |
+| `EMBODIED_DATA_ROOT` | `$PROJECT_ROOT/data` | 开源/私有数据根目录 |
+| `EMBODIED_MODEL_ROOT` | `$PROJECT_ROOT/models` | 权重、checkpoint 根目录 |
+| `EMBODIED_RUN_ROOT` | `$PROJECT_ROOT/runs` | manifest 和运行输出 |
+| `HF_HOME` | `$PROJECT_ROOT/hf_cache` | Hugging Face cache 根目录 |
 | `LEROBOT_DATASET_REPO_ID` | `lerobot/pusht` | LeRobot dataset repo |
 | `LEROBOT_DATASET_LOCAL_DIR` | `$EMBODIED_DATA_ROOT/lerobot/pusht` | dataset 落盘目录 |
 | `DOWNLOAD_LEROBOT_DATASET` | `1` | 是否下载 LeRobot dataset |
@@ -217,7 +284,7 @@ FASTWAM_RUN_DIR="runs/fastwam/<run_name>/<run_id>" make demo-chain-fastwam
 | `PYTHON_BIN` | `python3` | 写 manifest 用的 Python，可改成 venv/conda 里的解释器 |
 | `HF_CLI_BIN` | 自动检测 | 可显式指定 `/path/to/hf` 或 `/path/to/huggingface-cli` |
 
-## 10. 第一轮集群测试建议
+## 11. 第一轮集群测试建议
 
 最小测试顺序：
 
@@ -235,7 +302,7 @@ make lerobot-infer-smoke
 
 如果这四步跑通，第一阶段最关键的链路已经成立：公开数据能下载和读取，官方 LeRobot 训练入口能跑，loss 有 summary，checkpoint 能进入 offline inference。
 
-## 11. 上游链接
+## 12. 上游链接
 
 - LeRobot GitHub：https://github.com/huggingface/lerobot
 - LeRobot PushT dataset：https://huggingface.co/datasets/lerobot/pusht
