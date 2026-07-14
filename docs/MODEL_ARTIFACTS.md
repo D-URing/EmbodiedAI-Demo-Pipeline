@@ -137,6 +137,8 @@ $PROJECT_ROOT/checkpoints/
 make download-lerobot-artifacts
 ```
 
+在 SCUT 集群上，脚本会优先使用 `/home/scut/hfd.sh`、`hf-mirror.com` 和 `aria2c`；如果该工具不存在，才回退到 `hf download` / `huggingface-cli download`。
+
 默认下载：
 
 ```text
@@ -216,6 +218,17 @@ FastWAM release 权重按上游说明下载，例如：
 
 ```bash
 make download-fastwam-artifacts
+```
+
+在 SCUT 管理节点上，脚本会自动等价于：
+
+```bash
+HF_ENDPOINT=https://hf-mirror.com \
+bash /home/scut/hfd.sh yuanty/fastwam \
+  --include libero_uncond_2cam224.pt libero_uncond_2cam224_dataset_stats.json \
+  --local-dir "$EMBODIED_MODEL_ROOT/fastwam_release" \
+  --tool aria2c \
+  -x 10 -j 2
 ```
 
 然后运行 custom overlay 时显式指定：

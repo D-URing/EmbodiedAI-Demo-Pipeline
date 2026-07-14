@@ -56,6 +56,11 @@ def test_fastwam_release_download_script_tracks_public_artifacts() -> None:
     assert "libero_uncond_2cam224.pt" in runner
     assert "libero_uncond_2cam224_dataset_stats.json" in runner
     assert 'PYTHON_BIN="${PYTHON_BIN:-python3}"' in runner
+    assert 'HFD_BIN="${HFD_BIN:-/home/scut/hfd.sh}"' in runner
+    assert 'HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"' in runner
+    assert 'DOWNLOADER_KIND="hfd"' in runner
+    assert 'bash "$HFD_BIN" "$FASTWAM_RELEASE_REPO_ID"' in runner
+    assert '--include "${release_files[@]}"' in runner
     assert 'HF_CLI_BIN="${HF_CLI_BIN:-}"' in runner
     assert "HF_DOWNLOAD_CMD=(hf download)" in runner
     assert '"${HF_DOWNLOAD_CMD[@]}" "$FASTWAM_RELEASE_REPO_ID"' in runner

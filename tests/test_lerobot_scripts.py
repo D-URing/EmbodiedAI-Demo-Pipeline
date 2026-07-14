@@ -54,6 +54,10 @@ def test_lerobot_artifact_download_script_uses_explicit_hf_targets() -> None:
     assert "DOWNLOAD_LEROBOT_POLICY" in runner
     assert "LEROBOT_POLICY_REPO_ID is required" in runner
     assert 'PYTHON_BIN="${PYTHON_BIN:-python3}"' in runner
+    assert 'HFD_BIN="${HFD_BIN:-/home/scut/hfd.sh}"' in runner
+    assert 'HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"' in runner
+    assert 'DOWNLOADER_KIND="hfd"' in runner
+    assert '--dataset \\' in runner
     assert 'HF_CLI_BIN="${HF_CLI_BIN:-}"' in runner
     assert "HF_DOWNLOAD_CMD=(hf download)" in runner
     assert '"${HF_DOWNLOAD_CMD[@]}" "$LEROBOT_DATASET_REPO_ID"' in runner
