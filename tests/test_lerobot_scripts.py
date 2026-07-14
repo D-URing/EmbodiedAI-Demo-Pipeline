@@ -51,6 +51,9 @@ def test_lerobot_artifact_download_script_uses_explicit_hf_targets() -> None:
     assert "DOWNLOAD_LEROBOT_POLICY" in runner
     assert "LEROBOT_POLICY_REPO_ID is required" in runner
     assert 'PYTHON_BIN="${PYTHON_BIN:-python3}"' in runner
+    assert 'HF_CLI_BIN="${HF_CLI_BIN:-}"' in runner
+    assert "HF_DOWNLOAD_CMD=(hf download)" in runner
+    assert '"${HF_DOWNLOAD_CMD[@]}" "$LEROBOT_DATASET_REPO_ID"' in runner
     assert "artifact_manifests/lerobot_artifacts_manifest.json" in runner
     assert "download-lerobot-artifacts" in makefile
 

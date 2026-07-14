@@ -20,9 +20,21 @@ DOWNLOAD_LEROBOT_DATASET="${DOWNLOAD_LEROBOT_DATASET:-1}"
 DOWNLOAD_LEROBOT_POLICY="${DOWNLOAD_LEROBOT_POLICY:-0}"
 HF_HUB_ENABLE_HF_TRANSFER="${HF_HUB_ENABLE_HF_TRANSFER:-1}"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
+HF_CLI_BIN="${HF_CLI_BIN:-}"
 
-if ! command -v huggingface-cli >/dev/null 2>&1; then
-  echo "huggingface-cli is required. Install with: python3 -m pip install -U huggingface_hub hf_transfer" >&2
+if [[ -n "$HF_CLI_BIN" ]]; then
+  if ! command -v "$HF_CLI_BIN" >/dev/null 2>&1; then
+    echo "HF_CLI_BIN=$HF_CLI_BIN is not executable or not on PATH." >&2
+    exit 127
+  fi
+  HF_DOWNLOAD_CMD=("$HF_CLI_BIN" download)
+elif command -v huggingface-cli >/dev/null 2>&1; then
+  HF_DOWNLOAD_CMD=(huggingface-cli download)
+elif command -v hf >/dev/null 2>&1; then
+  HF_DOWNLOAD_CMD=(hf download)
+else
+  echo "Hugging Face CLI is required. Install with: python3 -m pip install -U huggingface_hub hf_transfer" >&2
+  echo "Expected either 'huggingface-cli' or the newer 'hf' command on PATH." >&2
   exit 127
 fi
 
@@ -39,7 +51,7 @@ policy_downloaded=false
 if [[ "$DOWNLOAD_LEROBOT_DATASET" == "1" ]]; then
   echo "[download] LeRobot dataset: $LEROBOT_DATASET_REPO_ID -> $LEROBOT_DATASET_LOCAL_DIR"
   HF_HUB_ENABLE_HF_TRANSFER="$HF_HUB_ENABLE_HF_TRANSFER" \
-    huggingface-cli download "$LEROBOT_DATASET_REPO_ID" \
+    "${HF_DOWNLOAD_CMD[@]}" "$LEROBOT_DATASET_REPO_ID" \
       --repo-type dataset \
       --local-dir "$LEROBOT_DATASET_LOCAL_DIR"
   dataset_downloaded=true
@@ -57,7 +69,7 @@ if [[ "$DOWNLOAD_LEROBOT_POLICY" == "1" ]]; then
   mkdir -p "$LEROBOT_POLICY_LOCAL_DIR"
   echo "[download] LeRobot policy: $LEROBOT_POLICY_REPO_ID -> $LEROBOT_POLICY_LOCAL_DIR"
   HF_HUB_ENABLE_HF_TRANSFER="$HF_HUB_ENABLE_HF_TRANSFER" \
-    huggingface-cli download "$LEROBOT_POLICY_REPO_ID" \
+    "${HF_DOWNLOAD_CMD[@]}" "$LEROBOT_POLICY_REPO_ID" \
       --local-dir "$LEROBOT_POLICY_LOCAL_DIR"
   policy_downloaded=true
 else

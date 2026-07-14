@@ -96,13 +96,10 @@ torchvision==0.22.1+cu128
 | `FASTWAM_RELEASE_DATASET_STATS` | `$FASTWAM_MODEL_BASE/fastwam_release/libero_uncond_2cam224_dataset_stats.json` | release stats |
 | `FASTWAM_PIN_STATS` | 空 | V6 多机 recipe 建议显式传，避免在线重扫 stats |
 
-release 权重准备仍按 FastWAM 文档：
+release 权重建议用本仓库封装入口准备；脚本会自动兼容旧版 `huggingface-cli` 和新版 `hf` CLI：
 
 ```bash
-huggingface-cli download yuanty/fastwam \
-  libero_uncond_2cam224.pt \
-  libero_uncond_2cam224_dataset_stats.json \
-  --local-dir "$FASTWAM_MODEL_BASE/fastwam_release"
+make download-fastwam-artifacts
 ```
 
 ActionDiT backbone 如果缺失，在 FastWAM 工作树中生成：
