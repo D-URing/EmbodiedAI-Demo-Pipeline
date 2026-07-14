@@ -2,7 +2,7 @@
 
 面向家庭与生活服务场景的具身智能 Demo 工程基座。项目采用 **contract-first、headless-first、evaluation-first、backend-switchable** 的路线：先稳定任务、观测、动作、运行和评测契约，再逐步接入 mock、离线回放、NVIDIA 仿真集群、VLA 和真实机器人。
 
-当前不以训练大模型、同时适配多个仿真器、搭建复杂可视化或立即接真机为目标。第一主线是 **LeRobot-first data-to-inference pipeline**：从 LeRobot 数据读取，到 policy 训练/加载，再到离线推理和证据报告。第一次看项目建议先读 [`docs/00_PROJECT_OVERVIEW.md`](docs/00_PROJECT_OVERVIEW.md)、[`docs/LEROBOT_FIRST_PIPELINE.md`](docs/LEROBOT_FIRST_PIPELINE.md) 和 [`docs/01_ARCHITECTURE.md`](docs/01_ARCHITECTURE.md)。
+当前不以训练大模型、同时适配多个仿真器、搭建复杂可视化或立即接真机为目标。第一主线是 **LeRobot-first data-to-inference pipeline**：从 LeRobot 数据读取，到 policy 训练/加载，再到离线推理和证据报告。当前 LeRobot demo 默认模型是 **ACT on PushT**。第一次看项目建议先读 [`docs/00_PROJECT_OVERVIEW.md`](docs/00_PROJECT_OVERVIEW.md)、[`docs/LEROBOT_FIRST_PIPELINE.md`](docs/LEROBOT_FIRST_PIPELINE.md)、[`docs/MODEL_ARTIFACTS.md`](docs/MODEL_ARTIFACTS.md)、[`docs/CLUSTER_ARTIFACTS_RUNBOOK.md`](docs/CLUSTER_ARTIFACTS_RUNBOOK.md) 和 [`docs/01_ARCHITECTURE.md`](docs/01_ARCHITECTURE.md)。
 
 ## 如何理解这个项目
 
@@ -10,7 +10,7 @@
 
 | 层级 | 回答的问题 | 当前状态 |
 |---|---|---|
-| LeRobot 主干 | 数据读取到 policy 推理是否打通？ | 已有训练 smoke，下一步补 data/inference smoke |
+| LeRobot 主干 | 数据读取到 policy 推理是否打通？ | ACT/PushT 已有 data/train/infer/report 入口 |
 | Custom backend 扩展 | 私有 FastWAM、自建模型和特殊 recipe 如何保留？ | FastWAM overlay 已接入 |
 | Household 应用层 | 家庭任务如何展示、评测和后续接仿真/真机？ | 4 个 R1 mock demo |
 
@@ -22,7 +22,7 @@
 - 已预留：mock/replay/sim/real 模式，local/Slurm launcher，inproc/WebSocket policy transport，CPU/GPU 资源声明
 - 已固化：LeRobot-first 作为第一 demo 管线基准；FastWAM 是 LeRobot-native policy 路径和 custom overlay 双路径；RoboDojo 作为后续外部仿真评测目标
 - 当前可运行：`embodied-demo run --config configs/runs/tabletop_sorting_mock.yaml` 可生成第一版 mock demo artifacts
-- 当前 LeRobot 复刻：`make lerobot-data-smoke`、`make lerobot-train-smoke`、`make lerobot-infer-smoke` 已有入口；默认不下载大文件，真实运行需要集群/缓存里的 dataset 和 checkpoint
+- 当前 LeRobot 复刻：默认模型是 ACT/PushT；`make lerobot-data-smoke`、`make lerobot-train-smoke`、`make lerobot-infer-smoke` 已有入口；默认不下载大文件，真实运行需要集群/缓存里的 dataset 和 checkpoint
 - 当前 FastWAM 集成：官方 LeRobot-native FastWAM 作为优先 policy 路径；私有 FastWAM overlay 作为自建模型/真机数据扩展路径
 - 当前 Demo Chain：`embodied-demo report-fastwam --run-dir <runs/fastwam/...>` 可把 FastWAM 训练产物归一化成 demo 交付报告
 - 当前规划格局：LeRobot data-to-inference 是主线；household mock 是应用层；私有 FastWAM overlay 是 custom backend 扩展
@@ -81,6 +81,7 @@ make demo-extended
 
 ```bash
 bash scripts/lerobot/install_lerobot_cluster.sh
+make download-lerobot-artifacts
 make lerobot-train-smoke
 ```
 
@@ -94,6 +95,18 @@ LEROBOT_POLICY_PATH=/path/to/local/checkpoint make lerobot-infer-smoke
 ```
 
 默认 `LEROBOT_ALLOW_DOWNLOAD=0`，不会下载大文件；如确实要在集群上下载，需显式设置 `LEROBOT_ALLOW_DOWNLOAD=1`。
+
+公开开源数据和权重下载已经封装为 Make target：
+
+```bash
+# 下载 LeRobot PushT dataset；可选下载 LeRobot policy repo
+make download-lerobot-artifacts
+
+# 下载 FastWAM release 权重和 stats
+make download-fastwam-artifacts
+```
+
+集群路径、Hugging Face cache、policy checkpoint 和 FastWAM release 的完整命令见 [`docs/CLUSTER_ARTIFACTS_RUNBOOK.md`](docs/CLUSTER_ARTIFACTS_RUNBOOK.md)。
 
 在 CUDA 集群上接入你已有的 FastWAM 真机训练/评测 pipeline：
 
@@ -149,12 +162,15 @@ make reference-fetch
 │   ├── ENVIRONMENT.md            # macOS/Linux/NVIDIA 集群环境配置
 │   ├── 00_PROJECT_OVERVIEW.md    # 新同事/汇报入口
 │   ├── 01_ARCHITECTURE.md        # Pipeline 分层与代码结构
+│   ├── CLUSTER_ARTIFACTS_RUNBOOK.md # 集群下载开源数据/模型和 smoke 验证
 │   ├── LEROBOT_FIRST_PIPELINE.md # LeRobot-first 主线
+│   ├── MODEL_ARTIFACTS.md        # 模型/数据/权重下载与存放规范
 │   ├── DEMO_COVERAGE_ROADMAP.md  # demo 覆盖矩阵与 readiness 分级
 │   ├── FASTWAM_REALROBOT_INTEGRATION.md
 │   └── MASTER_PLAN.md            # 项目范围、架构、资源映射与路线图
 ├── requirements/                 # 经过验收的 Python 版本约束
 ├── references/                   # 上游复刻基准和引用 pin
+│   └── model_registry.yaml       # 模型路径、状态和 artifact 约定
 ├── scripts/fastwam/              # FastWAM 外部 backend 准备、启动和日志解析
 ├── scenes/mock/                  # 轻量场景描述；不声称物理真实性
 ├── src/embodied_demo/

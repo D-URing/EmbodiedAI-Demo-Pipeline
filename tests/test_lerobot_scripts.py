@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import yaml
+
 from scripts.lerobot.parse_train_log import write_summary
 from scripts.lerobot.generate_data_to_inference_report import generate_report
 
@@ -40,6 +42,19 @@ def test_lerobot_dataset_smoke_disables_downloads_by_default() -> None:
     assert "scripts/lerobot/inspect_dataset.py" in runner
 
 
+def test_lerobot_artifact_download_script_uses_explicit_hf_targets() -> None:
+    runner = (ROOT / "scripts/lerobot/download_artifacts.sh").read_text(encoding="utf-8")
+    makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
+
+    assert "LEROBOT_DATASET_REPO_ID:-lerobot/pusht" in runner
+    assert "--repo-type dataset" in runner
+    assert "DOWNLOAD_LEROBOT_POLICY" in runner
+    assert "LEROBOT_POLICY_REPO_ID is required" in runner
+    assert 'PYTHON_BIN="${PYTHON_BIN:-python3}"' in runner
+    assert "artifact_manifests/lerobot_artifacts_manifest.json" in runner
+    assert "download-lerobot-artifacts" in makefile
+
+
 def test_lerobot_inference_smoke_requires_local_policy_path() -> None:
     runner = (ROOT / "scripts/lerobot/run_inference_smoke.sh").read_text(encoding="utf-8")
 
@@ -66,3 +81,18 @@ def test_lerobot_chain_report_uses_dataset_and_inference_evidence(tmp_path: Path
     assert "lerobot_fastwam_data_to_inference_v0" in report
     assert "policy_type: act" in report
     assert "loss_decreased: True" in report
+
+
+def test_model_registry_tracks_current_lerobot_demo() -> None:
+    registry = yaml.safe_load((ROOT / "references/model_registry.yaml").read_text(encoding="utf-8"))
+
+    act = registry["models"]["lerobot_act_pusht"]
+    assert act["path_type"] == "lerobot_native"
+    assert act["policy_type"] == "act"
+    assert act["dataset_repo_id"] == "lerobot/pusht"
+    assert "make download-lerobot-artifacts" in act["download_targets"]
+
+    fastwam_overlay = registry["models"]["custom_fastwam_realrobot_overlay"]
+    assert fastwam_overlay["path_type"] == "custom_backend"
+    assert "make download-fastwam-artifacts" in fastwam_overlay["download_targets"]
+    assert "not a from-scratch self-designed model" in " ".join(fastwam_overlay["notes"])

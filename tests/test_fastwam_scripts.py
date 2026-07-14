@@ -44,3 +44,15 @@ def test_fastwam_prepare_uses_overlay_without_vendoring() -> None:
     assert "rsync -a" in prepare
     assert "--exclude \"runs/\"" in prepare
     assert "--exclude \"checkpoints/\"" in prepare
+
+
+def test_fastwam_release_download_script_tracks_public_artifacts() -> None:
+    runner = (ROOT / "scripts/fastwam/download_release_artifacts.sh").read_text(encoding="utf-8")
+    makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
+
+    assert "FASTWAM_RELEASE_REPO_ID:-yuanty/fastwam" in runner
+    assert "libero_uncond_2cam224.pt" in runner
+    assert "libero_uncond_2cam224_dataset_stats.json" in runner
+    assert 'PYTHON_BIN="${PYTHON_BIN:-python3}"' in runner
+    assert "artifact_manifests/fastwam_release_artifacts_manifest.json" in runner
+    assert "download-fastwam-artifacts" in makefile

@@ -41,7 +41,7 @@ LeRobotDataset
   -> evidence report
 ```
 
-当前已有 `make lerobot-train-smoke`，下一步补 `make lerobot-data-smoke` 和 `make lerobot-infer-smoke`。
+当前第一条 LeRobot-native demo 是 **ACT on PushT**，默认配置为 `dataset.repo_id=lerobot/pusht`、`policy.type=act`。已封装 `make lerobot-data-smoke`、`make lerobot-train-smoke` 和 `make lerobot-infer-smoke`；默认不下载大文件。
 
 ### 应用层：可运行 household mock demo
 

@@ -23,6 +23,16 @@ LeRobot Dataset
 - 推理能不能从 observation/batch 产生 action？
 - loss、checkpoint、action shape、latency、设备和版本能不能被记录成可交付报告？
 
+当前已经封装的第一条 LeRobot-native 模型 demo 是：
+
+```text
+dataset.repo_id = lerobot/pusht
+policy.type     = act
+policy class    = lerobot.policies.act.modeling_act.ACTPolicy
+```
+
+也就是 **ACT on PushT**。这条链路用于验证 LeRobot 标准 data-to-inference 结构；FastWAM 是下一条重点 LeRobot-native policy path。
+
 ## 2. FastWAM 的新定位
 
 FastWAM 不再被描述成 LeRobot 之外的一条完全独立主线，而是拆成两个层级：
@@ -81,6 +91,7 @@ demo_chains/lerobot_fastwam_data_to_inference_v0.yaml
 已新增：
 
 ```bash
+make download-lerobot-artifacts
 make lerobot-data-smoke
 ```
 
@@ -97,7 +108,7 @@ scripts/lerobot/inspect_dataset.py
 scripts/lerobot/run_dataset_smoke.sh
 ```
 
-默认 `LEROBOT_ALLOW_DOWNLOAD=0`，脚本会设置 Hugging Face offline 环境变量；如果本地没有 dataset 缓存或 `LEROBOT_DATASET_ROOT`，会明确失败，不会偷偷下载大文件。
+默认 `LEROBOT_ALLOW_DOWNLOAD=0`，脚本会设置 Hugging Face offline 环境变量；如果本地没有 dataset 缓存或 `LEROBOT_DATASET_ROOT`，会明确失败，不会偷偷下载大文件。需要在集群上下载公开 dataset 时，先运行 `make download-lerobot-artifacts`；完整下载流程见 [`CLUSTER_ARTIFACTS_RUNBOOK.md`](CLUSTER_ARTIFACTS_RUNBOOK.md)。
 
 ### Step 2：training/load smoke
 
@@ -204,3 +215,14 @@ Shared evidence/report contract above both paths
 - 不把私有 FastWAM overlay 删除或降级为无用资产；
 - 不把 CUDA/LeRobot/FastWAM 依赖塞进 core `.venv`；
 - 不等待真机就地验证第一条 data-to-inference 链路。
+
+## 9. 模型和权重管理
+
+模型、dataset、checkpoint 下载和存放规范见 [`MODEL_ARTIFACTS.md`](MODEL_ARTIFACTS.md)。集群下载 runbook 见 [`CLUSTER_ARTIFACTS_RUNBOOK.md`](CLUSTER_ARTIFACTS_RUNBOOK.md)。当前模型 registry 见 [`references/model_registry.yaml`](../references/model_registry.yaml)。
+
+关键原则：
+
+- 当前 LeRobot demo 是 ACT/PushT；
+- FastWAM LeRobot-native 是下一条重点 policy；
+- FastWAM realrobot overlay 是 custom finetuning backend，不是从零自拟模型；
+- 大文件只放 cache/shared storage，不提交到仓库。

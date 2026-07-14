@@ -2,7 +2,7 @@ PYTHON ?= python3.11
 VENV ?= .venv
 CONSTRAINTS ?= requirements/constraints-py311.txt
 
-.PHONY: setup doctor test validate dry-run demo demo-extended lerobot-check-scripts lerobot-data-smoke lerobot-train-smoke lerobot-infer-smoke demo-chain-lerobot-fastwam fastwam-check-scripts fastwam-train-smoke demo-chain-fastwam schemas reference-fetch clean
+.PHONY: setup doctor test validate dry-run demo demo-extended download-lerobot-artifacts download-fastwam-artifacts lerobot-check-scripts lerobot-data-smoke lerobot-train-smoke lerobot-infer-smoke demo-chain-lerobot-fastwam fastwam-check-scripts fastwam-train-smoke demo-chain-fastwam schemas reference-fetch clean
 
 setup:
 	$(PYTHON) -m venv $(VENV)
@@ -33,8 +33,15 @@ demo-extended: demo
 	$(VENV)/bin/embodied-demo run --config configs/runs/kitchen_counter_sorting_mock.yaml
 	$(VENV)/bin/embodied-demo run --config configs/runs/drawer_pick_place_mock.yaml
 
+download-lerobot-artifacts:
+	bash scripts/lerobot/download_artifacts.sh
+
+download-fastwam-artifacts:
+	bash scripts/fastwam/download_release_artifacts.sh
+
 lerobot-check-scripts:
 	bash -n scripts/lerobot/install_lerobot_cluster.sh
+	bash -n scripts/lerobot/download_artifacts.sh
 	bash -n scripts/lerobot/run_pusht_act_gpu_smoke.sh
 	bash -n scripts/lerobot/run_dataset_smoke.sh
 	bash -n scripts/lerobot/run_inference_smoke.sh
@@ -58,6 +65,7 @@ demo-chain-lerobot-fastwam:
 
 fastwam-check-scripts:
 	bash -n scripts/fastwam/prepare_fastwam_overlay.sh
+	bash -n scripts/fastwam/download_release_artifacts.sh
 	bash -n scripts/fastwam/run_realrobot_train_eval.sh
 	bash -n scripts/fastwam/slurm_realrobot_pilot.sbatch
 	$(VENV)/bin/python scripts/fastwam/parse_train_log.py --log tests/fixtures/fastwam_train_stdout.log --output-dir build/fastwam-parser-test
