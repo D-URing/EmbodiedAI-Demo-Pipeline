@@ -22,23 +22,38 @@
 
 ## 2. 集群路径约定
 
-先在每个作业或登录节点上设置这些变量：
+本项目默认假设整个仓库目录已经放在共享盘上，因此所有公开数据、模型权重、Hugging Face cache、上游源码和运行输出都落在项目内。先进入项目根目录：
 
 ```bash
+cd /path/to/shared/EmbodiedAI-Demo-Pipeline
+
 export PROJECT_ROOT="$PWD"
 
-export EMBODIED_MODEL_ROOT="/root/paddlejob/share-storage/gpfs/system-public/dingxibo/models"
-export EMBODIED_DATA_ROOT="/root/paddlejob/share-storage/gpfs/system-public/dingxibo/Embodied_AI/data"
-export EMBODIED_RUN_ROOT="/root/paddlejob/share-storage/gpfs/system-public/dingxibo/Embodied_AI/runs"
+export EMBODIED_MODEL_ROOT="$PROJECT_ROOT/models"
+export EMBODIED_DATA_ROOT="$PROJECT_ROOT/data"
+export EMBODIED_RUN_ROOT="$PROJECT_ROOT/runs"
 
-export HF_HOME="/root/paddlejob/share-storage/gpfs/system-public/dingxibo/hf_home"
+export HF_HOME="$PROJECT_ROOT/hf_cache"
 export HUGGINGFACE_HUB_CACHE="$HF_HOME/hub"
 export HF_DATASETS_CACHE="$HF_HOME/datasets"
 export HF_HUB_ENABLE_HF_TRANSFER=1
 export PYTHON_BIN=python3
 ```
 
-如果集群路径不同，只需要替换上面的三个 root。建议所有节点共享同一套 `EMBODIED_*` 和 `HF_*` 路径，避免每次作业重复下载。
+如果你不设置这些变量，仓库脚本也会默认使用相同的项目内目录。显式 export 的好处是 shell 里更容易看清当前路径。
+
+项目内目录规划：
+
+```text
+$PROJECT_ROOT/
+├── data/
+├── models/
+├── checkpoints/
+├── runs/
+├── artifacts/
+├── upstreams/
+└── hf_cache/
+```
 
 ## 3. 准备 Python / LeRobot 环境
 
@@ -174,7 +189,7 @@ $EMBODIED_RUN_ROOT/artifact_manifests/fastwam_release_artifacts_manifest.json
 如果没有显式设置 `EMBODIED_MODEL_ROOT`，默认目标路径是：
 
 ```text
-$HOME/.cache/embodied-demo/models/fastwam_release
+$PROJECT_ROOT/models/fastwam_release
 ```
 
 后续 custom overlay 运行时：
@@ -197,7 +212,7 @@ Network is unreachable
 LocalEntryNotFoundError
 ```
 
-说明当前节点不能访问 Hugging Face，且本地 cache 里也没有对应 snapshot。先检查：
+说明当前节点不能访问 Hugging Face，且项目内 `hf_cache/` 里也没有对应 snapshot。先检查：
 
 ```bash
 which hf || which huggingface-cli
@@ -255,9 +270,10 @@ FASTWAM_RUN_DIR="runs/fastwam/<run_name>/<run_id>" make demo-chain-fastwam
 
 | 变量 | 默认值 | 作用 |
 |---|---|---|
-| `EMBODIED_DATA_ROOT` | `$HOME/.cache/embodied-demo/data` | 开源/私有数据根目录 |
-| `EMBODIED_MODEL_ROOT` | `$HOME/.cache/embodied-demo/models` | 权重、checkpoint 根目录 |
-| `EMBODIED_RUN_ROOT` | `$PWD/runs` | manifest 和运行输出 |
+| `EMBODIED_DATA_ROOT` | `$PROJECT_ROOT/data` | 开源/私有数据根目录 |
+| `EMBODIED_MODEL_ROOT` | `$PROJECT_ROOT/models` | 权重、checkpoint 根目录 |
+| `EMBODIED_RUN_ROOT` | `$PROJECT_ROOT/runs` | manifest 和运行输出 |
+| `HF_HOME` | `$PROJECT_ROOT/hf_cache` | Hugging Face cache 根目录 |
 | `LEROBOT_DATASET_REPO_ID` | `lerobot/pusht` | LeRobot dataset repo |
 | `LEROBOT_DATASET_LOCAL_DIR` | `$EMBODIED_DATA_ROOT/lerobot/pusht` | dataset 落盘目录 |
 | `DOWNLOAD_LEROBOT_DATASET` | `1` | 是否下载 LeRobot dataset |

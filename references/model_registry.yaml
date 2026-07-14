@@ -6,12 +6,19 @@ purpose: >
   secrets, or large artifact paths that are only valid on one machine.
 
 storage:
-  local_default:
-    model_root: "$HOME/.cache/embodied-demo/models"
-    data_root: "$HOME/.cache/embodied-demo/data"
-  cluster_example:
-    model_root: "/root/paddlejob/share-storage/gpfs/system-public/dingxibo/models"
-    data_root: "/root/paddlejob/share-storage/gpfs/system-public/dingxibo/Embodied_AI/data"
+  repo_local_default:
+    project_root: "$PWD"
+    model_root: "$PROJECT_ROOT/models"
+    data_root: "$PROJECT_ROOT/data"
+    run_root: "$PROJECT_ROOT/runs"
+    checkpoint_root: "$PROJECT_ROOT/checkpoints"
+    upstream_root: "$PROJECT_ROOT/upstreams"
+    hf_home: "$PROJECT_ROOT/hf_cache"
+  override_policy: >
+    Defaults are repo-local because the entire project directory is expected to
+    live on shared storage during early cluster testing. Override EMBODIED_*,
+    HF_HOME, FASTWAM_* or LEROBOT_* only when a cluster requires a different
+    mount layout.
   never_commit:
     - model weights
     - datasets

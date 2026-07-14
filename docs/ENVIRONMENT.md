@@ -136,18 +136,23 @@ VENV="$SCRATCH/venvs/embodied-core" make test
 
 如果集群不提供 module，可在团队确认后使用统一容器或 micromamba 安装 Python 3.11；不要让每位成员选择不同的 CUDA/Python 组合。
 
-### 4.3 缓存和产物位置
+### 4.3 下载、缓存和产物位置
 
-集群上把大缓存放到 scratch 或团队共享缓存，不要写入 Git 仓库或容量有限的 home：
+当前项目假设整个仓库目录放在团队共享盘上，因此默认把数据、模型权重、Hugging Face cache、上游源码和运行输出都放在项目内 ignored 目录：
 
 ```bash
-export PIP_CACHE_DIR="$SCRATCH/cache/pip"
-export HF_HOME="$SCRATCH/cache/huggingface"
-export TORCH_HOME="$SCRATCH/cache/torch"
-export EMBODIED_RUNS_ROOT="$SCRATCH/embodied-runs"
+export PROJECT_ROOT="$PWD"
+export EMBODIED_DATA_ROOT="$PROJECT_ROOT/data"
+export EMBODIED_MODEL_ROOT="$PROJECT_ROOT/models"
+export EMBODIED_RUN_ROOT="$PROJECT_ROOT/runs"
+export HF_HOME="$PROJECT_ROOT/hf_cache"
+export HUGGINGFACE_HUB_CACHE="$HF_HOME/hub"
+export HF_DATASETS_CACHE="$HF_HOME/datasets"
+export TORCH_HOME="$PROJECT_ROOT/hf_cache/torch"
+export PIP_CACHE_DIR="$PROJECT_ROOT/hf_cache/pip"
 ```
 
-这些变量暂时只是部署约定；`EMBODIED_RUNS_ROOT` 会在 M2 artifact writer 中正式接入。在此之前，RunSpec 默认仍写入仓库下被忽略的 `runs/`。
+对应目录 `data/`、`models/`、`checkpoints/`、`runs/`、`artifacts/`、`upstreams/` 和 `hf_cache/` 均已被 `.gitignore` 忽略。若某个集群必须使用独立 scratch/cache，再显式覆盖这些变量。
 
 ### 4.4 无公网计算节点
 
@@ -193,11 +198,11 @@ FASTWAM_CREATE_CONDA=1 FASTWAM_INSTALL=1 \
 bash scripts/fastwam/prepare_fastwam_overlay.sh
 ```
 
-它会把官方 FastWAM 与私有 `D-URing/fastwam-realrobot-pipeline` overlay 到 `$FASTWAM_WORKDIR`，再按 CUDA 12.8 默认安装 PyTorch 与 editable FastWAM。若集群 CUDA wheel、模型目录或私有仓库 checkout 位置不同，通过以下变量覆盖：
+它会把官方 FastWAM 与私有 `D-URing/fastwam-realrobot-pipeline` overlay 到 `$FASTWAM_WORKDIR`，默认位于项目内 `upstreams/FastWAM-realrobot`，再按 CUDA 12.8 默认安装 PyTorch 与 editable FastWAM。若集群 CUDA wheel、模型目录或私有仓库 checkout 位置不同，通过以下变量覆盖：
 
 ```bash
-export FASTWAM_WORKDIR="$SCRATCH/upstreams/FastWAM-realrobot"
-export FASTWAM_MODEL_BASE="/path/to/shared/models"
+export FASTWAM_WORKDIR="$PROJECT_ROOT/upstreams/FastWAM-realrobot"
+export FASTWAM_MODEL_BASE="$PROJECT_ROOT/models"
 export FASTWAM_TORCH_INDEX_URL="https://download.pytorch.org/whl/cu128"
 ```
 

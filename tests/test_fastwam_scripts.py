@@ -50,6 +50,8 @@ def test_fastwam_release_download_script_tracks_public_artifacts() -> None:
     runner = (ROOT / "scripts/fastwam/download_release_artifacts.sh").read_text(encoding="utf-8")
     makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
 
+    assert 'EMBODIED_MODEL_ROOT="${EMBODIED_MODEL_ROOT:-$REPO_ROOT/models}"' in runner
+    assert 'HF_HOME="${HF_HOME:-$REPO_ROOT/hf_cache}"' in runner
     assert "FASTWAM_RELEASE_REPO_ID:-yuanty/fastwam" in runner
     assert "libero_uncond_2cam224.pt" in runner
     assert "libero_uncond_2cam224_dataset_stats.json" in runner
@@ -62,3 +64,12 @@ def test_fastwam_release_download_script_tracks_public_artifacts() -> None:
     assert "HF_ENDPOINT" in runner
     assert "artifact_manifests/fastwam_release_artifacts_manifest.json" in runner
     assert "download-fastwam-artifacts" in makefile
+
+
+def test_fastwam_config_uses_repo_local_artifact_roots() -> None:
+    config = (ROOT / "configs/fastwam/realrobot_train_eval.sh").read_text(encoding="utf-8")
+
+    assert 'FASTWAM_CACHE_ROOT="${FASTWAM_CACHE_ROOT:-$EMBODIED_REPO_ROOT/upstreams}"' in config
+    assert 'FASTWAM_MODEL_BASE="${FASTWAM_MODEL_BASE:-$EMBODIED_REPO_ROOT/models}"' in config
+    assert 'FASTWAM_RUN_ROOT="${FASTWAM_RUN_ROOT:-$EMBODIED_REPO_ROOT/runs/fastwam}"' in config
+    assert "$EMBODIED_REPO_ROOT/checkpoints/fastwam/ActionDiT" in config

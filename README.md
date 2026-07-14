@@ -141,7 +141,7 @@ embodied-demo export-schema --output-dir build/schemas
 
 也可以使用 `make test`、`make validate`、`make dry-run` 和 `make schemas`。
 
-复核外部复刻基准时，可以只拉取固定 commit 到本机 cache：
+复核外部复刻基准时，可以只拉取固定 commit 到项目内 ignored 目录 `upstreams/`：
 
 ```bash
 make reference-fetch

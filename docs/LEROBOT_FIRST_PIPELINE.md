@@ -225,4 +225,4 @@ Shared evidence/report contract above both paths
 - 当前 LeRobot demo 是 ACT/PushT；
 - FastWAM LeRobot-native 是下一条重点 policy；
 - FastWAM realrobot overlay 是 custom finetuning backend，不是从零自拟模型；
-- 大文件只放 cache/shared storage，不提交到仓库。
+- 大文件只放项目内 ignored 目录或显式外部共享盘，不提交到仓库。

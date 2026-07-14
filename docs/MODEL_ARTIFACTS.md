@@ -66,22 +66,31 @@ FastWAM 当前 custom overlay 不是完全从零自拟模型，而是基于 Fast
 
 ## 4. 推荐存放位置
 
-### 本地开发机
+### 默认：项目内目录
 
-```bash
-export EMBODIED_MODEL_ROOT="$HOME/.cache/embodied-demo/models"
-export EMBODIED_DATA_ROOT="$HOME/.cache/embodied-demo/data"
-export EMBODIED_RUN_ROOT="$PWD/runs"
+本项目默认把公开数据、模型权重、训练产物和上游源码都放在仓库目录内。由于整个项目目录会放在共享盘上，这比 `$HOME/.cache` 更直观，也更方便团队复现。
+
+```text
+EmbodiedAI-Demo-Pipeline/
+├── data/          # LeRobot/Open-X/DROID 等数据
+├── models/        # 公开模型权重、release 权重、预训练 policy
+├── checkpoints/   # 本项目生成或整理的 checkpoint
+├── runs/          # smoke、训练、评测、manifest 和 report
+├── artifacts/     # 后续可视化/导出包
+├── upstreams/     # LeRobot/FastWAM/XPolicyLab 等上游源码 checkout
+└── hf_cache/      # Hugging Face hub/datasets cache
 ```
 
-### NVIDIA 集群
+这些目录已经在 `.gitignore` 中忽略，不会提交大文件。
 
-根据集群共享盘替换，例如：
+脚本默认等价于：
 
 ```bash
-export EMBODIED_MODEL_ROOT="/root/paddlejob/share-storage/gpfs/system-public/dingxibo/models"
-export EMBODIED_DATA_ROOT="/root/paddlejob/share-storage/gpfs/system-public/dingxibo/Embodied_AI/data"
-export EMBODIED_RUN_ROOT="/root/paddlejob/share-storage/gpfs/system-public/dingxibo/Embodied_AI/runs"
+export PROJECT_ROOT="$PWD"
+export EMBODIED_MODEL_ROOT="$PROJECT_ROOT/models"
+export EMBODIED_DATA_ROOT="$PROJECT_ROOT/data"
+export EMBODIED_RUN_ROOT="$PROJECT_ROOT/runs"
+export HF_HOME="$PROJECT_ROOT/hf_cache"
 ```
 
 ### 推荐目录结构
@@ -106,19 +115,25 @@ $EMBODIED_DATA_ROOT/
 │   └── pusht/
 ├── fastwam_realrobot/
 └── custom/
+
+$PROJECT_ROOT/upstreams/
+├── lerobot/
+├── FastWAM-realrobot/
+├── fastwam-realrobot-pipeline/
+└── XPolicyLab/
+
+$PROJECT_ROOT/checkpoints/
+└── fastwam/
+    └── ActionDiT_linear_interp_Wan22_alphascale_1024hdim.pt
 ```
 
 ## 5. 当前 ACT/PushT 使用方式
 
 ### 下载 PushT dataset
 
-集群上建议先显式下载公开 dataset：
+在项目根目录下显式下载公开 dataset：
 
 ```bash
-export EMBODIED_DATA_ROOT="/root/paddlejob/share-storage/gpfs/system-public/dingxibo/Embodied_AI/data"
-export EMBODIED_MODEL_ROOT="/root/paddlejob/share-storage/gpfs/system-public/dingxibo/models"
-export EMBODIED_RUN_ROOT="/root/paddlejob/share-storage/gpfs/system-public/dingxibo/Embodied_AI/runs"
-
 make download-lerobot-artifacts
 ```
 
@@ -146,7 +161,7 @@ make download-lerobot-artifacts
 
 ### Dataset smoke
 
-如果 dataset 已在本地/集群缓存中：
+如果 dataset 已在项目内：
 
 ```bash
 export LEROBOT_DATASET_REPO_ID=lerobot/pusht
@@ -218,7 +233,7 @@ FASTWAM_RELEASE_FILES="libero_uncond_2cam224.pt libero_uncond_2cam224_dataset_st
 make download-fastwam-artifacts
 ```
 
-更完整的集群下载、cache 和 smoke 验证步骤见 [`CLUSTER_ARTIFACTS_RUNBOOK.md`](CLUSTER_ARTIFACTS_RUNBOOK.md)。
+更完整的集群下载、项目内目录和 smoke 验证步骤见 [`CLUSTER_ARTIFACTS_RUNBOOK.md`](CLUSTER_ARTIFACTS_RUNBOOK.md)。
 
 ## 7. 新模型接入清单
 
@@ -229,7 +244,7 @@ make download-fastwam-artifacts
 3. smoke 入口：dataset/train/load/inference 至少一个；
 4. evidence 输出：dataset/training/inference/evaluation 至少一种；
 5. 边界声明：offline、sim、real 哪个层级已经证明；
-6. 不入库说明：哪些权重、数据和产物必须留在共享盘/cache。
+6. 不入库说明：哪些权重、数据和产物必须留在项目内 ignored 目录或外部共享盘。
 
 ## 8. 近期接入顺序
 

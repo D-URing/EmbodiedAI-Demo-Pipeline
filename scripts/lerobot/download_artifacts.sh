@@ -3,9 +3,12 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
-EMBODIED_DATA_ROOT="${EMBODIED_DATA_ROOT:-$HOME/.cache/embodied-demo/data}"
-EMBODIED_MODEL_ROOT="${EMBODIED_MODEL_ROOT:-$HOME/.cache/embodied-demo/models}"
+EMBODIED_DATA_ROOT="${EMBODIED_DATA_ROOT:-$REPO_ROOT/data}"
+EMBODIED_MODEL_ROOT="${EMBODIED_MODEL_ROOT:-$REPO_ROOT/models}"
 EMBODIED_RUN_ROOT="${EMBODIED_RUN_ROOT:-$REPO_ROOT/runs}"
+export HF_HOME="${HF_HOME:-$REPO_ROOT/hf_cache}"
+export HUGGINGFACE_HUB_CACHE="${HUGGINGFACE_HUB_CACHE:-$HF_HOME/hub}"
+export HF_DATASETS_CACHE="${HF_DATASETS_CACHE:-$HF_HOME/datasets}"
 
 LEROBOT_DATASET_REPO_ID="${LEROBOT_DATASET_REPO_ID:-lerobot/pusht}"
 LEROBOT_DATASET_NAME="${LEROBOT_DATASET_NAME:-${LEROBOT_DATASET_REPO_ID#*/}}"
@@ -84,6 +87,8 @@ echo "[artifact] policy_local_dir=$LEROBOT_POLICY_LOCAL_DIR"
 echo "[artifact] manifest=$MANIFEST_PATH"
 echo "[artifact] hf_cli=${HF_DOWNLOAD_CMD[*]}"
 echo "[artifact] hf_endpoint=${HF_ENDPOINT:-https://huggingface.co}"
+echo "[artifact] hf_home=$HF_HOME"
+echo "[artifact] hf_hub_cache=$HUGGINGFACE_HUB_CACHE"
 
 if [[ "$DOWNLOAD_LEROBOT_DATASET" == "1" ]]; then
   echo "[download] LeRobot dataset: $LEROBOT_DATASET_REPO_ID -> $LEROBOT_DATASET_LOCAL_DIR"

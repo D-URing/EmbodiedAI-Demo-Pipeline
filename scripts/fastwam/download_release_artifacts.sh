@@ -3,8 +3,11 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
-EMBODIED_MODEL_ROOT="${EMBODIED_MODEL_ROOT:-$HOME/.cache/embodied-demo/models}"
+EMBODIED_MODEL_ROOT="${EMBODIED_MODEL_ROOT:-$REPO_ROOT/models}"
 EMBODIED_RUN_ROOT="${EMBODIED_RUN_ROOT:-$REPO_ROOT/runs}"
+export HF_HOME="${HF_HOME:-$REPO_ROOT/hf_cache}"
+export HUGGINGFACE_HUB_CACHE="${HUGGINGFACE_HUB_CACHE:-$HF_HOME/hub}"
+export HF_DATASETS_CACHE="${HF_DATASETS_CACHE:-$HF_HOME/datasets}"
 
 FASTWAM_RELEASE_REPO_ID="${FASTWAM_RELEASE_REPO_ID:-yuanty/fastwam}"
 FASTWAM_RELEASE_LOCAL_DIR="${FASTWAM_RELEASE_LOCAL_DIR:-$EMBODIED_MODEL_ROOT/fastwam_release}"
@@ -75,6 +78,8 @@ echo "[artifact] local_dir=$FASTWAM_RELEASE_LOCAL_DIR"
 echo "[artifact] manifest=$MANIFEST_PATH"
 echo "[artifact] hf_cli=${HF_DOWNLOAD_CMD[*]}"
 echo "[artifact] hf_endpoint=${HF_ENDPOINT:-https://huggingface.co}"
+echo "[artifact] hf_home=$HF_HOME"
+echo "[artifact] hf_hub_cache=$HUGGINGFACE_HUB_CACHE"
 echo "[download] FastWAM release: $FASTWAM_RELEASE_REPO_ID -> $FASTWAM_RELEASE_LOCAL_DIR"
 if ! HF_HUB_ENABLE_HF_TRANSFER="$HF_HUB_ENABLE_HF_TRANSFER" \
   "${HF_DOWNLOAD_CMD[@]}" "$FASTWAM_RELEASE_REPO_ID" \

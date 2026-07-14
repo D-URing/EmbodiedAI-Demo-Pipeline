@@ -86,12 +86,12 @@ torchvision==0.22.1+cu128
 
 ## 4. 模型、数据和路径
 
-默认路径来自你现有工程记录，集群上可通过环境变量覆盖：
+默认路径全部落在项目内，集群上仍可通过环境变量覆盖：
 
 | 变量 | 默认 | 说明 |
 |---|---|---|
-| `FASTWAM_WORKDIR` | `$HOME/.cache/embodied-demo/upstreams/FastWAM-realrobot` | overlay 后的可运行 FastWAM 树 |
-| `FASTWAM_MODEL_BASE` | `/root/paddlejob/share-storage/gpfs/system-public/dingxibo/models` | Wan/FastWAM 模型根目录 |
+| `FASTWAM_WORKDIR` | `$PROJECT_ROOT/upstreams/FastWAM-realrobot` | overlay 后的可运行 FastWAM 树 |
+| `FASTWAM_MODEL_BASE` | `$PROJECT_ROOT/models` | Wan/FastWAM 模型根目录 |
 | `FASTWAM_RELEASE_CKPT` | `$FASTWAM_MODEL_BASE/fastwam_release/libero_uncond_2cam224.pt` | FastWAM LIBERO release 权重 |
 | `FASTWAM_RELEASE_DATASET_STATS` | `$FASTWAM_MODEL_BASE/fastwam_release/libero_uncond_2cam224_dataset_stats.json` | release stats |
 | `FASTWAM_PIN_STATS` | 空 | V6 多机 recipe 建议显式传，避免在线重扫 stats |
@@ -102,13 +102,14 @@ release 权重建议用本仓库封装入口准备；脚本会自动兼容旧版
 make download-fastwam-artifacts
 ```
 
-ActionDiT backbone 如果缺失，在 FastWAM 工作树中生成：
+ActionDiT backbone 如果缺失，建议生成到项目内 `checkpoints/fastwam/`：
 
 ```bash
 cd "$FASTWAM_WORKDIR"
+mkdir -p "$PROJECT_ROOT/checkpoints/fastwam"
 python scripts/preprocess_action_dit_backbone.py \
   --model-config configs/model/fastwam.yaml \
-  --output checkpoints/ActionDiT_linear_interp_Wan22_alphascale_1024hdim.pt \
+  --output "$PROJECT_ROOT/checkpoints/fastwam/ActionDiT_linear_interp_Wan22_alphascale_1024hdim.pt" \
   --device cuda \
   --dtype bfloat16
 ```

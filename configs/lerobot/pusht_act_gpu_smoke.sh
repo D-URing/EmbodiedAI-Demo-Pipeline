@@ -1,6 +1,7 @@
 # shellcheck shell=bash
 
 # Pinned to the LeRobot commit recorded in references/upstreams.yaml.
+export EMBODIED_REPO_ROOT="${EMBODIED_REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 export LEROBOT_UPSTREAM_COMMIT="${LEROBOT_UPSTREAM_COMMIT:-e40b58a8dfa9e7b86918c374791599d070518d11}"
 
 # Official lightweight LeRobot smoke target. Override these on the cluster when needed.
@@ -24,4 +25,4 @@ export LEROBOT_EVAL_STEPS="${LEROBOT_EVAL_STEPS:-0}"
 export LEROBOT_WANDB_ENABLE="${LEROBOT_WANDB_ENABLE:-false}"
 
 export LEROBOT_RUN_NAME="${LEROBOT_RUN_NAME:-pusht_act_gpu_smoke}"
-export LEROBOT_RUN_ROOT="${LEROBOT_RUN_ROOT:-runs/lerobot}"
+export LEROBOT_RUN_ROOT="${LEROBOT_RUN_ROOT:-$EMBODIED_REPO_ROOT/runs/lerobot}"
