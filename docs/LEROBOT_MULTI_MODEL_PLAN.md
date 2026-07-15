@@ -176,10 +176,10 @@ bash experiments/lerobot/smolvla_so100_infer/launch.sh
 bash experiments/lerobot/fastwam_libero_infer/launch.sh
 ```
 
-FastWAM 推理注意：当前 `data/fastwam/libero-fastwam` 是 LeRobot v2.1，当前 LeRobot loader 需要 v3。先转换一个 subset，再覆盖：
+FastWAM 推理注意：当前 `data/custom/fastwam/libero-fastwam` 是 LeRobot v2.1，当前 LeRobot loader 需要 v3。先转换一个 subset，再覆盖：
 
 ```bash
-export LEROBOT_DATASET_ROOT="$PROJECT/data/fastwam/libero-fastwam/<converted_v3_subset>"
+export LEROBOT_DATASET_ROOT="$PROJECT/data/custom/fastwam/libero-fastwam/<converted_v3_subset>"
 bash experiments/lerobot/fastwam_libero_infer/launch.sh
 ```
 

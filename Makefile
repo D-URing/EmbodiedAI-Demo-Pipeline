@@ -159,7 +159,7 @@ download-imagewam-artifacts:
 
 download-imagewam-flux2-base: prepare-imagewam-upstream
 	cd upstreams/ImageWAM && \
-	MODEL_ROOT="$${IMAGEWAM_MODEL_ROOT:-$${EMBODIED_MODEL_ROOT:-$$(pwd)/../../models}/imagewam}" \
+	MODEL_ROOT="$${IMAGEWAM_MODEL_ROOT:-$${EMBODIED_MODEL_ROOT:-$$(pwd)/../../models}/custom/imagewam}" \
 	DOWNLOAD_9B="$${IMAGEWAM_DOWNLOAD_9B:-false}" \
 	bash scripts/flux2/prepare_flux2_files.sh
 

@@ -10,7 +10,7 @@
 |---|---|---|---|
 | `lerobot/pusht` | `data/lerobot/pusht` | ACT / Diffusion 训练与推理 | `make download-lerobot-pusht-dataset` |
 | `lerobot/svla_so100_pickplace` | `data/lerobot/svla_so100_pickplace` | SmolVLA fine-tune | `make download-lerobot-svla-so100-pickplace-dataset` |
-| `yuanty/LIBERO-fastwam` | `data/fastwam/libero-fastwam` | FastWAM / ImageWAM custom WAM 路线 | 见 `pipelines/custom/README.md` |
+| `yuanty/LIBERO-fastwam` | `data/custom/fastwam/libero-fastwam` | FastWAM / ImageWAM custom WAM 路线 | 见 `pipelines/custom/README.md` |
 
 ### B. 建议先下 sample / 子集
 

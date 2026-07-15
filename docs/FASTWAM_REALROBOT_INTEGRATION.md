@@ -92,8 +92,8 @@ torchvision==0.22.1+cu128
 |---|---|---|
 | `FASTWAM_WORKDIR` | `$PROJECT_ROOT/upstreams/FastWAM-realrobot` | overlay 后的可运行 FastWAM 树 |
 | `FASTWAM_MODEL_BASE` | `$PROJECT_ROOT/models` | Wan/FastWAM 模型根目录 |
-| `FASTWAM_RELEASE_CKPT` | `$FASTWAM_MODEL_BASE/fastwam_release/libero_uncond_2cam224.pt` | FastWAM LIBERO release 权重 |
-| `FASTWAM_RELEASE_DATASET_STATS` | `$FASTWAM_MODEL_BASE/fastwam_release/libero_uncond_2cam224_dataset_stats.json` | release stats |
+| `FASTWAM_RELEASE_CKPT` | `$FASTWAM_MODEL_BASE/custom/fastwam/release/libero_uncond_2cam224.pt` | FastWAM LIBERO release 权重 |
+| `FASTWAM_RELEASE_DATASET_STATS` | `$FASTWAM_MODEL_BASE/custom/fastwam/release/libero_uncond_2cam224_dataset_stats.json` | release stats |
 | `FASTWAM_PIN_STATS` | 空 | V6 多机 recipe 建议显式传，避免在线重扫 stats |
 
 release 权重建议用本仓库封装入口准备；脚本会自动兼容旧版 `huggingface-cli` 和新版 `hf` CLI：

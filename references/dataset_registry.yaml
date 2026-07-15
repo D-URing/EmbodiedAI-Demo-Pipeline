@@ -36,7 +36,7 @@ tiers:
     description: Release data for the FastWAM custom backend route.
     datasets:
       - id: yuanty/LIBERO-fastwam
-        local_dir: data/fastwam/libero-fastwam
+        local_dir: data/custom/fastwam/libero-fastwam
         format: LeRobot v2.1
         use_for:
           - FastWAM release/custom overlay training

@@ -21,7 +21,7 @@ export FASTWAM_RESET_WORKDIR="${FASTWAM_RESET_WORKDIR:-0}"
 # Model/checkpoint locations. Defaults are repo-local because the project itself
 # is expected to live on shared storage during early cluster testing.
 export FASTWAM_MODEL_BASE="${FASTWAM_MODEL_BASE:-$EMBODIED_REPO_ROOT/models}"
-export FASTWAM_RELEASE_DIR="${FASTWAM_RELEASE_DIR:-$FASTWAM_MODEL_BASE/fastwam_release}"
+export FASTWAM_RELEASE_DIR="${FASTWAM_RELEASE_DIR:-$FASTWAM_MODEL_BASE/custom/fastwam/release}"
 export FASTWAM_RELEASE_CKPT="${FASTWAM_RELEASE_CKPT:-$FASTWAM_RELEASE_DIR/libero_uncond_2cam224.pt}"
 export FASTWAM_RELEASE_DATASET_STATS="${FASTWAM_RELEASE_DATASET_STATS:-$FASTWAM_RELEASE_DIR/libero_uncond_2cam224_dataset_stats.json}"
 export FASTWAM_ACTION_DIT_BACKBONE="${FASTWAM_ACTION_DIT_BACKBONE:-$EMBODIED_REPO_ROOT/checkpoints/fastwam/ActionDiT_linear_interp_Wan22_alphascale_1024hdim.pt}"

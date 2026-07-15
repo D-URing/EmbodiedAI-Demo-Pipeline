@@ -229,7 +229,7 @@ make download-fastwam-artifacts
 HF_ENDPOINT=https://hf-mirror.com \
 bash /home/scut/hfd.sh yuanty/fastwam \
   --include libero_uncond_2cam224.pt libero_uncond_2cam224_dataset_stats.json \
-  --local-dir "$EMBODIED_MODEL_ROOT/fastwam_release" \
+  --local-dir "$EMBODIED_MODEL_ROOT/custom/fastwam/release" \
   --tool aria2c \
   -x 10 -j 2
 ```
@@ -242,7 +242,7 @@ files:
   - libero_uncond_2cam224.pt
   - libero_uncond_2cam224_dataset_stats.json
 target:
-  $EMBODIED_MODEL_ROOT/fastwam_release
+  $EMBODIED_MODEL_ROOT/custom/fastwam/release
 ```
 
 如果要下载其他 FastWAM release 文件：
@@ -261,15 +261,15 @@ $EMBODIED_RUN_ROOT/artifact_manifests/fastwam_release_artifacts_manifest.json
 如果没有显式设置 `EMBODIED_MODEL_ROOT`，默认目标路径是：
 
 ```text
-$PROJECT_ROOT/models/fastwam_release
+$PROJECT_ROOT/models/custom/fastwam/release
 ```
 
 后续 custom overlay 运行时：
 
 ```bash
 export FASTWAM_MODEL_BASE="$EMBODIED_MODEL_ROOT"
-export FASTWAM_RELEASE_CKPT="$EMBODIED_MODEL_ROOT/fastwam_release/libero_uncond_2cam224.pt"
-export FASTWAM_RELEASE_DATASET_STATS="$EMBODIED_MODEL_ROOT/fastwam_release/libero_uncond_2cam224_dataset_stats.json"
+export FASTWAM_RELEASE_CKPT="$EMBODIED_MODEL_ROOT/custom/fastwam/release/libero_uncond_2cam224.pt"
+export FASTWAM_RELEASE_DATASET_STATS="$EMBODIED_MODEL_ROOT/custom/fastwam/release/libero_uncond_2cam224_dataset_stats.json"
 
 FASTWAM_MODE=pilot FASTWAM_RECIPE=joint_base \
 bash scripts/fastwam/run_realrobot_train_eval.sh
@@ -282,17 +282,17 @@ bash scripts/fastwam/run_realrobot_train_eval.sh
 ```text
 repo: yuanty/LIBERO-fastwam
 format: LeRobot v2.1
-target: $EMBODIED_DATA_ROOT/fastwam/libero-fastwam
+target: $EMBODIED_DATA_ROOT/custom/fastwam/libero-fastwam
 ```
 
 SCUT 管理节点下载命令：
 
 ```bash
-mkdir -p "$EMBODIED_DATA_ROOT/fastwam/libero-fastwam"
+mkdir -p "$EMBODIED_DATA_ROOT/custom/fastwam/libero-fastwam"
 HF_ENDPOINT=https://hf-mirror.com \
 bash /home/scut/hfd.sh yuanty/LIBERO-fastwam \
   --dataset \
-  --local-dir "$EMBODIED_DATA_ROOT/fastwam/libero-fastwam" \
+  --local-dir "$EMBODIED_DATA_ROOT/custom/fastwam/libero-fastwam" \
   --tool aria2c \
   -x 10 -j 4
 ```
@@ -300,7 +300,7 @@ bash /home/scut/hfd.sh yuanty/LIBERO-fastwam \
 下载后按上游 README 解压：
 
 ```bash
-cd "$EMBODIED_DATA_ROOT/fastwam/libero-fastwam"
+cd "$EMBODIED_DATA_ROOT/custom/fastwam/libero-fastwam"
 for f in *.tar.gz; do
   tar -xzf "$f"
 done
@@ -309,7 +309,7 @@ done
 当前 SCUT 已下载并解压：
 
 ```text
-data/fastwam/libero-fastwam/
+data/custom/fastwam/libero-fastwam/
 ├── libero_10_no_noops_lerobot/
 ├── libero_goal_no_noops_lerobot/
 ├── libero_object_no_noops_lerobot/
@@ -341,7 +341,7 @@ runs/artifact_manifests/fastwam_libero_dataset_manifest.json
 ```bash
 python -m lerobot.scripts.convert_dataset_v21_to_v30 \
   --repo-id <local-or-team-repo-id> \
-  --root "$EMBODIED_DATA_ROOT/fastwam/libero-fastwam/<subset>" \
+  --root "$EMBODIED_DATA_ROOT/custom/fastwam/libero-fastwam/<subset>" \
   --push-to-hub false
 ```
 
@@ -379,7 +379,7 @@ export HF_ENDPOINT=https://hf-mirror.com
 export HFD_BIN=/home/scut/hfd.sh
 ```
 
-如果集群完全没有外网，就在有外网的机器下载后，把以下文件拷贝到 `$EMBODIED_MODEL_ROOT/fastwam_release/`：
+如果集群完全没有外网，就在有外网的机器下载后，把以下文件拷贝到 `$EMBODIED_MODEL_ROOT/custom/fastwam/release/`：
 
 ```text
 libero_uncond_2cam224.pt
@@ -389,8 +389,8 @@ libero_uncond_2cam224_dataset_stats.json
 然后继续设置：
 
 ```bash
-export FASTWAM_RELEASE_CKPT="$EMBODIED_MODEL_ROOT/fastwam_release/libero_uncond_2cam224.pt"
-export FASTWAM_RELEASE_DATASET_STATS="$EMBODIED_MODEL_ROOT/fastwam_release/libero_uncond_2cam224_dataset_stats.json"
+export FASTWAM_RELEASE_CKPT="$EMBODIED_MODEL_ROOT/custom/fastwam/release/libero_uncond_2cam224.pt"
+export FASTWAM_RELEASE_DATASET_STATS="$EMBODIED_MODEL_ROOT/custom/fastwam/release/libero_uncond_2cam224_dataset_stats.json"
 ```
 
 ## 9. 生成第一版交付报告

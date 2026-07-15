@@ -103,8 +103,8 @@ configs/fastwam/
 scripts/fastwam/
 experiments/custom/fastwam_realrobot_smoke/
 runs/experiments/custom/
-data/fastwam/
-models/fastwam_release/
+data/custom/fastwam/
+models/custom/fastwam/release/
 upstreams/FastWAM-realrobot/
 ```
 
@@ -124,7 +124,7 @@ scripts/imagewam/
 pipelines/custom/imagewam/
 experiments/custom/imagewam_flux2_4b_libero_pilot/
 runs/experiments/custom/
-models/imagewam/
+models/custom/imagewam/
 upstreams/ImageWAM/
 ```
 

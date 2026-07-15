@@ -311,7 +311,7 @@ FastWAM / LIBERO：
 bash scripts/lerobot/run_inference_smoke.sh configs/lerobot/infer/fastwam_libero.sh
 ```
 
-FastWAM 注意事项：`data/fastwam/libero-fastwam` 目前是 LeRobot v2.1 数据。当前 LeRobot v3 loader 直接读需要转换一个 v3 副本，然后把 `LEROBOT_DATASET_ROOT` 指向转换后的 subset。
+FastWAM 注意事项：`data/custom/fastwam/libero-fastwam` 目前是 LeRobot v2.1 数据。当前 LeRobot v3 loader 直接读需要转换一个 v3 副本，然后把 `LEROBOT_DATASET_ROOT` 指向转换后的 subset。
 
 如果 SmolVLA 显存或 dataloader 压力偏大：
 

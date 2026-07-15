@@ -104,10 +104,14 @@ $EMBODIED_MODEL_ROOT/
 │   ├── fastwam/
 │   │   └── <checkpoint-or-pretrained-dir>/
 │   └── diffusion_policy/
-├── fastwam_release/
-│   ├── libero_uncond_2cam224.pt
-│   └── libero_uncond_2cam224_dataset_stats.json
 └── custom/
+    ├── fastwam/
+    │   └── release/
+    │       ├── libero_uncond_2cam224.pt
+    │       └── libero_uncond_2cam224_dataset_stats.json
+    ├── imagewam/
+    │   ├── flux2_klein_4b_libero/
+    │   └── flux2/
     └── <future_model_name>/
 
 $EMBODIED_DATA_ROOT/
@@ -210,9 +214,9 @@ FastWAM 有两类资产：
 | 资产 | 建议位置 | 用途 |
 |---|---|---|
 | LeRobot-native FastWAM checkpoint | `$EMBODIED_MODEL_ROOT/lerobot/fastwam/<name>/` | 后续 LeRobot-native data-to-inference |
-| FastWAM release 权重 | `$EMBODIED_MODEL_ROOT/fastwam_release/` | custom overlay 微调初始化 |
-| FastWAM LIBERO 数据 | `$EMBODIED_DATA_ROOT/fastwam/libero-fastwam/` | FastWAM LIBERO 训练/复现实验 |
-| FastWAM dataset stats | `$EMBODIED_MODEL_ROOT/fastwam_release/` 或数据目录 meta | normalizer / stats |
+| FastWAM release 权重 | `$EMBODIED_MODEL_ROOT/custom/fastwam/release/` | custom overlay 微调初始化 |
+| FastWAM LIBERO 数据 | `$EMBODIED_DATA_ROOT/custom/fastwam/libero-fastwam/` | FastWAM LIBERO 训练/复现实验 |
+| FastWAM dataset stats | `$EMBODIED_MODEL_ROOT/custom/fastwam/release/` 或数据目录 meta | normalizer / stats |
 | custom overlay checkpoint | `$EMBODIED_MODEL_ROOT/custom/fastwam_realrobot/<run>/` | 私有 realrobot recipe 输出 |
 
 FastWAM release 权重按上游说明下载，例如：
@@ -227,7 +231,7 @@ make download-fastwam-artifacts
 HF_ENDPOINT=https://hf-mirror.com \
 bash /home/scut/hfd.sh yuanty/fastwam \
   --include libero_uncond_2cam224.pt libero_uncond_2cam224_dataset_stats.json \
-  --local-dir "$EMBODIED_MODEL_ROOT/fastwam_release" \
+  --local-dir "$EMBODIED_MODEL_ROOT/custom/fastwam/release" \
   --tool aria2c \
   -x 10 -j 2
 ```
@@ -236,8 +240,8 @@ bash /home/scut/hfd.sh yuanty/fastwam \
 
 ```bash
 export FASTWAM_MODEL_BASE="$EMBODIED_MODEL_ROOT"
-export FASTWAM_RELEASE_CKPT="$EMBODIED_MODEL_ROOT/fastwam_release/libero_uncond_2cam224.pt"
-export FASTWAM_RELEASE_DATASET_STATS="$EMBODIED_MODEL_ROOT/fastwam_release/libero_uncond_2cam224_dataset_stats.json"
+export FASTWAM_RELEASE_CKPT="$EMBODIED_MODEL_ROOT/custom/fastwam/release/libero_uncond_2cam224.pt"
+export FASTWAM_RELEASE_DATASET_STATS="$EMBODIED_MODEL_ROOT/custom/fastwam/release/libero_uncond_2cam224_dataset_stats.json"
 ```
 
 如需下载其他 FastWAM release 文件：
@@ -256,7 +260,7 @@ yuanty/LIBERO-fastwam
 SCUT 已下载并解压到：
 
 ```text
-data/fastwam/libero-fastwam/
+data/custom/fastwam/libero-fastwam/
 ```
 
 其中 4 个子集分别是：

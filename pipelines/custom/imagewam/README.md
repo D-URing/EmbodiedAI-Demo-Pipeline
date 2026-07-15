@@ -6,8 +6,8 @@ ImageWAM 是与 FastWAM 并列的 custom WAM 后端。它的官方项目把 imag
 
 ```text
 upstreams/ImageWAM/        # 官方源码 checkout，本地 ignored
-data/fastwam/libero-fastwam/
-models/imagewam/
+data/custom/fastwam/libero-fastwam/
+models/custom/imagewam/
 runs/experiments/custom/imagewam_flux2_4b_libero_pilot/
 ```
 
@@ -30,8 +30,8 @@ ImageWAM 当前更像一个完整研究代码库：
 backend = imagewam
 variant = flux2_4b
 task_type = libero
-dataset = data/fastwam/libero-fastwam
-release_ckpt = models/imagewam/flux2_klein_4b_libero
+dataset = data/custom/fastwam/libero-fastwam
+release_ckpt = models/custom/imagewam/flux2_klein_4b_libero
 ```
 
 原因：
@@ -64,7 +64,7 @@ make download-imagewam-artifacts
 默认路径：
 
 ```text
-models/imagewam/flux2_klein_4b_libero/
+models/custom/imagewam/flux2_klein_4b_libero/
 ├── model.pt
 ├── dataset_stats.json
 └── train_config.yaml
@@ -79,7 +79,7 @@ make download-imagewam-flux2-base
 默认路径：
 
 ```text
-models/imagewam/flux2/
+models/custom/imagewam/flux2/
 ├── FLUX.2-klein-base-4B/flux-2-klein-base-4b.safetensors
 └── FLUX.2-dev/ae.safetensors
 ```
@@ -94,7 +94,7 @@ IMAGEWAM_DOWNLOAD_9B=true make download-imagewam-flux2-base
 
 ```bash
 IMAGEWAM_POLICY_REPO_ID=yuyangalin/ImageWAM-FLUX.2-9B-LIBERO \
-IMAGEWAM_POLICY_LOCAL_DIR="$PWD/models/imagewam/flux2_klein_9b_libero" \
+IMAGEWAM_POLICY_LOCAL_DIR="$PWD/models/custom/imagewam/flux2_klein_9b_libero" \
 make download-imagewam-artifacts
 ```
 

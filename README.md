@@ -18,8 +18,8 @@ Household/mock demo 仍保留，但它是应用展示层，不是当前训练能
 - LeRobot PushT 数据已下载到 `data/lerobot/pusht`；
 - LeRobot 多模型训练 profile 已补齐：ACT、Diffusion、SmolVLA；
 - LeRobot 开源 policy 下载入口已补齐：Diffusion PushT、SmolVLA base、FastWAM LIBERO；
-- FastWAM release 权重已下载到 `models/fastwam_release/`；
-- FastWAM LIBERO 数据已下载并解压到 `data/fastwam/libero-fastwam/`；
+- FastWAM release 权重已下载到 `models/custom/fastwam/release/`；
+- FastWAM LIBERO 数据已下载并解压到 `data/custom/fastwam/libero-fastwam/`；
 - ImageWAM 已作为 `custom/imagewam` 后端接入，默认走 FLUX.2 4B + LIBERO；
 - FastWAM 私有 realrobot overlay 还需要远端 GitHub 私有仓库权限。
 
@@ -188,9 +188,9 @@ experiments/lerobot/smolvla_so100_8gpu_long/slurm.sbatch
 Custom WAM 当前包含 FastWAM 与 ImageWAM。FastWAM 已下载：
 
 ```text
-models/fastwam_release/libero_uncond_2cam224.pt
-models/fastwam_release/libero_uncond_2cam224_dataset_stats.json
-data/fastwam/libero-fastwam/
+models/custom/fastwam/release/libero_uncond_2cam224.pt
+models/custom/fastwam/release/libero_uncond_2cam224_dataset_stats.json
+data/custom/fastwam/libero-fastwam/
 ```
 
 LeRobot 预训练 policy 也应放在全局 `models/` 池中，例如：
@@ -231,8 +231,8 @@ bash experiments/custom/imagewam_flux2_4b_libero_pilot/launch.sh
 
 ```text
 upstreams/ImageWAM/
-models/imagewam/flux2_klein_4b_libero/
-models/imagewam/flux2/
+models/custom/imagewam/flux2_klein_4b_libero/
+models/custom/imagewam/flux2/
 runs/experiments/custom/imagewam_flux2_4b_libero_pilot/
 ```
 

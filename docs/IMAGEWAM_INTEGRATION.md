@@ -25,7 +25,7 @@ scripts/imagewam/
 ├── download_artifacts.sh
 └── run_train_eval.sh
 experiments/custom/imagewam_flux2_4b_libero_pilot/
-models/imagewam/
+models/custom/imagewam/
 upstreams/ImageWAM/
 runs/experiments/custom/imagewam_flux2_4b_libero_pilot/
 ```
@@ -63,7 +63,7 @@ bash experiments/custom/imagewam_flux2_4b_libero_pilot/launch.sh
 SLURM：
 
 ```bash
-sbatch experiments/custom/imagewam_flux2_4b_libero_pilot/slurm.sbatch  # legacy wrapper
+sbatch experiments/custom/imagewam_flux2_4b_libero_pilot/slurm.sbatch
 ```
 
 ## 资产约定
@@ -71,10 +71,10 @@ sbatch experiments/custom/imagewam_flux2_4b_libero_pilot/slurm.sbatch  # legacy 
 | 类型 | 默认路径 |
 |---|---|
 | ImageWAM official repo | `upstreams/ImageWAM/` |
-| FLUX.2 4B LIBERO ckpt | `models/imagewam/flux2_klein_4b_libero/` |
-| FLUX.2 9B LIBERO ckpt | `models/imagewam/flux2_klein_9b_libero/` |
-| FLUX.2 base / AE | `models/imagewam/flux2/` |
-| LIBERO 数据 | `data/fastwam/libero-fastwam/` |
+| FLUX.2 4B LIBERO ckpt | `models/custom/imagewam/flux2_klein_4b_libero/` |
+| FLUX.2 9B LIBERO ckpt | `models/custom/imagewam/flux2_klein_9b_libero/` |
+| FLUX.2 base / AE | `models/custom/imagewam/flux2/` |
+| LIBERO 数据 | `data/custom/fastwam/libero-fastwam/` |
 | 运行日志 | `runs/experiments/custom/imagewam_flux2_4b_libero_pilot/` |
 | manifest | `runs/artifact_manifests/imagewam_*.json` |
 
