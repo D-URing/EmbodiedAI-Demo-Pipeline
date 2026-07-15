@@ -276,7 +276,15 @@ fi
 CMD=(bash scripts/train_zero1.sh "$GPUS_PER_NODE" "${MODEL_ARGS[@]}" "${RUN_ARGS[@]}" "${EXTRA_ARGS[@]}")
 if (( IS_MAIN_RANK == 1 )); then
   printf "%q " "${CMD[@]}" > "$RUN_DIR/command.txt"
-  PRECOMPUTE_CMD=(torchrun --standalone --nproc_per_node "$TEXT_EMBED_GPUS" scripts/precompute_text_embeds.py "${PRECOMPUTE_ARGS[@]}")
+  PRECOMPUTE_CMD=(
+    torchrun
+    --nnodes 1
+    --nproc_per_node "$TEXT_EMBED_GPUS"
+    --master_addr "$FASTWAM_TEXT_EMBED_MASTER_ADDR"
+    --master_port "$FASTWAM_TEXT_EMBED_MASTER_PORT"
+    scripts/precompute_text_embeds.py
+    "${PRECOMPUTE_ARGS[@]}"
+  )
   printf "%q " "${PRECOMPUTE_CMD[@]}" > "$RUN_DIR/precompute_text_embeds_command.txt"
   echo "$FASTWAM_NATIVE_OUTPUT_DIR" > "$RUN_DIR/fastwam_native_output_dir.txt"
 
@@ -308,6 +316,8 @@ manifest = {
     "precompute_text_embeds": "${FASTWAM_PRECOMPUTE_TEXT_EMBEDS}",
     "text_embed_gpus": int("${TEXT_EMBED_GPUS}"),
     "text_embed_overwrite": "${FASTWAM_TEXT_EMBED_OVERWRITE}",
+    "text_embed_master_addr": "${FASTWAM_TEXT_EMBED_MASTER_ADDR}",
+    "text_embed_master_port": "${FASTWAM_TEXT_EMBED_MASTER_PORT}",
     "release_checkpoint": "${FASTWAM_RELEASE_CKPT}",
     "pin_stats": "${FASTWAM_PIN_STATS}",
 }

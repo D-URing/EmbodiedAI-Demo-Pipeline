@@ -139,6 +139,10 @@ def build_env(config: dict[str, Any], project_root: Path, config_path: Path) -> 
             env["FASTWAM_TEXT_EMBED_OVERWRITE"] = bool_text(text_embeddings["overwrite"])
         if "wait_timeout" in text_embeddings:
             env["FASTWAM_TEXT_EMBED_WAIT_TIMEOUT"] = str(text_embeddings["wait_timeout"])
+        if "master_addr" in text_embeddings:
+            env["FASTWAM_TEXT_EMBED_MASTER_ADDR"] = str(text_embeddings["master_addr"])
+        if "master_port" in text_embeddings:
+            env["FASTWAM_TEXT_EMBED_MASTER_PORT"] = str(text_embeddings["master_port"])
 
     if "task_name" in fastwam:
         env["FASTWAM_TASK_NAME"] = str(fastwam["task_name"])

@@ -44,6 +44,9 @@ fastwam:
     gpus: 8
     overwrite: false
     wait_timeout: 3600
+    # Avoid torchrun --standalone resolving to an unreachable cluster hostname.
+    master_addr: 127.0.0.1
+    master_port: 29517
   extra_overrides: []
 
 mode:
