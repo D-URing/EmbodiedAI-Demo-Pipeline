@@ -6,20 +6,19 @@
 
 ## 1. 准备环境
 
-如果 `conda activate fastwam` 报 `EnvironmentNameNotFound`，先创建并安装 FastWAM 环境：
+如果 `conda activate fastwam` 报 `EnvironmentNameNotFound`，先在管理节点或登录节点创建并安装 FastWAM 环境。不要在不能联网的计算节点执行这一步：
 
 ```bash
 cd /mnt/gpu11_200T/dingxibo/EmbodiedAI-Demo-Pipeline
 
-CONDA_EXE="$(command -v conda)" \
-FASTWAM_CREATE_CONDA=1 \
-FASTWAM_INSTALL=1 \
-bash scripts/fastwam/prepare_fastwam_overlay.sh
+make prepare-assets-custom-fastwam
+CONDA_EXE="/mnt/gpu11_200T/dingxibo/miniconda3/bin/conda" make prepare-env-custom-fastwam
 ```
 
-然后激活：
+然后在计算节点激活共享环境：
 
 ```bash
+source /mnt/gpu11_200T/dingxibo/miniconda3/etc/profile.d/conda.sh
 conda activate fastwam
 ```
 

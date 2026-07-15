@@ -2,7 +2,7 @@ PYTHON ?= python3.11
 VENV ?= .venv
 CONSTRAINTS ?= requirements/constraints-py311.txt
 
-.PHONY: help setup doctor test validate prepare-dirs prepare-assets-lerobot prepare-assets-custom-fastwam prepare-env-custom-fastwam prepare-assets-imagewam check-assets check-assets-core check-assets-lerobot check-assets-custom-fastwam check-assets-imagewam download-lerobot-artifacts download-lerobot-pusht-dataset download-lerobot-svla-so100-pickplace-dataset download-lerobot-fastwam-libero-dataset convert-lerobot-fastwam-libero-v3 download-lerobot-fastwam-base-cache download-lerobot-diffusion-pusht-policy download-lerobot-smolvla-base-policy download-lerobot-fastwam-libero-policy download-data-rovid20k download-data-rovidx download-data-mdm-depth download-data-xperience10m-sample download-data-abc130k download-data-agibotworld-alpha download-data-interndata-a1 download-custom-fastwam-libero-dataset download-fastwam-artifacts prepare-imagewam-upstream download-imagewam-artifacts download-imagewam-flux2-base lerobot-check-scripts fastwam-check-scripts imagewam-check-scripts experiments-check-scripts lerobot-data-smoke schemas clean
+.PHONY: help setup doctor test validate prepare-dirs prepare-assets-lerobot prepare-assets-custom-fastwam prepare-sources-custom-fastwam prepare-env-custom-fastwam prepare-assets-imagewam check-assets check-assets-core check-assets-lerobot check-assets-custom-fastwam check-assets-imagewam download-lerobot-artifacts download-lerobot-pusht-dataset download-lerobot-svla-so100-pickplace-dataset download-lerobot-fastwam-libero-dataset convert-lerobot-fastwam-libero-v3 download-lerobot-fastwam-base-cache download-lerobot-diffusion-pusht-policy download-lerobot-smolvla-base-policy download-lerobot-fastwam-libero-policy download-data-rovid20k download-data-rovidx download-data-mdm-depth download-data-xperience10m-sample download-data-abc130k download-data-agibotworld-alpha download-data-interndata-a1 download-custom-fastwam-libero-dataset download-fastwam-artifacts prepare-imagewam-upstream download-imagewam-artifacts download-imagewam-flux2-base lerobot-check-scripts fastwam-check-scripts imagewam-check-scripts experiments-check-scripts lerobot-data-smoke schemas clean
 
 help:
 	@echo "EmbodiedAI Demo Pipeline"
@@ -21,6 +21,7 @@ help:
 	@echo "Bootstrap:"
 	@echo "  make prepare-assets-lerobot        Download first LeRobot datasets/policies/cache"
 	@echo "  make prepare-assets-custom-fastwam Download FastWAM data/release and prepare overlay"
+	@echo "  make prepare-sources-custom-fastwam Sync FastWAM source/overlay on a networked node"
 	@echo "  make prepare-env-custom-fastwam    Create/install the custom FastWAM conda env"
 	@echo "  make prepare-assets-imagewam       Prepare ImageWAM upstream and model assets"
 	@echo
@@ -99,10 +100,13 @@ prepare-assets-lerobot: prepare-dirs
 prepare-assets-custom-fastwam: prepare-dirs
 	$(MAKE) download-custom-fastwam-libero-dataset
 	$(MAKE) download-fastwam-artifacts
-	bash scripts/fastwam/prepare_fastwam_overlay.sh
+	FASTWAM_SOURCE_MODE=sync bash scripts/fastwam/prepare_fastwam_overlay.sh
+
+prepare-sources-custom-fastwam: prepare-dirs
+	FASTWAM_SOURCE_MODE=sync bash scripts/fastwam/prepare_fastwam_overlay.sh
 
 prepare-env-custom-fastwam: prepare-dirs
-	FASTWAM_CREATE_CONDA=1 FASTWAM_INSTALL=1 bash scripts/fastwam/prepare_fastwam_overlay.sh
+	FASTWAM_SOURCE_MODE="$${FASTWAM_SOURCE_MODE:-reuse}" FASTWAM_CREATE_CONDA=1 FASTWAM_INSTALL=1 bash scripts/fastwam/prepare_fastwam_overlay.sh
 
 prepare-assets-imagewam: prepare-dirs
 	$(MAKE) prepare-imagewam-upstream

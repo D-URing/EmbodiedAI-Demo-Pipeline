@@ -74,18 +74,23 @@ bash scripts/lerobot/install_lerobot_cluster.sh
 
 ### Custom FastWAM 环境
 
-FastWAM overlay 通常使用独立 `fastwam` 环境：
+FastWAM overlay 通常使用独立 `fastwam` 环境。注意：如果计算节点不能联网，源码同步、数据下载和 pip/conda 安装都应该在管理节点或登录节点完成，落盘到共享项目目录；计算节点只负责激活环境和训练。
+
+在管理节点准备源码、数据和环境：
 
 ```bash
+make prepare-assets-custom-fastwam
 CONDA_EXE="$CONDA" make prepare-env-custom-fastwam
 conda activate fastwam
 ```
 
-如果只准备源码 overlay、不安装 Python 包：
+如果只准备源码 overlay、不安装 Python 包，使用联网同步模式：
 
 ```bash
-bash scripts/fastwam/prepare_fastwam_overlay.sh
+FASTWAM_SOURCE_MODE=sync bash scripts/fastwam/prepare_fastwam_overlay.sh
 ```
+
+`make prepare-env-custom-fastwam` 默认使用 `FASTWAM_SOURCE_MODE=reuse`，只复用已经在共享盘准备好的 `upstreams/FastWAM-realrobot`，不会主动 `git clone`。但它仍会安装 Python/CUDA 依赖，因此也应放在能访问 conda/pip 镜像的管理节点执行。
 
 ## 2. 资产准备：LeRobot 路线
 

@@ -160,7 +160,7 @@ bash experiments/lerobot/fastwam_libero_infer/launch.sh
 
 ## Custom FastWAM 8 机随机初始化训练
 
-准备 overlay、数据和 FastWAM conda 环境：
+准备 overlay、数据和 FastWAM conda 环境。计算节点若不能联网，请在管理节点执行这一步，落盘到共享项目目录：
 
 ```bash
 make prepare-assets-custom-fastwam
