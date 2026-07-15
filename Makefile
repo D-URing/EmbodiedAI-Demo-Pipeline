@@ -2,8 +2,10 @@ PYTHON ?= python3.11
 VENV ?= .venv
 CONSTRAINTS ?= requirements/constraints-py311.txt
 LEROBOT_TRAIN_CONFIG ?= configs/lerobot/pusht_act_gpu_smoke.sh
+LEROBOT_ACCELERATE_CONFIG ?= configs/lerobot/train/svla_so100_smolvla_8gpu_long.sh
+LEROBOT_INFER_CONFIG ?= configs/lerobot/native_pusht_act_pipeline.sh
 
-.PHONY: help setup doctor test validate dry-run demo demo-extended download-lerobot-artifacts download-lerobot-pusht-dataset download-lerobot-svla-so100-pickplace-dataset download-lerobot-diffusion-pusht-policy download-lerobot-smolvla-base-policy download-lerobot-fastwam-libero-policy download-data-rovid20k download-data-rovidx download-data-mdm-depth download-data-xperience10m-sample download-data-abc130k download-data-agibotworld-alpha download-data-interndata-a1 download-fastwam-artifacts lerobot-check-scripts lerobot-data-smoke lerobot-train-smoke lerobot-train-act lerobot-train-diffusion lerobot-train-smolvla lerobot-infer-smoke demo-chain-lerobot-fastwam fastwam-check-scripts fastwam-train-smoke demo-chain-fastwam schemas reference-fetch clean
+.PHONY: help setup doctor test validate dry-run demo demo-extended download-lerobot-artifacts download-lerobot-pusht-dataset download-lerobot-svla-so100-pickplace-dataset download-lerobot-diffusion-pusht-policy download-lerobot-smolvla-base-policy download-lerobot-fastwam-libero-policy download-data-rovid20k download-data-rovidx download-data-mdm-depth download-data-xperience10m-sample download-data-abc130k download-data-agibotworld-alpha download-data-interndata-a1 download-fastwam-artifacts lerobot-check-scripts lerobot-data-smoke lerobot-train-smoke lerobot-train-act lerobot-train-diffusion lerobot-train-smolvla lerobot-train-8gpu-smolvla lerobot-infer-smoke lerobot-infer-diffusion lerobot-infer-smolvla lerobot-infer-fastwam demo-chain-lerobot-fastwam fastwam-check-scripts fastwam-train-smoke demo-chain-fastwam schemas reference-fetch clean
 
 help:
 	@echo "EmbodiedAI Demo Pipeline"
@@ -29,7 +31,11 @@ help:
 	@echo "  make lerobot-train-act             Run ACT/PushT train profile"
 	@echo "  make lerobot-train-diffusion       Run Diffusion/PushT train profile"
 	@echo "  make lerobot-train-smolvla         Run SmolVLA/SO100 fine-tune profile"
-	@echo "  make lerobot-infer-smoke           Run offline policy inference smoke"
+	@echo "  make lerobot-train-8gpu-smolvla    Run SmolVLA/SO100 long profile with accelerate"
+	@echo "  make lerobot-infer-smoke           Run offline policy inference with LEROBOT_INFER_CONFIG"
+	@echo "  make lerobot-infer-diffusion       Run Diffusion/PushT offline inference"
+	@echo "  make lerobot-infer-smolvla         Run SmolVLA/SO100 offline inference"
+	@echo "  make lerobot-infer-fastwam         Run FastWAM/LIBERO offline inference after v3 data conversion"
 	@echo
 	@echo "Open data shortcuts:"
 	@echo "  make download-data-rovid20k        Download practical RoVid-X subset"
@@ -166,11 +172,17 @@ lerobot-check-scripts:
 	bash -n scripts/lerobot/run_pusht_act_gpu_smoke.sh
 	bash -n scripts/lerobot/run_dataset_smoke.sh
 	bash -n scripts/lerobot/run_inference_smoke.sh
+	bash -n scripts/lerobot/run_train_accelerate.sh
 	bash -n scripts/lerobot/slurm_pusht_act_gpu_smoke.sbatch
+	bash -n scripts/lerobot/slurm_smolvla_8gpu_long.sbatch
 	bash -n configs/lerobot/train/pusht_act.sh
 	bash -n configs/lerobot/train/pusht_diffusion.sh
 	bash -n configs/lerobot/train/svla_so100_smolvla.sh
+	bash -n configs/lerobot/train/svla_so100_smolvla_8gpu_long.sh
 	bash -n configs/lerobot/train/aloha_pi0fast_template.sh
+	bash -n configs/lerobot/infer/pusht_diffusion.sh
+	bash -n configs/lerobot/infer/svla_so100_smolvla.sh
+	bash -n configs/lerobot/infer/fastwam_libero.sh
 	$(VENV)/bin/python scripts/lerobot/parse_train_log.py --log tests/fixtures/lerobot_train_stdout.log --output-dir build/lerobot-parser-test
 	$(VENV)/bin/python scripts/lerobot/generate_data_to_inference_report.py --dataset-profile tests/fixtures/lerobot_dataset_profile.json --inference-evidence tests/fixtures/lerobot_inference_evidence.json --training-summary build/lerobot-parser-test/loss_summary.json --output-dir build/lerobot-chain-report-test
 
@@ -189,8 +201,20 @@ lerobot-train-diffusion:
 lerobot-train-smolvla:
 	bash scripts/lerobot/run_pusht_act_gpu_smoke.sh configs/lerobot/train/svla_so100_smolvla.sh
 
+lerobot-train-8gpu-smolvla:
+	bash scripts/lerobot/run_train_accelerate.sh $(LEROBOT_ACCELERATE_CONFIG)
+
 lerobot-infer-smoke:
-	bash scripts/lerobot/run_inference_smoke.sh
+	bash scripts/lerobot/run_inference_smoke.sh $(LEROBOT_INFER_CONFIG)
+
+lerobot-infer-diffusion:
+	bash scripts/lerobot/run_inference_smoke.sh configs/lerobot/infer/pusht_diffusion.sh
+
+lerobot-infer-smolvla:
+	bash scripts/lerobot/run_inference_smoke.sh configs/lerobot/infer/svla_so100_smolvla.sh
+
+lerobot-infer-fastwam:
+	bash scripts/lerobot/run_inference_smoke.sh configs/lerobot/infer/fastwam_libero.sh
 
 demo-chain-lerobot-fastwam:
 	test -n "$(LEROBOT_DATASET_PROFILE)" || (echo "LEROBOT_DATASET_PROFILE is required" >&2; exit 2)

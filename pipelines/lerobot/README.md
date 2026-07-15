@@ -235,6 +235,82 @@ export LEROBOT_BATCH_SIZE=8
 make lerobot-train-smolvla
 ```
 
+## 单机八卡长期训练
+
+真实八卡入口使用 LeRobot 内部的 `accelerate.Accelerator`，而不是手写 DDP。
+
+配置：
+
+```text
+configs/lerobot/train/svla_so100_smolvla_8gpu_long.sh
+scripts/lerobot/run_train_accelerate.sh
+scripts/lerobot/slurm_smolvla_8gpu_long.sbatch
+```
+
+直接在 8 卡节点上跑：
+
+```bash
+export LEROBOT_STEPS=20000
+export LEROBOT_BATCH_SIZE=8        # per-process batch size; effective batch = 8 * 8
+export LEROBOT_NUM_PROCESSES=8
+export LEROBOT_SAVE_FREQ=1000
+
+make lerobot-train-8gpu-smolvla
+```
+
+Slurm：
+
+```bash
+sbatch scripts/lerobot/slurm_smolvla_8gpu_long.sbatch
+```
+
+长期实验产物：
+
+```text
+runs/lerobot/svla_so100_smolvla_8gpu_long/<run_id>/
+├── command.txt
+├── backend_manifest.json
+├── train_stdout.log
+├── loss_summary.json
+└── lerobot_output/
+    └── checkpoints/
+```
+
+恢复训练：
+
+```bash
+export LEROBOT_RESUME=1
+export LEROBOT_RESUME_CONFIG_PATH="$PROJECT/runs/lerobot/<run>/<id>/lerobot_output/checkpoints/<step>/train_config.json"
+export LEROBOT_OUTPUT_DIR="$PROJECT/runs/lerobot/<new_or_same_run>/<id>/lerobot_output"
+make lerobot-train-8gpu-smolvla
+```
+
+注意：LeRobot resume 对 batch size 和 world size 敏感。为了样本顺序完全一致，恢复时尽量保持 `LEROBOT_BATCH_SIZE` 和 `LEROBOT_NUM_PROCESSES` 不变。
+
+## 推理链路
+
+当前是离线单样本推理 smoke：读取本地 dataset sample，加载本地 policy/checkpoint，在 CUDA 上输出 action 形状、latency 和 evidence JSON。
+
+Diffusion / PushT：
+
+```bash
+make lerobot-infer-diffusion
+```
+
+SmolVLA / SO100：
+
+```bash
+make lerobot-infer-smolvla
+```
+
+FastWAM / LIBERO：
+
+```bash
+make lerobot-infer-fastwam
+```
+
+FastWAM 注意事项：`data/fastwam/libero-fastwam` 目前是 LeRobot v2.1 数据。当前 LeRobot v3 loader 直接读需要转换一个 v3 副本，然后把 `LEROBOT_DATASET_ROOT` 指向转换后的 subset。
+
 如果 SmolVLA 显存或 dataloader 压力偏大：
 
 ```bash

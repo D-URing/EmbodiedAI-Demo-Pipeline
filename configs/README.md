@@ -18,6 +18,7 @@ configs/
 - ACT/PushT GPU training；
 - Diffusion/PushT GPU training；
 - SmolVLA/SO100 fine-tuning；
+- SmolVLA/SO100 单机八卡长期训练；
 - offline inference；
 - report evidence。
 
@@ -28,7 +29,17 @@ configs/lerobot/train/
 ├── pusht_act.sh
 ├── pusht_diffusion.sh
 ├── svla_so100_smolvla.sh
+├── svla_so100_smolvla_8gpu_long.sh
 └── aloha_pi0fast_template.sh
+```
+
+推理 profile：
+
+```text
+configs/lerobot/infer/
+├── pusht_diffusion.sh
+├── svla_so100_smolvla.sh
+└── fastwam_libero.sh
 ```
 
 默认入口见 [`../pipelines/lerobot/README.md`](../pipelines/lerobot/README.md)。
