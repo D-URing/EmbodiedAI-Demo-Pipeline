@@ -7,6 +7,8 @@ if [[ ! -f "$CONFIG_PATH" ]]; then
   exit 2
 fi
 
+export PYTHONPATH="$(pwd):${PYTHONPATH:-}"
+
 # shellcheck disable=SC1090
 source "$CONFIG_PATH"
 
