@@ -211,6 +211,7 @@ FastWAM 有两类资产：
 |---|---|---|
 | LeRobot-native FastWAM checkpoint | `$EMBODIED_MODEL_ROOT/lerobot/fastwam/<name>/` | 后续 LeRobot-native data-to-inference |
 | FastWAM release 权重 | `$EMBODIED_MODEL_ROOT/fastwam_release/` | custom overlay 微调初始化 |
+| FastWAM LIBERO 数据 | `$EMBODIED_DATA_ROOT/fastwam/libero-fastwam/` | FastWAM LIBERO 训练/复现实验 |
 | FastWAM dataset stats | `$EMBODIED_MODEL_ROOT/fastwam_release/` 或数据目录 meta | normalizer / stats |
 | custom overlay checkpoint | `$EMBODIED_MODEL_ROOT/custom/fastwam_realrobot/<run>/` | 私有 realrobot recipe 输出 |
 
@@ -245,6 +246,29 @@ export FASTWAM_RELEASE_DATASET_STATS="$EMBODIED_MODEL_ROOT/fastwam_release/liber
 FASTWAM_RELEASE_FILES="libero_uncond_2cam224.pt libero_uncond_2cam224_dataset_stats.json <another-file>" \
 make download-fastwam-artifacts
 ```
+
+FastWAM 的公开 LIBERO 数据不是放在 `yuanty/fastwam` model repo，而是在 Hugging Face dataset repo：
+
+```text
+yuanty/LIBERO-fastwam
+```
+
+SCUT 已下载并解压到：
+
+```text
+data/fastwam/libero-fastwam/
+```
+
+其中 4 个子集分别是：
+
+```text
+libero_10_no_noops_lerobot/
+libero_goal_no_noops_lerobot/
+libero_object_no_noops_lerobot/
+libero_spatial_no_noops_lerobot/
+```
+
+该 release 是 LeRobot v2.1 格式；当前 LeRobot v3 主线如需直接读取，应先做格式转换。完整命令见 [`CLUSTER_ARTIFACTS_RUNBOOK.md`](CLUSTER_ARTIFACTS_RUNBOOK.md)。
 
 更完整的集群下载、项目内目录和 smoke 验证步骤见 [`CLUSTER_ARTIFACTS_RUNBOOK.md`](CLUSTER_ARTIFACTS_RUNBOOK.md)。
 

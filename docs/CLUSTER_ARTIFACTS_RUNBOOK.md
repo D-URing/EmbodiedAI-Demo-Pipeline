@@ -275,7 +275,79 @@ FASTWAM_MODE=pilot FASTWAM_RECIPE=joint_base \
 bash scripts/fastwam/run_realrobot_train_eval.sh
 ```
 
-## 8. 下载网络问题排查
+## 8. 下载 FastWAM LIBERO 数据
+
+当前 FastWAM release 权重 `libero_uncond_2cam224.pt` 对应的公开预处理数据是：
+
+```text
+repo: yuanty/LIBERO-fastwam
+format: LeRobot v2.1
+target: $EMBODIED_DATA_ROOT/fastwam/libero-fastwam
+```
+
+SCUT 管理节点下载命令：
+
+```bash
+mkdir -p "$EMBODIED_DATA_ROOT/fastwam/libero-fastwam"
+HF_ENDPOINT=https://hf-mirror.com \
+bash /home/scut/hfd.sh yuanty/LIBERO-fastwam \
+  --dataset \
+  --local-dir "$EMBODIED_DATA_ROOT/fastwam/libero-fastwam" \
+  --tool aria2c \
+  -x 10 -j 4
+```
+
+下载后按上游 README 解压：
+
+```bash
+cd "$EMBODIED_DATA_ROOT/fastwam/libero-fastwam"
+for f in *.tar.gz; do
+  tar -xzf "$f"
+done
+```
+
+当前 SCUT 已下载并解压：
+
+```text
+data/fastwam/libero-fastwam/
+├── libero_10_no_noops_lerobot/
+├── libero_goal_no_noops_lerobot/
+├── libero_object_no_noops_lerobot/
+└── libero_spatial_no_noops_lerobot/
+```
+
+数据概况：
+
+```text
+format: LeRobot v2.1
+subsets: 4
+total_frames: 277713
+robot: franka
+fps: 20
+action_shape: [7]
+image_keys:
+  - observation.images.image
+  - observation.images.wrist_image
+```
+
+Manifest 已写到：
+
+```text
+runs/artifact_manifests/fastwam_libero_dataset_manifest.json
+```
+
+注意：当前项目的 LeRobot 主线使用较新的 LeRobot v3 loader，直接 `make lerobot-data-smoke` 读取这些 v2.1 子集会提示需要转换。若要纳入 LeRobot-native 训练/推理，应先使用 LeRobot 自带命令做 v2.1 → v3.0 转换，例如：
+
+```bash
+python -m lerobot.scripts.convert_dataset_v21_to_v30 \
+  --repo-id <local-or-team-repo-id> \
+  --root "$EMBODIED_DATA_ROOT/fastwam/libero-fastwam/<subset>" \
+  --push-to-hub false
+```
+
+如果走 FastWAM 官方/custom overlay 路线，优先按 FastWAM 代码期望的数据格式使用该 v2.1 release，不要盲目转换后覆盖原始目录。
+
+## 9. 下载网络问题排查
 
 如果遇到：
 
