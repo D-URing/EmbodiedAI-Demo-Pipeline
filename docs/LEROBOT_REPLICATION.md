@@ -91,7 +91,7 @@ policy.push_to_hub    = false
 TORCH_HOME            = <repo>/hf_cache/torch
 ```
 
-这样做是为了避免计算节点联网下载 ResNet18 backbone，以及绕开旧 host glibc 下 `torchcodec + conda-forge ffmpeg` 的 native ABI 问题。
+这样做是为了避免计算节点联网下载 ResNet18 backbone。当前 LeRobot v3 / FastWAM 视频读取已改为在 `lerobot` 环境固定 `ffmpeg=6.*`，避免旧 host glibc 下 `ffmpeg=8` 相关 native ABI 问题。
 
 或显式指定配置：
 

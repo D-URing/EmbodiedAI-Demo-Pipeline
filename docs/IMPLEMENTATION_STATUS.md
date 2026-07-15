@@ -1,5 +1,7 @@
 # 工程落地状态
 
+> 本文是历史实现记录，保留阶段演进脉络。当前训练、推理、下载命令和最新验证状态以 [`TRAINING_AND_INFERENCE.md`](TRAINING_AND_INFERENCE.md) 为准。
+
 本文记录“规划中的设计”与“仓库中已验证实现”的边界，避免把接口占位误认为已接入能力。
 
 ## 2026-07-13：M1 Core Contract
@@ -243,4 +245,21 @@ FastWAM 接入改变的是项目构建格局：本项目可以同时推进“可
 
 ### 当前结论
 
-下一步不应继续优先增加 household mock task。当前 LeRobot demo 是 ACT/PushT；dataset inspection、offline inference smoke 和报告入口已完成第一版封装；真实运行需要在集群/缓存环境提供 LeRobot dataset 和本地 checkpoint。私有 FastWAM overlay 不丢，作为 custom backend 和未来自建模型路径继续保留。
+下一步不应继续优先增加 household mock task。LeRobot 主线已经从早期 ACT/PushT scaffold 扩展为两条证据：ACT/PushT 真实训练 smoke 用于回答 loss，FastWAM/LIBERO CUDA offline inference 用于回答权重加载和 action 输出。私有 FastWAM overlay 不丢，作为 custom backend 和未来自建模型路径继续保留。
+
+## 2026-07-15：Training / Inference Runbook Refresh
+
+状态：已把训练、推理、下载和集群结果路径收敛到统一文档。
+
+### 已落地
+
+| 规划项 | 实现位置 | 当前能力 |
+|---|---|---|
+| 统一训练/推理入口 | `docs/TRAINING_AND_INFERENCE.md` | 汇总 LeRobot、custom WAM、下载、环境变量、输出路径和排障 |
+| LeRobot ACT 训练证据 | `experiments/lerobot/pusht_act_smoke/` | SCUT GPU 上已验证真实训练 smoke 与 loss summary |
+| LeRobot FastWAM 推理证据 | `experiments/lerobot/fastwam_libero_infer/` | SCUT GPU 上已验证 `policy.type=fastwam`、LIBERO v3 数据和 CUDA action 输出 |
+| 资产路径收敛 | `data/`、`models/`、`hf_cache/`、`runs/` | 数据和模型权重默认落在项目根目录资产池，大文件由 `.gitignore` 排除 |
+
+### 当前结论
+
+当前仓库可以明确回答两件事：一是“有真实训练链路，能看到 loss 日志”；二是“有真实 LeRobot-compatible FastWAM 推理链路，能在 CUDA 上输出 action”。后续重点是把 Diffusion/PushT、SmolVLA/SO100 和 custom FastWAM/ImageWAM 长期实验跑出稳定 evidence，而不是继续扩散旧文档里的临时命令。

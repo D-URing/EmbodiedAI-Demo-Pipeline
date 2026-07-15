@@ -1,8 +1,10 @@
 # 集群开源数据与模型下载 Runbook
 
-> 状态：v0.1<br>
-> 日期：2026-07-14<br>
+> 状态：v0.2<br>
+> 日期：2026-07-15<br>
 > 目标：给 NVIDIA 集群测试准备一套可复制的 artifact 下载、存放和 smoke 验证流程。
+
+> 当前训练/推理的完整命令以 [`TRAINING_AND_INFERENCE.md`](TRAINING_AND_INFERENCE.md) 为准；本文保留集群资产下载和 smoke 验证的背景说明。
 
 这份文档只处理公开开源资产和本项目 smoke 链路，不下载私有真机数据，不提交任何大文件到 git。
 
@@ -13,12 +15,14 @@
 | 优先级 | 资产 | 来源 | 用途 | 默认是否下载 |
 |---|---|---|---|---|
 | P0 | `lerobot/pusht` dataset | Hugging Face dataset | LeRobot ACT/PushT data/train/inference smoke | 是 |
-| P0 | ACT/PushT 训练输出 checkpoint | 集群本地训练产生 | `bash experiments/lerobot/diffusion_pusht_infer/launch.sh` 输入 | 训练后本地产生 |
-| P1 | LeRobot policy checkpoint | Hugging Face model repo 或内部 checkpoint | 跳过训练、直接推理 | 否，需要显式 repo id |
+| P0 | ACT/PushT 训练输出 checkpoint | 集群本地训练产生 | 证明 LeRobot 真实训练和 loss 日志 | 训练后本地产生 |
+| P0 | FastWAM/LIBERO dataset v3 | Hugging Face / 本地转换 | LeRobot `policy.type=fastwam` 离线推理 | 是 |
+| P0 | FastWAM policy + Wan/T5 base cache | Hugging Face model repo | FastWAM/LIBERO CUDA inference | 是 |
+| P1 | Diffusion / SmolVLA checkpoint | Hugging Face model repo 或内部 checkpoint | 后续训练/推理扩展 | 否，需要显式 repo id |
 | P1 | FastWAM release 权重与 stats | `yuanty/fastwam` | custom FastWAM overlay 初始化 | 否，按需执行 |
 | P2 | 大规模 LeRobot/Open-X/DROID/BridgeData 等数据 | 各上游 | 后续扩展 | 暂不在第一条 smoke 自动下载 |
 
-当前仓库默认 LeRobot demo 是 **ACT on PushT**。FastWAM 是下一条重点接入路径；公开 release 权重用于 custom overlay 或后续 FastWAM 实验，不等同于当前已完成的 LeRobot-native FastWAM smoke。
+当前主线已经分成两条可解释链路：**ACT on PushT** 用于证明真实训练/loss，**FastWAM on LIBERO** 用于证明 LeRobot-compatible 权重加载和 CUDA 离线推理。custom FastWAM overlay 继续保留，用于私有真机数据、FastWAM 微调和未来自建模型。
 
 ## 2. 集群路径约定
 
@@ -144,7 +148,7 @@ $EMBODIED_DATA_ROOT/lerobot/pusht
 命令：
 
 ```bash
-make download-lerobot-artifacts
+make download-lerobot-pusht-dataset
 ```
 
 等价显式写法：
@@ -152,13 +156,13 @@ make download-lerobot-artifacts
 ```bash
 export LEROBOT_DATASET_REPO_ID=lerobot/pusht
 export LEROBOT_DATASET_LOCAL_DIR="$EMBODIED_DATA_ROOT/lerobot/pusht"
-DOWNLOAD_LEROBOT_DATASET=1 make download-lerobot-artifacts
+DOWNLOAD_LEROBOT_DATASET=1 bash scripts/lerobot/download_artifacts.sh
 ```
 
 脚本会生成：
 
 ```text
-$EMBODIED_RUN_ROOT/artifact_manifests/lerobot_artifacts_manifest.json
+$EMBODIED_RUN_ROOT/artifact_manifests/lerobot_pusht_dataset_manifest.json
 ```
 
 下载完成后验证数据能被 LeRobot 读到：
@@ -179,7 +183,7 @@ export LEROBOT_POLICY_LOCAL_DIR="$EMBODIED_MODEL_ROOT/lerobot/act/pusht/<model-r
 
 DOWNLOAD_LEROBOT_DATASET=0 \
 DOWNLOAD_LEROBOT_POLICY=1 \
-make download-lerobot-artifacts
+bash scripts/lerobot/download_artifacts.sh
 ```
 
 然后推理：
@@ -216,7 +220,7 @@ loss_decreased=true, drop=14.06%
 
 该检查只证明真实 LeRobot GPU 训练链路能启动并产生 loss，不代表正式收敛结果。正式回答“loss 是否正常下降”建议把 `LEROBOT_STEPS` 提高到 500-1000。
 
-训练输出在 `runs/lerobot/...` 下。脚本会解析 stdout 并生成 loss summary，用来回答“loss 是否正常下降”。
+训练输出在 `runs/experiments/lerobot/...` 下。脚本会解析 stdout 并生成 loss summary，用来回答“loss 是否正常下降”。
 
 训练完成后，找到 LeRobot 输出的 checkpoint/pretrained policy 目录，并设置：
 
@@ -452,17 +456,20 @@ FASTWAM_RUN_DIR="runs/experiments/custom/fastwam_realrobot_smoke/<run_id>" embod
 
 ```bash
 bash scripts/lerobot/install_lerobot_cluster.sh
-make download-lerobot-artifacts
+make download-lerobot-pusht-dataset
 
 export LEROBOT_DATASET_ROOT="$EMBODIED_DATA_ROOT/lerobot/pusht"
 make lerobot-data-smoke
 bash experiments/lerobot/pusht_act_smoke/launch.sh
 
-export LEROBOT_POLICY_PATH="<训练输出 checkpoint/pretrained policy dir>"
-bash experiments/lerobot/diffusion_pusht_infer/launch.sh
+make download-lerobot-fastwam-libero-policy
+make download-lerobot-fastwam-libero-dataset
+make convert-lerobot-fastwam-libero-v3
+make download-lerobot-fastwam-base-cache
+bash experiments/lerobot/fastwam_libero_infer/launch.sh
 ```
 
-如果这四步跑通，第一阶段最关键的链路已经成立：公开数据能下载和读取，官方 LeRobot 训练入口能跑，loss 有 summary，checkpoint 能进入 offline inference。
+如果这些步骤跑通，第一阶段最关键的链路已经成立：公开数据能下载和读取，官方 LeRobot 训练入口能跑，loss 有 summary，预训练 FastWAM policy 能进入 CUDA offline inference。
 
 ## 12. 上游链接
 

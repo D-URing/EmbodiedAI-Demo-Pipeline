@@ -18,22 +18,22 @@ Household/mock demo 仍保留，但它是应用展示层，不是当前训练能
 - LeRobot PushT 数据已下载到 `data/lerobot/pusht`；
 - LeRobot 多模型训练 profile 已补齐：ACT、Diffusion、SmolVLA；
 - LeRobot 开源 policy 下载入口已补齐：Diffusion PushT、SmolVLA base、FastWAM LIBERO；
+- LeRobot FastWAM/LIBERO 已在 SCUT `gpu11` 跑通 CUDA inference smoke，输出 `action.shape=[1, 7]`；
 - FastWAM release 权重已下载到 `models/custom/fastwam/release/`；
 - FastWAM LIBERO 数据已按路线拆分：`data/custom/fastwam/libero-fastwam/` 给 custom/FastWAM，`data/lerobot/libero-fastwam/` 给 LeRobot；
+- LeRobot FastWAM 需要的 Wan/T5 base cache 已下载到 `hf_cache/hub/`；
 - ImageWAM 已作为 `custom/imagewam` 后端接入，默认走 FLUX.2 4B + LIBERO；
 - FastWAM 私有 realrobot overlay 还需要远端 GitHub 私有仓库权限。
 
 如果你刚接手项目，按这个顺序读：
 
 1. [`docs/README.md`](docs/README.md)；
-2. [`docs/PROJECT_STRUCTURE.md`](docs/PROJECT_STRUCTURE.md)；
-3. [`docs/STORAGE_AND_ARTIFACTS.md`](docs/STORAGE_AND_ARTIFACTS.md)；
-4. [`pipelines/lerobot/README.md`](pipelines/lerobot/README.md)；
-5. [`docs/LEROBOT_MULTI_MODEL_PLAN.md`](docs/LEROBOT_MULTI_MODEL_PLAN.md)；
-6. [`docs/OPEN_DATA_AND_EVAL_PLAN.md`](docs/OPEN_DATA_AND_EVAL_PLAN.md)；
-7. [`pipelines/custom/README.md`](pipelines/custom/README.md)；
-8. [`experiments/README.md`](experiments/README.md)；
-9. [`docs/IMAGEWAM_INTEGRATION.md`](docs/IMAGEWAM_INTEGRATION.md)。
+2. [`docs/TRAINING_AND_INFERENCE.md`](docs/TRAINING_AND_INFERENCE.md)；
+3. [`docs/PROJECT_STRUCTURE.md`](docs/PROJECT_STRUCTURE.md)；
+4. [`docs/STORAGE_AND_ARTIFACTS.md`](docs/STORAGE_AND_ARTIFACTS.md)；
+5. [`pipelines/lerobot/README.md`](pipelines/lerobot/README.md)；
+6. [`pipelines/custom/README.md`](pipelines/custom/README.md)；
+7. [`experiments/README.md`](experiments/README.md)。
 
 ## 仓库结构
 
@@ -132,7 +132,11 @@ lerobot
 "$CONDA" run -n embodied-core python -m pytest
 ```
 
-## LeRobot 主线
+## 当前训练 / 推理入口
+
+完整命令见 [`docs/TRAINING_AND_INFERENCE.md`](docs/TRAINING_AND_INFERENCE.md)。常用入口如下。
+
+### LeRobot 主线
 
 进入环境：
 
@@ -141,107 +145,73 @@ source "$BASE/miniconda3/etc/profile.d/conda.sh"
 conda activate lerobot
 ```
 
-验证 dataset：
-
-```bash
-export LEROBOT_ALLOW_DOWNLOAD=0
-export LEROBOT_DATASET_ROOT="$PROJECT/data/lerobot/pusht"
-
-make lerobot-data-smoke
-```
-
-下载第一轮 LeRobot 资产：
+准备第一批资产：
 
 ```bash
 make download-lerobot-pusht-dataset
 make download-lerobot-svla-so100-pickplace-dataset
-make download-lerobot-fastwam-libero-dataset
-make convert-lerobot-fastwam-libero-v3
-make download-lerobot-fastwam-base-cache
 make download-lerobot-diffusion-pusht-policy
 make download-lerobot-smolvla-base-policy
 make download-lerobot-fastwam-libero-policy
+make download-lerobot-fastwam-libero-dataset
+make convert-lerobot-fastwam-libero-v3
+make download-lerobot-fastwam-base-cache
 ```
 
-在 GPU 节点上跑训练/推理实验时，不从 Makefile 启动，而是使用 `experiments/`：
+训练：
 
 ```bash
 bash experiments/lerobot/pusht_act_smoke/launch.sh
-bash experiments/lerobot/diffusion_pusht_infer/launch.sh
-```
-
-单机八卡长期实验：
-
-```bash
+bash experiments/lerobot/pusht_diffusion_train/launch.sh
 bash experiments/lerobot/smolvla_so100_8gpu_long/launch.sh
 ```
 
-对应配置：
+推理：
 
-```text
-experiments/lerobot/smolvla_so100_8gpu_long/config.sh
-experiments/lerobot/smolvla_so100_8gpu_long/launch.sh
-experiments/lerobot/smolvla_so100_8gpu_long/slurm.sbatch
+```bash
+bash experiments/lerobot/diffusion_pusht_infer/launch.sh
+bash experiments/lerobot/smolvla_so100_infer/launch.sh
+bash experiments/lerobot/fastwam_libero_infer/launch.sh
 ```
 
-快速 2-step 验环境见 [`pipelines/lerobot/README.md`](pipelines/lerobot/README.md)。
+已验证 FastWAM/LIBERO 推理证据：
 
-## Custom WAM 主线
+```text
+runs/experiments/lerobot/fastwam_libero_infer/20260715-210113/inference_evidence.json
+policy_type=fastwam
+device=cuda
+action.shape=[1, 7]
+latency_ms=7931.62
+```
 
-Custom WAM 当前包含 FastWAM 与 ImageWAM。FastWAM 已下载：
+### Custom WAM 主线
+
+Custom WAM 当前包含 FastWAM 与 ImageWAM。FastWAM 资产：
 
 ```text
 models/custom/fastwam/release/libero_uncond_2cam224.pt
 models/custom/fastwam/release/libero_uncond_2cam224_dataset_stats.json
 data/custom/fastwam/libero-fastwam/
-data/lerobot/libero-fastwam/v2.1/
-data/lerobot/libero-fastwam/v3/
 ```
 
-LeRobot 预训练 policy 也应放在全局 `models/` 池中，例如：
-
-```text
-models/lerobot/diffusion/diffusion_pusht/
-```
-
-下载命令：
+Custom FastWAM：
 
 ```bash
-make download-lerobot-diffusion-pusht-policy
-```
-
-重新下载 release 权重：
-
-```bash
+make download-custom-fastwam-libero-dataset
 make download-fastwam-artifacts
+bash experiments/custom/fastwam_realrobot_smoke/launch.sh
 ```
 
-FastWAM LIBERO 数据下载、v2.1/v3 格式说明和 private overlay 权限问题见 [`pipelines/custom/fastwam/README.md`](pipelines/custom/fastwam/README.md)。
-
-ImageWAM 第一阶段默认 FLUX.2 4B + LIBERO：
+ImageWAM：
 
 ```bash
 make prepare-imagewam-upstream
 make download-imagewam-artifacts
 make download-imagewam-flux2-base
-```
-
-启动 ImageWAM pilot 使用实验入口：
-
-```bash
 bash experiments/custom/imagewam_flux2_4b_libero_pilot/launch.sh
 ```
 
-路径：
-
-```text
-upstreams/ImageWAM/
-models/custom/imagewam/flux2_klein_4b_libero/
-models/custom/imagewam/flux2/
-runs/experiments/custom/imagewam_flux2_4b_libero_pilot/
-```
-
-说明见 [`pipelines/custom/imagewam/README.md`](pipelines/custom/imagewam/README.md)。
+更多说明见 [`pipelines/custom/README.md`](pipelines/custom/README.md)。
 
 ## 常用 Make targets
 
@@ -255,7 +225,7 @@ Make 只作为环境、下载和检查入口；训练/推理实验请使用 `exp
 | `make fastwam-check-scripts` | 检查 FastWAM wrapper 和 parser |
 | `make imagewam-check-scripts` | 检查 ImageWAM wrapper |
 | `make experiments-check-scripts` | 检查 experiments 启动脚本 |
-| `make download-lerobot-artifacts` | 下载 LeRobot PushT |
+| `make download-lerobot-pusht-dataset` | 下载 LeRobot PushT |
 | `make download-lerobot-svla-so100-pickplace-dataset` | 下载 SmolVLA SO100 pick-place 数据 |
 | `make download-lerobot-fastwam-libero-dataset` | 下载 FastWAM LIBERO 原始数据到 LeRobot 路线 |
 | `make convert-lerobot-fastwam-libero-v3` | 转换 LeRobot 路线 FastWAM LIBERO v2.1 → v3.0 |
@@ -274,8 +244,8 @@ Make 只作为环境、下载和检查入口；训练/推理实验请使用 `exp
 ## 当前边界
 
 - LeRobot ACT/PushT 是当前已验证真实训练链路；
-- Diffusion/PushT 与 SmolVLA/SO100 已进入可运行 profile，待集群执行验证；
-- FastWAM release 权重和 custom/FastWAM LIBERO 数据已准备，但 private overlay 还没在 SCUT 完整跑通；
-- LeRobot-FastWAM LIBERO 已拆出独立目录；`v2.1` 是原始副本，`v3` 通过 `make convert-lerobot-fastwam-libero-v3` 生成；
+- LeRobot FastWAM/LIBERO 是当前已验证真实 CUDA 推理链路；
+- Diffusion/PushT 与 SmolVLA/SO100 的训练/推理入口已准备，长期实验结果另行记录；
+- Custom FastWAM realrobot 训练依赖私有 overlay 权限；
 - household/mock demo 是展示层，不代表模型能力；
 - viewer、真实仿真器、真机闭环暂缓。

@@ -23,8 +23,8 @@ runs/
 |---|---|---|---|---|
 | P0 | ACT | `lerobot/pusht` | 保底真实训练，快速看 loss | 已在 SCUT 验证 |
 | P0 | Diffusion | `lerobot/pusht` | 第二条 IL 训练链路 | 已配置 |
-| P1 | SmolVLA | `lerobot/svla_so100_pickplace` + `lerobot/smolvla_base` | A100 上的 VLA fine-tune | 已配置，待集群验证 |
-| P1 | FastWAM | LIBERO/FastWAM 数据 + `lerobot/fastwam_libero_uncond_2cam224` | LeRobot-compatible world/action model 权重推理 | 权重已下载 |
+| P1 | SmolVLA | `lerobot/svla_so100_pickplace` + `lerobot/smolvla_base` | A100 上的 VLA fine-tune | 入口已配置，待长期实验 |
+| P1 | FastWAM | LIBERO/FastWAM 数据 + `lerobot/fastwam_libero_uncond_2cam224` | LeRobot-compatible world/action model 权重推理 | 已在 SCUT 验证 CUDA inference |
 | P2 | Pi0-FAST | `lerobot/aloha_sim_insertion_human` + base policy | 重 VLA 候选 | 模板已放入，不作为第一轮必跑 |
 | P2 | GR00T N1.7 | DROID/LIBERO/SIMPLER 相关数据 | 大模型/评测候选 | 后续单独开任务 |
 
@@ -176,10 +176,14 @@ bash experiments/lerobot/smolvla_so100_infer/launch.sh
 bash experiments/lerobot/fastwam_libero_infer/launch.sh
 ```
 
-FastWAM 推理注意：当前 `data/custom/fastwam/libero-fastwam` 是 LeRobot v2.1，当前 LeRobot loader 需要 v3。先转换一个 subset，再覆盖：
+FastWAM 推理注意：LeRobot 路线使用独立数据目录，不直接读 custom/FastWAM 数据。先准备并转换 LeRobot 专属 LIBERO 数据：
 
 ```bash
-export LEROBOT_DATASET_ROOT="$PROJECT/data/custom/fastwam/libero-fastwam/<converted_v3_subset>"
+make download-lerobot-fastwam-libero-dataset
+make convert-lerobot-fastwam-libero-v3
+make download-lerobot-fastwam-base-cache
+
+export LEROBOT_DATASET_ROOT="$PROJECT/data/lerobot/libero-fastwam/v3/libero_10_no_noops_lerobot"
 bash experiments/lerobot/fastwam_libero_infer/launch.sh
 ```
 

@@ -1,33 +1,23 @@
 # 模型、数据与权重存放规范
 
-> 状态：v0.1<br>
-> 日期：2026-07-14<br>
-> 目标：明确当前 LeRobot demo 是什么模型，以及未来接入新模型时如何下载、存放、记录和引用。
+> 状态：v0.2<br>
+> 日期：2026-07-15<br>
+> 目标：明确当前 LeRobot / custom 两条模型路径，以及未来接入新模型时如何下载、存放、记录和引用。
 
-## 1. 当前 LeRobot demo 是什么
+> 当前训练和推理命令以 [`TRAINING_AND_INFERENCE.md`](TRAINING_AND_INFERENCE.md) 为准。
 
-当前仓库里已经封装的 LeRobot-native demo 默认是：
+## 1. 当前 LeRobot 已有哪些模型链路
 
-```text
-dataset.repo_id = lerobot/pusht
-policy.type     = act
-policy class    = lerobot.policies.act.modeling_act.ACTPolicy
-```
+当前仓库不再只维护一个“默认 demo”，而是按模型链路管理：
 
-也就是说，当前 LeRobot demo 是 **ACT on PushT** 的 data/train/inference smoke，不是 FastWAM demo。
+| 链路 | 数据 | 模型/Policy | 当前状态 | 作用 |
+|---|---|---|---|---|
+| ACT / PushT | `lerobot/pusht` | `policy.type=act` | SCUT 已验证真实训练 smoke | 快速回答 loss 是否下降 |
+| Diffusion / PushT | `lerobot/pusht` | `policy.type=diffusion` | 训练/推理入口已配置 | 第二条 IL baseline |
+| SmolVLA / SO100 | `lerobot/svla_so100_pickplace` | `lerobot/smolvla_base` | 长期实验入口已配置 | 轻量 VLA fine-tune |
+| FastWAM / LIBERO | LIBERO/FastWAM v3 | `lerobot/fastwam_libero_uncond_2cam224` | SCUT 已验证 CUDA offline inference | LeRobot-compatible world/action model 推理 |
 
-当前能力边界：
-
-| 环节 | 当前状态 |
-|---|---|
-| dataset smoke | 已有入口：`make lerobot-data-smoke` |
-| training smoke | 已有入口：`bash experiments/lerobot/pusht_act_smoke/launch.sh` |
-| offline inference smoke | 已有入口：`bash experiments/lerobot/diffusion_pusht_infer/launch.sh` |
-| report | 已有入口：`python scripts/lerobot/generate_data_to_inference_report.py` |
-| 大文件下载 | 默认禁用，`LEROBOT_ALLOW_DOWNLOAD=0` |
-| 真实闭环 | 未声明 |
-
-第一版之所以选 ACT/PushT，是因为它轻、LeRobot 官方路径稳定、适合验证 data-to-inference 的工程链路。FastWAM 是下一条重点 LeRobot-native policy path。
+真实闭环、仿真闭环和真机评测仍未声明为已完成。
 
 ## 2. 两条模型路径
 
@@ -35,7 +25,7 @@ policy class    = lerobot.policies.act.modeling_act.ACTPolicy
 
 | 路径 | 说明 | 当前代表 | 何时使用 |
 |---|---|---|---|
-| LeRobot-native path | 模型已能通过 LeRobot dataset/policy/train/inference API 跑通 | ACT/PushT，后续 FastWAM | 第一优先级，适合标准 demo |
+| LeRobot-native path | 模型已能通过 LeRobot dataset/policy/train/inference API 跑通 | ACT/PushT、Diffusion/PushT、SmolVLA/SO100、FastWAM/LIBERO | 第一优先级，适合标准 demo |
 | Custom backend path | 需要自定义训练、私有数据、特殊 action head 或未进入 LeRobot 的模型 | FastWAM realrobot overlay | 自研/改模型/真机扩展 |
 
 FastWAM 当前 custom overlay 不是完全从零自拟模型，而是基于 FastWAM 公开结构/权重做 realrobot 数据微调、recipe 适配和离线 probe。它是 custom backend 的第一个样板。
@@ -138,7 +128,7 @@ $PROJECT_ROOT/checkpoints/
 在项目根目录下显式下载公开 dataset：
 
 ```bash
-make download-lerobot-artifacts
+make download-lerobot-pusht-dataset
 ```
 
 在 SCUT 集群上，脚本会优先使用 `/home/scut/hfd.sh`、`hf-mirror.com` 和 `aria2c`；如果该工具不存在，才回退到 `hf download` / `huggingface-cli download`。
@@ -148,7 +138,7 @@ make download-lerobot-artifacts
 ```text
 repo: lerobot/pusht
 target: $EMBODIED_DATA_ROOT/lerobot/pusht
-manifest: $EMBODIED_RUN_ROOT/artifact_manifests/lerobot_artifacts_manifest.json
+manifest: $EMBODIED_RUN_ROOT/artifact_manifests/lerobot_pusht_dataset_manifest.json
 ```
 
 如果要下载一个确认过的 LeRobot policy repo：
@@ -160,10 +150,10 @@ export LEROBOT_POLICY_LOCAL_DIR="$EMBODIED_MODEL_ROOT/lerobot/act/pusht/<model-r
 
 DOWNLOAD_LEROBOT_DATASET=0 \
 DOWNLOAD_LEROBOT_POLICY=1 \
-make download-lerobot-artifacts
+bash scripts/lerobot/download_artifacts.sh
 ```
 
-当前仓库不默认绑定 ACT/PushT 的预训练 policy repo；如果没有明确 checkpoint，优先通过 `bash experiments/lerobot/pusht_act_smoke/launch.sh` 训练一个本地 checkpoint，再进入 inference smoke。
+当前已有明确下载 target 的 policy 优先使用专用 target，例如 `make download-lerobot-diffusion-pusht-policy`、`make download-lerobot-smolvla-base-policy`、`make download-lerobot-fastwam-libero-policy`。如果没有明确 ACT/PushT checkpoint，优先通过 `bash experiments/lerobot/pusht_act_smoke/launch.sh` 训练一个本地 checkpoint。
 
 ### Dataset smoke
 

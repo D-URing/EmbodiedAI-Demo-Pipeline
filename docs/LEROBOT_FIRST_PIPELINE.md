@@ -1,8 +1,10 @@
 # LeRobot-First Demo Pipeline
 
-> 状态：主线规划 v0.2；data/inference/report scaffold 已落地<br>
-> 日期：2026-07-14<br>
+> 状态：主线规划 v0.3；训练与 FastWAM 推理链路已落地<br>
+> 日期：2026-07-15<br>
 > 关联：[`adr/0003-lerobot-first-fastwam-pipeline.md`](adr/0003-lerobot-first-fastwam-pipeline.md)、[`LEROBOT_REPLICATION.md`](LEROBOT_REPLICATION.md)、[`FASTWAM_REALROBOT_INTEGRATION.md`](FASTWAM_REALROBOT_INTEGRATION.md)
+
+> 当前可执行命令以 [`TRAINING_AND_INFERENCE.md`](TRAINING_AND_INFERENCE.md) 为准；本文解释 LeRobot-first 的结构和边界。
 
 ## 1. 新主线
 
@@ -23,15 +25,14 @@ LeRobot Dataset
 - 推理能不能从 observation/batch 产生 action？
 - loss、checkpoint、action shape、latency、设备和版本能不能被记录成可交付报告？
 
-当前已经封装的第一条 LeRobot-native 模型 demo 是：
+当前已经落地的 LeRobot 主线分成两类：
 
 ```text
-dataset.repo_id = lerobot/pusht
-policy.type     = act
-policy class    = lerobot.policies.act.modeling_act.ACTPolicy
+训练链路：ACT / PushT
+推理链路：FastWAM / LIBERO
 ```
 
-也就是 **ACT on PushT**。这条链路用于验证 LeRobot 标准 data-to-inference 结构；FastWAM 是下一条重点 LeRobot-native policy path。
+**ACT on PushT** 用于验证 LeRobot 标准训练结构和 loss 日志；**FastWAM on LIBERO** 用于验证 LeRobot-compatible policy 权重、v3 数据、Wan/T5 base cache 和 CUDA 离线推理。Diffusion/PushT 与 SmolVLA/SO100 已作为后续训练/推理入口保留在 `experiments/lerobot/`。
 
 ## 2. FastWAM 的新定位
 
@@ -91,7 +92,7 @@ demo_chains/lerobot_fastwam_data_to_inference_v0.yaml
 已新增：
 
 ```bash
-make download-lerobot-artifacts
+make download-lerobot-pusht-dataset
 make lerobot-data-smoke
 ```
 
@@ -108,7 +109,7 @@ scripts/lerobot/inspect_dataset.py
 scripts/lerobot/run_dataset_smoke.sh
 ```
 
-默认 `LEROBOT_ALLOW_DOWNLOAD=0`，脚本会设置 Hugging Face offline 环境变量；如果本地没有 dataset 缓存或 `LEROBOT_DATASET_ROOT`，会明确失败，不会偷偷下载大文件。需要在集群上下载公开 dataset 时，先运行 `make download-lerobot-artifacts`；完整下载流程见 [`CLUSTER_ARTIFACTS_RUNBOOK.md`](CLUSTER_ARTIFACTS_RUNBOOK.md)。
+默认 `LEROBOT_ALLOW_DOWNLOAD=0`，脚本会设置 Hugging Face offline 环境变量；如果本地没有 dataset 缓存或 `LEROBOT_DATASET_ROOT`，会明确失败，不会偷偷下载大文件。需要在集群上下载公开 dataset 时，先运行 `make download-lerobot-pusht-dataset`；当前训练/推理命令见 [`TRAINING_AND_INFERENCE.md`](TRAINING_AND_INFERENCE.md)。
 
 ### Step 2：training/load smoke
 
@@ -202,6 +203,7 @@ Shared evidence/report contract above both paths
 | `make lerobot-data-smoke` | LeRobot-first 主线的 dataset inspection |
 | `bash experiments/lerobot/pusht_act_smoke/launch.sh` | LeRobot-first 主线的 training smoke |
 | `bash experiments/lerobot/diffusion_pusht_infer/launch.sh` | LeRobot-first 主线的 offline inference smoke |
+| `bash experiments/lerobot/fastwam_libero_infer/launch.sh` | LeRobot-compatible FastWAM/LIBERO CUDA offline inference |
 | `python scripts/lerobot/generate_data_to_inference_report.py` | dataset/inference/training evidence 的报告入口 |
 | FastWAM realrobot overlay | custom FastWAM / future self-built model extension |
 | `embodied-demo report-fastwam` | training evidence importer，可复用到 LeRobot-native FastWAM |
@@ -222,7 +224,7 @@ Shared evidence/report contract above both paths
 
 关键原则：
 
-- 当前 LeRobot demo 是 ACT/PushT；
-- FastWAM LeRobot-native 是下一条重点 policy；
+- ACT/PushT 是保底训练链路；
+- FastWAM/LIBERO 是已验证的 LeRobot-compatible CUDA 推理链路；
 - FastWAM realrobot overlay 是 custom finetuning backend，不是从零自拟模型；
 - 大文件只放项目内 ignored 目录或显式外部共享盘，不提交到仓库。
