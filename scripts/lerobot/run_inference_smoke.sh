@@ -19,6 +19,7 @@ fi
 RUN_ID="${LEROBOT_RUN_ID:-$(date +%Y%m%d-%H%M%S)}"
 RUN_DIR="${LEROBOT_RUN_ROOT}/${LEROBOT_RUN_NAME}/${RUN_ID}"
 mkdir -p "$RUN_DIR"
+cp "$CONFIG_PATH" "$RUN_DIR/config.sh"
 
 ARGS=(
   --dataset-repo-id "$LEROBOT_DATASET_REPO_ID"

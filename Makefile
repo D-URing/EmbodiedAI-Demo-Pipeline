@@ -2,19 +2,24 @@ PYTHON ?= python3.11
 VENV ?= .venv
 CONSTRAINTS ?= requirements/constraints-py311.txt
 LEROBOT_TRAIN_CONFIG ?= configs/lerobot/pusht_act_gpu_smoke.sh
+LEROBOT_ACCELERATE_CONFIG ?= configs/lerobot/train/svla_so100_smolvla_8gpu_long.sh
+LEROBOT_INFER_CONFIG ?= configs/lerobot/native_pusht_act_pipeline.sh
 
-.PHONY: help setup doctor test validate dry-run demo demo-extended download-lerobot-artifacts download-lerobot-pusht-dataset download-lerobot-svla-so100-pickplace-dataset download-lerobot-diffusion-pusht-policy download-lerobot-smolvla-base-policy download-data-rovid20k download-data-rovidx download-data-mdm-depth download-data-xperience10m-sample download-data-abc130k download-data-agibotworld-alpha download-data-interndata-a1 download-fastwam-artifacts lerobot-check-scripts lerobot-data-smoke lerobot-train-smoke lerobot-train-act lerobot-train-diffusion lerobot-train-smolvla lerobot-infer-smoke demo-chain-lerobot-fastwam fastwam-check-scripts fastwam-train-smoke demo-chain-fastwam schemas reference-fetch clean
+.PHONY: help setup doctor test validate dry-run demo demo-extended download-lerobot-artifacts download-lerobot-pusht-dataset download-lerobot-svla-so100-pickplace-dataset download-lerobot-diffusion-pusht-policy download-lerobot-smolvla-base-policy download-lerobot-fastwam-libero-policy download-data-rovid20k download-data-rovidx download-data-mdm-depth download-data-xperience10m-sample download-data-abc130k download-data-agibotworld-alpha download-data-interndata-a1 download-fastwam-artifacts prepare-imagewam-upstream download-imagewam-artifacts download-imagewam-flux2-base lerobot-check-scripts fastwam-check-scripts imagewam-check-scripts experiments-check-scripts lerobot-data-smoke lerobot-train-smoke lerobot-train-act lerobot-train-diffusion lerobot-train-smolvla lerobot-train-8gpu-smolvla lerobot-infer-smoke lerobot-infer-diffusion lerobot-infer-smolvla lerobot-infer-fastwam demo-chain-lerobot-fastwam fastwam-train-smoke demo-chain-fastwam imagewam-train-smoke schemas reference-fetch clean
 
 help:
 	@echo "EmbodiedAI Demo Pipeline"
 	@echo
-	@echo "Core / mock:"
+	@echo "Environment / checks:"
 	@echo "  make setup                         Create local core .venv"
 	@echo "  make test                          Run unit tests"
 	@echo "  make validate                      Validate task/run configs"
-	@echo "  make demo                          Run minimal mock demos"
+	@echo "  make lerobot-check-scripts         Check LeRobot wrapper syntax/parsers"
+	@echo "  make fastwam-check-scripts         Check FastWAM wrapper syntax/parsers"
+	@echo "  make imagewam-check-scripts        Check ImageWAM wrapper syntax"
+	@echo "  make experiments-check-scripts     Check experiment launch/config scripts"
 	@echo
-	@echo "LeRobot pipeline:"
+	@echo "LeRobot downloads:"
 	@echo "  make download-lerobot-artifacts    Download LeRobot PushT dataset"
 	@echo "  make download-lerobot-svla-so100-pickplace-dataset"
 	@echo "                                      Download SmolVLA SO100 pick-place dataset"
@@ -22,12 +27,8 @@ help:
 	@echo "                                      Download LeRobot diffusion PushT policy"
 	@echo "  make download-lerobot-smolvla-base-policy"
 	@echo "                                      Download LeRobot SmolVLA base policy"
-	@echo "  make lerobot-data-smoke            Inspect LeRobot dataset"
-	@echo "  make lerobot-train-smoke           Run LeRobot train with LEROBOT_TRAIN_CONFIG"
-	@echo "  make lerobot-train-act             Run ACT/PushT train profile"
-	@echo "  make lerobot-train-diffusion       Run Diffusion/PushT train profile"
-	@echo "  make lerobot-train-smolvla         Run SmolVLA/SO100 fine-tune profile"
-	@echo "  make lerobot-infer-smoke           Run offline policy inference smoke"
+	@echo "  make download-lerobot-fastwam-libero-policy"
+	@echo "                                      Download LeRobot-compatible FastWAM LIBERO policy"
 	@echo
 	@echo "Open data shortcuts:"
 	@echo "  make download-data-rovid20k        Download practical RoVid-X subset"
@@ -35,15 +36,21 @@ help:
 	@echo "                                      Download Xperience-10M sample episode"
 	@echo "  make download-data-abc130k         Download ABC-130k after HF access approval"
 	@echo
-	@echo "Custom / FastWAM pipeline:"
+	@echo "Custom downloads / upstreams:"
 	@echo "  make download-fastwam-artifacts    Download FastWAM release ckpt/stats"
-	@echo "  make fastwam-train-smoke           Run FastWAM custom smoke after overlay setup"
-	@echo "  make demo-chain-fastwam            Convert FastWAM run into demo report"
+	@echo "  make prepare-imagewam-upstream     Clone/update official ImageWAM repo"
+	@echo "  make download-imagewam-artifacts   Download ImageWAM FLUX.2 4B LIBERO release"
+	@echo "  make download-imagewam-flux2-base  Download FLUX.2 4B base/AE via official script"
+	@echo
+	@echo "Training / inference:"
+	@echo "  Use experiments/<route>/<experiment>/launch.sh, not make."
+	@echo "  Start with experiments/README.md"
 	@echo
 	@echo "Start here:"
 	@echo "  docs/README.md"
 	@echo "  pipelines/lerobot/README.md"
-	@echo "  pipelines/custom_fastwam/README.md"
+	@echo "  pipelines/custom/README.md"
+	@echo "  experiments/README.md"
 
 setup:
 	$(PYTHON) -m venv $(VENV)
@@ -105,6 +112,14 @@ download-lerobot-smolvla-base-policy:
 	LEROBOT_POLICY_LOCAL_DIR="$${EMBODIED_MODEL_ROOT:-$$(pwd)/models}/lerobot/smolvla/smolvla_base" \
 	bash scripts/lerobot/download_artifacts.sh
 
+download-lerobot-fastwam-libero-policy:
+	DOWNLOAD_LEROBOT_DATASET=0 DOWNLOAD_LEROBOT_POLICY=1 \
+	ARTIFACT_MANIFEST_NAME=lerobot_fastwam_libero_policy_manifest.json \
+	LEROBOT_POLICY_TYPE=fastwam \
+	LEROBOT_POLICY_REPO_ID=lerobot/fastwam_libero_uncond_2cam224 \
+	LEROBOT_POLICY_LOCAL_DIR="$${EMBODIED_MODEL_ROOT:-$$(pwd)/models}/lerobot/fastwam/fastwam_libero_uncond_2cam224" \
+	bash scripts/lerobot/download_artifacts.sh
+
 download-data-rovid20k:
 	ARTIFACT_FAMILY=open_data ARTIFACT_MANIFEST_NAME=open_data_rovid20k_manifest.json \
 	LEROBOT_DATASET_REPO_ID=Perflow-Shuai/RoVid-20K-10s \
@@ -150,17 +165,35 @@ download-data-interndata-a1:
 download-fastwam-artifacts:
 	bash scripts/fastwam/download_release_artifacts.sh
 
+prepare-imagewam-upstream:
+	bash scripts/imagewam/prepare_imagewam_upstream.sh
+
+download-imagewam-artifacts:
+	bash scripts/imagewam/download_artifacts.sh
+
+download-imagewam-flux2-base: prepare-imagewam-upstream
+	cd upstreams/ImageWAM && \
+	MODEL_ROOT="$${IMAGEWAM_MODEL_ROOT:-$${EMBODIED_MODEL_ROOT:-$$(pwd)/../../models}/imagewam}" \
+	DOWNLOAD_9B="$${IMAGEWAM_DOWNLOAD_9B:-false}" \
+	bash scripts/flux2/prepare_flux2_files.sh
+
 lerobot-check-scripts:
 	bash -n scripts/lerobot/install_lerobot_cluster.sh
 	bash -n scripts/lerobot/download_artifacts.sh
 	bash -n scripts/lerobot/run_pusht_act_gpu_smoke.sh
 	bash -n scripts/lerobot/run_dataset_smoke.sh
 	bash -n scripts/lerobot/run_inference_smoke.sh
+	bash -n scripts/lerobot/run_train_accelerate.sh
 	bash -n scripts/lerobot/slurm_pusht_act_gpu_smoke.sbatch
+	bash -n scripts/lerobot/slurm_smolvla_8gpu_long.sbatch
 	bash -n configs/lerobot/train/pusht_act.sh
 	bash -n configs/lerobot/train/pusht_diffusion.sh
 	bash -n configs/lerobot/train/svla_so100_smolvla.sh
+	bash -n configs/lerobot/train/svla_so100_smolvla_8gpu_long.sh
 	bash -n configs/lerobot/train/aloha_pi0fast_template.sh
+	bash -n configs/lerobot/infer/pusht_diffusion.sh
+	bash -n configs/lerobot/infer/svla_so100_smolvla.sh
+	bash -n configs/lerobot/infer/fastwam_libero.sh
 	$(VENV)/bin/python scripts/lerobot/parse_train_log.py --log tests/fixtures/lerobot_train_stdout.log --output-dir build/lerobot-parser-test
 	$(VENV)/bin/python scripts/lerobot/generate_data_to_inference_report.py --dataset-profile tests/fixtures/lerobot_dataset_profile.json --inference-evidence tests/fixtures/lerobot_inference_evidence.json --training-summary build/lerobot-parser-test/loss_summary.json --output-dir build/lerobot-chain-report-test
 
@@ -179,8 +212,20 @@ lerobot-train-diffusion:
 lerobot-train-smolvla:
 	bash scripts/lerobot/run_pusht_act_gpu_smoke.sh configs/lerobot/train/svla_so100_smolvla.sh
 
+lerobot-train-8gpu-smolvla:
+	bash scripts/lerobot/run_train_accelerate.sh $(LEROBOT_ACCELERATE_CONFIG)
+
 lerobot-infer-smoke:
-	bash scripts/lerobot/run_inference_smoke.sh
+	bash scripts/lerobot/run_inference_smoke.sh $(LEROBOT_INFER_CONFIG)
+
+lerobot-infer-diffusion:
+	bash scripts/lerobot/run_inference_smoke.sh configs/lerobot/infer/pusht_diffusion.sh
+
+lerobot-infer-smolvla:
+	bash scripts/lerobot/run_inference_smoke.sh configs/lerobot/infer/svla_so100_smolvla.sh
+
+lerobot-infer-fastwam:
+	bash scripts/lerobot/run_inference_smoke.sh configs/lerobot/infer/fastwam_libero.sh
 
 demo-chain-lerobot-fastwam:
 	test -n "$(LEROBOT_DATASET_PROFILE)" || (echo "LEROBOT_DATASET_PROFILE is required" >&2; exit 2)
@@ -200,6 +245,20 @@ fastwam-train-smoke:
 demo-chain-fastwam:
 	test -n "$(FASTWAM_RUN_DIR)" || (echo "FASTWAM_RUN_DIR is required, e.g. FASTWAM_RUN_DIR=runs/fastwam/<run>/<id> make demo-chain-fastwam" >&2; exit 2)
 	$(VENV)/bin/embodied-demo report-fastwam --run-dir "$(FASTWAM_RUN_DIR)" $(if $(OUTPUT_DIR),--output-dir "$(OUTPUT_DIR)",) $(if $(MOCK_RUN_DIR),--mock-run-dir "$(MOCK_RUN_DIR)",)
+
+imagewam-check-scripts:
+	bash -n configs/imagewam/libero_train_eval.sh
+	bash -n scripts/imagewam/prepare_imagewam_upstream.sh
+	bash -n scripts/imagewam/download_artifacts.sh
+	bash -n scripts/imagewam/run_train_eval.sh
+	bash -n scripts/imagewam/slurm_libero_pilot.sbatch
+
+experiments-check-scripts:
+	find experiments -name '*.sh' -print0 | xargs -0 -n 1 bash -n
+	find experiments -name '*.sbatch' -print0 | xargs -0 -n 1 bash -n
+
+imagewam-train-smoke:
+	IMAGEWAM_MODE=metadata-smoke IMAGEWAM_REQUIRE_CUDA=0 bash scripts/imagewam/run_train_eval.sh
 
 schemas:
 	$(VENV)/bin/embodied-demo export-schema --output-dir build/schemas

@@ -24,9 +24,9 @@ runs/
 | P0 | ACT | `lerobot/pusht` | 保底真实训练，快速看 loss | 已在 SCUT 验证 |
 | P0 | Diffusion | `lerobot/pusht` | 第二条 IL 训练链路 | 已配置 |
 | P1 | SmolVLA | `lerobot/svla_so100_pickplace` + `lerobot/smolvla_base` | A100 上的 VLA fine-tune | 已配置，待集群验证 |
+| P1 | FastWAM | LIBERO/FastWAM 数据 + `lerobot/fastwam_libero_uncond_2cam224` | LeRobot-compatible world/action model 权重推理 | 权重已下载 |
 | P2 | Pi0-FAST | `lerobot/aloha_sim_insertion_human` + base policy | 重 VLA 候选 | 模板已放入，不作为第一轮必跑 |
 | P2 | GR00T N1.7 | DROID/LIBERO/SIMPLER 相关数据 | 大模型/评测候选 | 后续单独开任务 |
-| P2 | FastWAM in LeRobot | LIBERO/FastWAM 数据 | world/action model 接入 | 等官方接口和本地适配稳定 |
 
 ## 为什么先选这三个
 
@@ -69,6 +69,7 @@ make download-lerobot-pusht-dataset
 make download-lerobot-svla-so100-pickplace-dataset
 make download-lerobot-diffusion-pusht-policy
 make download-lerobot-smolvla-base-policy
+make download-lerobot-fastwam-libero-policy
 ```
 
 训练 ACT：
@@ -103,6 +104,57 @@ export LEROBOT_NUM_WORKERS=2
 make lerobot-train-smolvla
 ```
 
+## 单机八卡长期实验
+
+八卡训练走 LeRobot 内部的 `accelerate.Accelerator`。当前正式长期 profile 是 SmolVLA / SO100：
+
+```text
+configs/lerobot/train/svla_so100_smolvla_8gpu_long.sh
+scripts/lerobot/run_train_accelerate.sh
+scripts/lerobot/slurm_smolvla_8gpu_long.sbatch
+```
+
+交互式启动：
+
+```bash
+export LEROBOT_STEPS=20000
+export LEROBOT_BATCH_SIZE=8
+export LEROBOT_NUM_PROCESSES=8
+export LEROBOT_SAVE_FREQ=1000
+
+make lerobot-train-8gpu-smolvla
+```
+
+Slurm 启动：
+
+```bash
+sbatch scripts/lerobot/slurm_smolvla_8gpu_long.sbatch
+```
+
+长期实验输出：
+
+```text
+runs/lerobot/svla_so100_smolvla_8gpu_long/<run_id>/
+├── command.txt
+├── backend_manifest.json
+├── train_stdout.log
+├── loss_summary.json
+└── lerobot_output/
+    └── checkpoints/
+```
+
+恢复训练：
+
+```bash
+export LEROBOT_RESUME=1
+export LEROBOT_RESUME_CONFIG_PATH="$PROJECT/runs/lerobot/<run>/<id>/lerobot_output/checkpoints/<step>/train_config.json"
+export LEROBOT_OUTPUT_DIR="$PROJECT/runs/lerobot/<run>/<id>/lerobot_output"
+
+make lerobot-train-8gpu-smolvla
+```
+
+恢复时尽量保持 `LEROBOT_NUM_PROCESSES` 和 `LEROBOT_BATCH_SIZE` 不变，否则 LeRobot 会提示样本顺序不完全一致。
+
 ## 推理
 
 下载的开源 policy 推理：
@@ -116,14 +168,27 @@ export LEROBOT_POLICY_PATH="$PROJECT/models/lerobot/diffusion/diffusion_pusht"
 make lerobot-infer-smoke
 ```
 
+也可以使用固化 profile：
+
+```bash
+make lerobot-infer-diffusion
+make lerobot-infer-smolvla
+make lerobot-infer-fastwam
+```
+
+FastWAM 推理注意：当前 `data/fastwam/libero-fastwam` 是 LeRobot v2.1，当前 LeRobot loader 需要 v3。先转换一个 subset，再覆盖：
+
+```bash
+export LEROBOT_DATASET_ROOT="$PROJECT/data/fastwam/libero-fastwam/<converted_v3_subset>"
+make lerobot-infer-fastwam
+```
+
 训练产物推理时，把 `LEROBOT_POLICY_PATH` 指向对应 run 的 `lerobot_output/checkpoints/...` 或最终整理后的 `models/lerobot/<policy>/<name>`。
 
 ## 多卡和多节点
 
-当前仓库先保证单机单卡/单机可见 GPU 的 LeRobot training command 可稳定运行。下一步再把同一组 profile 接入：
+当前仓库已经提供单机 8 卡 accelerate profile。下一步再扩展多节点：
 
-- `torchrun --nproc_per_node=N`；
-- Slurm `sbatch`；
 - 多节点 rendezvous 参数。
 
 原则是 profile 不变，只替换 launcher。

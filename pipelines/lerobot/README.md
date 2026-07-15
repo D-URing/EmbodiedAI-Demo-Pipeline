@@ -45,8 +45,9 @@ data/lerobot/pusht
 data/lerobot/svla_so100_pickplace                  # SmolVLA fine-tune 数据
 models/lerobot/diffusion/diffusion_pusht        # 可选开源预训练 policy
 models/lerobot/smolvla/smolvla_base             # SmolVLA base policy
+models/lerobot/fastwam/fastwam_libero_uncond_2cam224
 hf_cache/torch/hub/checkpoints/resnet18-f37072fd.pth
-runs/lerobot/<run_name>/<run_id>/loss_summary.json
+runs/experiments/lerobot/<run_name>/<run_id>/loss_summary.json
 ```
 
 ## 环境
@@ -85,7 +86,8 @@ LeRobot 主线的资产分四层：
 | Backbone cache | `hf_cache/torch/hub/checkpoints/resnet18-f37072fd.pth` | ACT 默认 ResNet18 视觉 backbone |
 | Open policy | `models/lerobot/diffusion/diffusion_pusht` | 可直接下载的 LeRobot diffusion PushT 预训练 policy |
 | VLA base policy | `models/lerobot/smolvla/smolvla_base` | SmolVLA fine-tune 起点 |
-| Local checkpoint | `runs/lerobot/<run>/lerobot_output` 或整理到 `models/lerobot/act/pusht/<name>` | 我们自己训练得到的 ACT checkpoint |
+| FastWAM policy | `models/lerobot/fastwam/fastwam_libero_uncond_2cam224` | LeRobot-compatible FastWAM LIBERO 权重 |
+| Local checkpoint | `runs/experiments/lerobot/<run>/lerobot_output` 或整理到 `models/lerobot/act/pusht/<name>` | 我们自己训练得到的 ACT checkpoint |
 
 注意：ACT/PushT 当前主线优先用于训练 smoke。开源预训练 policy 先用 `lerobot/diffusion_pusht` 作为“可下载、可管理”的 policy 样例，后续再补 ACT 或 FastWAM 的 LeRobot-native checkpoint。
 
@@ -133,6 +135,18 @@ make download-lerobot-smolvla-base-policy
 models/lerobot/smolvla/smolvla_base
 ```
 
+LeRobot-compatible FastWAM LIBERO policy：
+
+```bash
+make download-lerobot-fastwam-libero-policy
+```
+
+默认落盘：
+
+```text
+models/lerobot/fastwam/fastwam_libero_uncond_2cam224
+```
+
 ResNet18 backbone，如果不存在：
 
 ```bash
@@ -167,7 +181,7 @@ export LEROBOT_POLICY_PATH="$PROJECT/models/lerobot/diffusion/diffusion_pusht"
 然后按当前 inference smoke 入口测试：
 
 ```bash
-make lerobot-infer-smoke
+bash experiments/lerobot/diffusion_pusht_infer/launch.sh
 ```
 
 如果 policy 类型和 inference 脚本版本不匹配，优先记录错误并修 adapter，不要把 policy 复制到别的位置。
@@ -188,7 +202,7 @@ export LEROBOT_LOG_FREQ=1
 export LEROBOT_SAVE_FREQ=2
 export LEROBOT_RUN_NAME=pusht_act_gpu_make_check
 
-make lerobot-train-smoke
+bash experiments/lerobot/pusht_act_smoke/launch.sh
 ```
 
 ACT / PushT：
@@ -200,7 +214,7 @@ export LEROBOT_NUM_WORKERS=4
 export LEROBOT_LOG_FREQ=20
 export LEROBOT_SAVE_FREQ=1000
 
-make lerobot-train-act
+bash experiments/lerobot/pusht_act_smoke/launch.sh
 ```
 
 Diffusion / PushT：
@@ -209,7 +223,8 @@ Diffusion / PushT：
 export LEROBOT_STEPS=1000
 export LEROBOT_BATCH_SIZE=8
 
-make lerobot-train-diffusion
+# 目前先保留底层 profile，新增长期实验时复制 experiments/lerobot/pusht_act_smoke
+bash scripts/lerobot/run_pusht_act_gpu_smoke.sh configs/lerobot/train/pusht_diffusion.sh
 ```
 
 SmolVLA / SO100：
@@ -218,8 +233,85 @@ SmolVLA / SO100：
 export LEROBOT_STEPS=2000
 export LEROBOT_BATCH_SIZE=8
 
-make lerobot-train-smolvla
+# 推荐长期 SmolVLA 使用 8GPU 实验入口；短跑可复制 experiments/lerobot/smolvla_so100_8gpu_long
+bash experiments/lerobot/smolvla_so100_8gpu_long/launch.sh
 ```
+
+## 单机八卡长期训练
+
+真实八卡入口使用 LeRobot 内部的 `accelerate.Accelerator`，而不是手写 DDP。
+
+配置：
+
+```text
+experiments/lerobot/smolvla_so100_8gpu_long/config.sh
+experiments/lerobot/smolvla_so100_8gpu_long/launch.sh
+experiments/lerobot/smolvla_so100_8gpu_long/slurm.sbatch
+```
+
+直接在 8 卡节点上跑：
+
+```bash
+export LEROBOT_STEPS=20000
+export LEROBOT_BATCH_SIZE=8        # per-process batch size; effective batch = 8 * 8
+export LEROBOT_NUM_PROCESSES=8
+export LEROBOT_SAVE_FREQ=1000
+
+bash experiments/lerobot/smolvla_so100_8gpu_long/launch.sh
+```
+
+Slurm：
+
+```bash
+sbatch experiments/lerobot/smolvla_so100_8gpu_long/slurm.sbatch
+```
+
+长期实验产物：
+
+```text
+runs/experiments/lerobot/smolvla_so100_8gpu_long/<run_id>/
+├── command.txt
+├── backend_manifest.json
+├── train_stdout.log
+├── loss_summary.json
+└── lerobot_output/
+    └── checkpoints/
+```
+
+恢复训练：
+
+```bash
+export LEROBOT_RESUME=1
+export LEROBOT_RESUME_CONFIG_PATH="$PROJECT/runs/experiments/lerobot/<run>/<id>/lerobot_output/checkpoints/<step>/train_config.json"
+export LEROBOT_OUTPUT_DIR="$PROJECT/runs/experiments/lerobot/<new_or_same_run>/<id>/lerobot_output"
+bash experiments/lerobot/smolvla_so100_8gpu_long/launch.sh
+```
+
+注意：LeRobot resume 对 batch size 和 world size 敏感。为了样本顺序完全一致，恢复时尽量保持 `LEROBOT_BATCH_SIZE` 和 `LEROBOT_NUM_PROCESSES` 不变。
+
+## 推理链路
+
+当前是离线单样本推理 smoke：读取本地 dataset sample，加载本地 policy/checkpoint，在 CUDA 上输出 action 形状、latency 和 evidence JSON。
+
+Diffusion / PushT：
+
+```bash
+bash experiments/lerobot/diffusion_pusht_infer/launch.sh
+```
+
+SmolVLA / SO100：
+
+```bash
+bash scripts/lerobot/run_inference_smoke.sh configs/lerobot/infer/svla_so100_smolvla.sh
+```
+
+FastWAM / LIBERO：
+
+```bash
+bash scripts/lerobot/run_inference_smoke.sh configs/lerobot/infer/fastwam_libero.sh
+```
+
+FastWAM 注意事项：`data/fastwam/libero-fastwam` 目前是 LeRobot v2.1 数据。当前 LeRobot v3 loader 直接读需要转换一个 v3 副本，然后把 `LEROBOT_DATASET_ROOT` 指向转换后的 subset。
 
 如果 SmolVLA 显存或 dataloader 压力偏大：
 
@@ -227,13 +319,13 @@ make lerobot-train-smolvla
 export LEROBOT_BATCH_SIZE=2
 export LEROBOT_NUM_WORKERS=2
 
-make lerobot-train-smolvla
+bash experiments/lerobot/smolvla_so100_8gpu_long/launch.sh
 ```
 
 输出：
 
 ```text
-runs/lerobot/<run_name>/<run_id>/
+runs/experiments/lerobot/<run_name>/<run_id>/
 ├── command.txt
 ├── train_stdout.log
 ├── loss_summary.json

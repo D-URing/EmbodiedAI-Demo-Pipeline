@@ -37,8 +37,8 @@ models:
     default_config: configs/lerobot/native_pusht_act_pipeline.sh
     smoke_targets:
       - make lerobot-data-smoke
-      - make lerobot-train-smoke
-      - make lerobot-infer-smoke
+      - bash experiments/lerobot/pusht_act_smoke/launch.sh
+      - bash scripts/lerobot/run_inference_smoke.sh configs/lerobot/native_pusht_act_pipeline.sh
     download_targets:
       - make download-lerobot-artifacts
       - DOWNLOAD_LEROBOT_DATASET=0 DOWNLOAD_LEROBOT_POLICY=1 LEROBOT_POLICY_REPO_ID=<org>/<repo> make download-lerobot-artifacts
@@ -61,7 +61,7 @@ models:
     default_config: TBD
     smoke_targets:
       - make lerobot-data-smoke
-      - make lerobot-infer-smoke
+      - bash scripts/lerobot/run_inference_smoke.sh configs/lerobot/infer/fastwam_libero.sh
       - make demo-chain-lerobot-fastwam
     download_targets:
       - DOWNLOAD_LEROBOT_DATASET=0 DOWNLOAD_LEROBOT_POLICY=1 LEROBOT_POLICY_REPO_ID=<fastwam-lerobot-repo> make download-lerobot-artifacts
@@ -79,7 +79,7 @@ models:
     dataset_repo_id: lerobot/pusht
     policy_repo_id: lerobot/diffusion_pusht
     smoke_targets:
-      - LEROBOT_POLICY_PATH="$EMBODIED_MODEL_ROOT/lerobot/diffusion/diffusion_pusht" make lerobot-infer-smoke
+      - bash experiments/lerobot/diffusion_pusht_infer/launch.sh
     download_targets:
       - make download-lerobot-diffusion-pusht-policy
     artifact_location:
@@ -97,14 +97,14 @@ models:
     dataset_repo_id: lerobot/pusht
     default_config: configs/lerobot/train/pusht_diffusion.sh
     smoke_targets:
-      - make lerobot-train-diffusion
+      - bash scripts/lerobot/run_pusht_act_gpu_smoke.sh configs/lerobot/train/pusht_diffusion.sh
     download_targets:
       - make download-lerobot-pusht-dataset
       - make download-lerobot-diffusion-pusht-policy
     artifact_location:
       dataset_root: "$EMBODIED_DATA_ROOT/lerobot/pusht"
       pretrained_policy_path: "$EMBODIED_MODEL_ROOT/lerobot/diffusion/diffusion_pusht"
-      training_runs: "$EMBODIED_RUN_ROOT/lerobot/pusht_diffusion_train/"
+      training_runs: "$EMBODIED_RUN_ROOT/experiments/lerobot/pusht_diffusion_train/"
     capability_claim: second_lerobot_il_training_path
     notes:
       - Use this as the second LeRobot-native policy after ACT.
@@ -118,18 +118,37 @@ models:
     policy_repo_id: lerobot/smolvla_base
     default_config: configs/lerobot/train/svla_so100_smolvla.sh
     smoke_targets:
-      - make lerobot-train-smolvla
+      - bash experiments/lerobot/smolvla_so100_8gpu_long/launch.sh
     download_targets:
       - make download-lerobot-svla-so100-pickplace-dataset
       - make download-lerobot-smolvla-base-policy
     artifact_location:
       dataset_root: "$EMBODIED_DATA_ROOT/lerobot/svla_so100_pickplace"
       pretrained_policy_path: "$EMBODIED_MODEL_ROOT/lerobot/smolvla/smolvla_base"
-      training_runs: "$EMBODIED_RUN_ROOT/lerobot/svla_so100_smolvla_train/"
+      training_runs: "$EMBODIED_RUN_ROOT/experiments/lerobot/smolvla_so100_smolvla_train/"
     capability_claim: first_lerobot_vla_finetuning_path
     notes:
       - This is the first VLA/foundation-model training profile in the LeRobot route.
       - Keep batch size adjustable; start with batch_size=8 on A100/A800 and reduce if needed.
+
+  lerobot_fastwam_libero:
+    status: downloaded_on_scut
+    path_type: lerobot_native
+    policy_type: fastwam
+    dataset_repo_id: yuanty/LIBERO-fastwam
+    policy_repo_id: lerobot/fastwam_libero_uncond_2cam224
+    smoke_targets:
+      - bash scripts/lerobot/run_inference_smoke.sh configs/lerobot/infer/fastwam_libero.sh
+    download_targets:
+      - make download-lerobot-fastwam-libero-policy
+    artifact_location:
+      release_dataset: "$EMBODIED_DATA_ROOT/fastwam/libero-fastwam/"
+      policy_path: "$EMBODIED_MODEL_ROOT/lerobot/fastwam/fastwam_libero_uncond_2cam224"
+    capability_claim: lerobot_compatible_fastwam_policy
+    notes:
+      - This is different from models/fastwam_release, which belongs to the custom/FastWAM route.
+      - The downloaded policy contains model.safetensors and normalizer/postprocessor assets.
+      - FastWAM LIBERO data is LeRobot v2.1; convert a copy before using the current LeRobot v3 loader.
 
   lerobot_pi0fast_template:
     status: template_only
@@ -148,8 +167,8 @@ models:
     overlay: D-URing/fastwam-realrobot-pipeline
     default_config: configs/fastwam/realrobot_train_eval.sh
     smoke_targets:
-      - make fastwam-train-smoke
-      - FASTWAM_MODE=pilot FASTWAM_RECIPE=joint_base bash scripts/fastwam/run_realrobot_train_eval.sh
+      - bash experiments/custom/fastwam_realrobot_smoke/launch.sh
+      - FASTWAM_MODE=pilot FASTWAM_RECIPE=joint_base bash experiments/custom/fastwam_realrobot_smoke/launch.sh
       - make demo-chain-fastwam
     download_targets:
       - make download-fastwam-artifacts
@@ -157,10 +176,41 @@ models:
     artifact_location:
       release_weights: "$EMBODIED_MODEL_ROOT/fastwam_release/"
       release_dataset: "$EMBODIED_DATA_ROOT/fastwam/libero-fastwam/"
-      custom_outputs: "$EMBODIED_MODEL_ROOT/custom/fastwam_realrobot/<run>/"
+      custom_outputs: "$EMBODIED_RUN_ROOT/experiments/custom/fastwam_realrobot_smoke/"
     capability_claim: custom_finetuning_training_evidence
     notes:
       - This is not a from-scratch self-designed model.
       - It is a customized finetuning/realrobot overlay path.
       - FastWAM LIBERO release data is LeRobot v2.1; convert a copy before using the current LeRobot v3 loader.
       - SCUT private overlay clone currently needs GitHub private repository credentials.
+
+  custom_imagewam_flux2_4b_libero:
+    status: configured_pending_cluster_download
+    path_type: custom_backend
+    upstream: yuyangalin/ImageWAM
+    policy_family: imagewam
+    policy_variant: flux2_4b
+    task_type: libero
+    policy_repo_id: yuyangalin/ImageWAM-FLUX.2-4B-LIBERO
+    default_config: configs/imagewam/libero_train_eval.sh
+    smoke_targets:
+      - make prepare-imagewam-upstream
+      - make download-imagewam-artifacts
+      - make download-imagewam-flux2-base
+      - IMAGEWAM_MODE=metadata-smoke IMAGEWAM_REQUIRE_CUDA=0 bash experiments/custom/imagewam_flux2_4b_libero_pilot/launch.sh
+    download_targets:
+      - make download-imagewam-artifacts
+      - make download-imagewam-flux2-base
+      - IMAGEWAM_POLICY_REPO_ID=yuyangalin/ImageWAM-FLUX.2-9B-LIBERO IMAGEWAM_POLICY_LOCAL_DIR="$EMBODIED_MODEL_ROOT/imagewam/flux2_klein_9b_libero" make download-imagewam-artifacts
+    artifact_location:
+      release_dataset: "$EMBODIED_DATA_ROOT/fastwam/libero-fastwam/"
+      release_weights: "$EMBODIED_MODEL_ROOT/imagewam/flux2_klein_4b_libero/"
+      flux2_base_weights: "$EMBODIED_MODEL_ROOT/imagewam/flux2/"
+      upstream_source: "$PROJECT_ROOT/upstreams/ImageWAM/"
+      custom_outputs: "$EMBODIED_RUN_ROOT/experiments/custom/imagewam_flux2_4b_libero_pilot/"
+    capability_claim: custom_image_editing_backend_candidate
+    notes:
+      - ImageWAM is parallel to FastWAM under pipelines/custom.
+      - Default first target is FLUX.2 4B + LIBERO because it is lighter than 9B and aligns with available LIBERO assets.
+      - The first wrapper records metadata and delegates real training to the official ImageWAM scripts after the upstream environment is installed.
+      - Do not claim LIBERO/RoboTwin success rates until the simulator/eval wrapper is installed and run.
