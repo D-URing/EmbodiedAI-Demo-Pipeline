@@ -2,7 +2,7 @@ PYTHON ?= python3.11
 VENV ?= .venv
 CONSTRAINTS ?= requirements/constraints-py311.txt
 
-.PHONY: help setup doctor test validate download-lerobot-artifacts download-lerobot-pusht-dataset download-lerobot-svla-so100-pickplace-dataset download-lerobot-fastwam-libero-dataset convert-lerobot-fastwam-libero-v3 download-lerobot-fastwam-base-cache download-lerobot-diffusion-pusht-policy download-lerobot-smolvla-base-policy download-lerobot-fastwam-libero-policy download-data-rovid20k download-data-rovidx download-data-mdm-depth download-data-xperience10m-sample download-data-abc130k download-data-agibotworld-alpha download-data-interndata-a1 download-custom-fastwam-libero-dataset download-fastwam-artifacts prepare-imagewam-upstream download-imagewam-artifacts download-imagewam-flux2-base lerobot-check-scripts fastwam-check-scripts imagewam-check-scripts experiments-check-scripts lerobot-data-smoke schemas clean
+.PHONY: help setup doctor test validate prepare-dirs prepare-assets-lerobot prepare-assets-custom-fastwam prepare-assets-imagewam check-assets check-assets-core check-assets-lerobot check-assets-custom-fastwam check-assets-imagewam download-lerobot-artifacts download-lerobot-pusht-dataset download-lerobot-svla-so100-pickplace-dataset download-lerobot-fastwam-libero-dataset convert-lerobot-fastwam-libero-v3 download-lerobot-fastwam-base-cache download-lerobot-diffusion-pusht-policy download-lerobot-smolvla-base-policy download-lerobot-fastwam-libero-policy download-data-rovid20k download-data-rovidx download-data-mdm-depth download-data-xperience10m-sample download-data-abc130k download-data-agibotworld-alpha download-data-interndata-a1 download-custom-fastwam-libero-dataset download-fastwam-artifacts prepare-imagewam-upstream download-imagewam-artifacts download-imagewam-flux2-base lerobot-check-scripts fastwam-check-scripts imagewam-check-scripts experiments-check-scripts lerobot-data-smoke schemas clean
 
 help:
 	@echo "EmbodiedAI Demo Pipeline"
@@ -15,6 +15,13 @@ help:
 	@echo "  make fastwam-check-scripts         Check FastWAM wrapper syntax/parsers"
 	@echo "  make imagewam-check-scripts        Check ImageWAM wrapper syntax"
 	@echo "  make experiments-check-scripts     Check experiment launch/config scripts"
+	@echo "  make prepare-dirs                  Create repo-local asset directories"
+	@echo "  make check-assets                  Check repo-local data/model/cache assets"
+	@echo
+	@echo "Bootstrap:"
+	@echo "  make prepare-assets-lerobot        Download first LeRobot datasets/policies/cache"
+	@echo "  make prepare-assets-custom-fastwam Download FastWAM data/release and prepare overlay"
+	@echo "  make prepare-assets-imagewam       Prepare ImageWAM upstream and model assets"
 	@echo
 	@echo "LeRobot downloads:"
 	@echo "  make download-lerobot-artifacts    Download LeRobot PushT dataset"
@@ -74,6 +81,44 @@ validate:
 	$(MAKE) imagewam-check-scripts
 	$(MAKE) experiments-check-scripts
 	$(MAKE) schemas
+
+prepare-dirs:
+	mkdir -p data models checkpoints runs/artifact_manifests artifacts upstreams hf_cache/hub hf_cache/datasets hf_cache/torch hf_cache/pip
+
+prepare-assets-lerobot: prepare-dirs
+	$(MAKE) download-lerobot-pusht-dataset
+	$(MAKE) download-lerobot-svla-so100-pickplace-dataset
+	$(MAKE) download-lerobot-diffusion-pusht-policy
+	$(MAKE) download-lerobot-smolvla-base-policy
+	$(MAKE) download-lerobot-fastwam-libero-policy
+	$(MAKE) download-lerobot-fastwam-libero-dataset
+	$(MAKE) convert-lerobot-fastwam-libero-v3
+	$(MAKE) download-lerobot-fastwam-base-cache
+
+prepare-assets-custom-fastwam: prepare-dirs
+	$(MAKE) download-custom-fastwam-libero-dataset
+	$(MAKE) download-fastwam-artifacts
+	bash scripts/fastwam/prepare_fastwam_overlay.sh
+
+prepare-assets-imagewam: prepare-dirs
+	$(MAKE) prepare-imagewam-upstream
+	$(MAKE) download-imagewam-artifacts
+	$(MAKE) download-imagewam-flux2-base
+
+check-assets:
+	$(PYTHON) scripts/check_assets.py --profile all
+
+check-assets-core:
+	$(PYTHON) scripts/check_assets.py --profile core
+
+check-assets-lerobot:
+	$(PYTHON) scripts/check_assets.py --profile lerobot
+
+check-assets-custom-fastwam:
+	$(PYTHON) scripts/check_assets.py --profile custom-fastwam
+
+check-assets-imagewam:
+	$(PYTHON) scripts/check_assets.py --profile imagewam
 
 download-lerobot-artifacts:
 	bash scripts/lerobot/download_artifacts.sh

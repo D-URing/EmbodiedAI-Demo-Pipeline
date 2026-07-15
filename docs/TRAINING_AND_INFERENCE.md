@@ -59,6 +59,8 @@ bash scripts/lerobot/install_lerobot_cluster.sh
 
 ## 1. 资产准备
 
+如果是新 checkout，先按 [`BOOTSTRAP.md`](BOOTSTRAP.md) 准备目录、环境、数据、模型和 cache。本节只列训练/推理所需的关键资产命令。
+
 ### LeRobot 数据和 policy
 
 ```bash

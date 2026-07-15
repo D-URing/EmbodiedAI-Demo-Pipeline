@@ -7,6 +7,7 @@
 | 文档 | 用途 |
 |---|---|
 | [`../README.md`](../README.md) | 项目现在是什么，怎么快速跑 |
+| [`BOOTSTRAP.md`](BOOTSTRAP.md) | 从新 checkout 到可用工作区：目录、环境、数据、模型、cache |
 | [`TRAINING_AND_INFERENCE.md`](TRAINING_AND_INFERENCE.md) | 训练、推理、下载、结果路径和排障的唯一主入口 |
 | [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) | 仓库结构，LeRobot / Custom 两条线怎么分 |
 | [`STORAGE_AND_ARTIFACTS.md`](STORAGE_AND_ARTIFACTS.md) | 数据、权重、cache、runs 分别放哪里 |
