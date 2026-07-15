@@ -4,7 +4,7 @@
 
 原则：
 
-> `make` 只做环境、下载、转换和检查；训练/推理从 `experiments/<route>/<experiment>/launch.sh` 启动。
+> `make` 只做环境、下载、转换和检查；训练/推理从 `experiments/<route>/<experiment>/run.py` 或 `launch.sh` 启动。
 
 完整训练/推理说明见 [`../docs/TRAINING_AND_INFERENCE.md`](../docs/TRAINING_AND_INFERENCE.md)。
 
@@ -21,6 +21,8 @@ experiments/
 │   └── fastwam_libero_infer/          # FastWAM / LIBERO inference
 └── custom/
     ├── fastwam_realrobot_smoke/       # custom FastWAM realrobot smoke/pilot/full
+    ├── fastwam_realrobot_single8_random/
+    │                                  # custom FastWAM single-node 8-GPU random-init training
     ├── fastwam_realrobot_8node_random/# custom FastWAM 8-node random-init training
     └── imagewam_flux2_4b_libero_pilot/# ImageWAM FLUX.2 4B LIBERO metadata/pilot
 ```
@@ -119,6 +121,13 @@ FastWAM 8 机随机初始化：
 
 ```bash
 sbatch experiments/custom/fastwam_realrobot_8node_random/slurm.sbatch
+```
+
+FastWAM 单机 8 卡随机初始化，优先用于手动验证和短试验：
+
+```bash
+python experiments/custom/fastwam_realrobot_single8_random/run.py --dry-run
+python experiments/custom/fastwam_realrobot_single8_random/run.py
 ```
 
 ImageWAM metadata smoke：

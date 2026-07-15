@@ -160,11 +160,19 @@ bash experiments/lerobot/fastwam_libero_infer/launch.sh
 
 ## Custom FastWAM 8 机随机初始化训练
 
-准备 overlay 和数据：
+准备 overlay、数据和 FastWAM conda 环境：
 
 ```bash
-make download-custom-fastwam-libero-dataset
-bash scripts/fastwam/prepare_fastwam_overlay.sh
+make prepare-assets-custom-fastwam
+CONDA_EXE="$(command -v conda)" make prepare-env-custom-fastwam
+conda activate fastwam
+```
+
+单机 8 卡随机初始化，优先用于手动验证：
+
+```bash
+python experiments/custom/fastwam_realrobot_single8_random/run.py --dry-run
+python experiments/custom/fastwam_realrobot_single8_random/run.py
 ```
 
 Slurm 启动 8 机 × 8 卡：

@@ -39,6 +39,39 @@ def test_fastwam_runner_refuses_cpu_fallback_and_wraps_train_zero1() -> None:
     assert "FASTWAM_NNODES" in runner
 
 
+def test_fastwam_yaml_runner_renders_single8_config(tmp_path: Path) -> None:
+    config = ROOT / "experiments/custom/fastwam_realrobot_single8_random/config.yaml"
+    generated = tmp_path / "generated.sh"
+
+    import subprocess
+    import sys
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts/fastwam/run_config.py"),
+            "--config",
+            str(config),
+            "--dry-run",
+            "--output-shell",
+            str(generated),
+        ],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+
+    rendered = generated.read_text(encoding="utf-8")
+    assert "FASTWAM_CONFIG_RESOLVED" in result.stdout
+    assert "FASTWAM_RUN_COMMAND" in result.stdout
+    assert "export FASTWAM_NNODES=1" in rendered
+    assert "export FASTWAM_GPUS_PER_NODE=8" in rendered
+    assert "export FASTWAM_INIT=random" in rendered
+    assert "export FASTWAM_RECIPE=v6_scratch" in rendered
+    assert "export FASTWAM_PILOT_MAX_STEPS=20" in rendered
+
+
 def test_fastwam_prepare_uses_overlay_without_vendoring() -> None:
     prepare = (ROOT / "scripts/fastwam/prepare_fastwam_overlay.sh").read_text(encoding="utf-8")
 

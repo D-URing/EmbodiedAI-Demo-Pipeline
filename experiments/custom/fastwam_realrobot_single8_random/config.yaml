@@ -1,0 +1,44 @@
+backend: fastwam
+base_config: configs/fastwam/realrobot_train_eval.sh
+
+experiment:
+  name: fastwam_realrobot_single8_random
+  route: custom
+  run_name: fastwam_realrobot_single8_random
+  # Empty means run.py will create a timestamped id.
+  run_id:
+
+environment:
+  conda_env: fastwam
+
+paths:
+  # Keep generated data/model/cache artifacts inside the project checkout.
+  run_root: runs/experiments/custom
+  cache_root: upstreams
+  fastwam_workdir: upstreams/FastWAM-realrobot
+  model_base: models
+
+distributed:
+  # Single node, eight visible GPUs.
+  nnodes: 1
+  node_rank: 0
+  gpus_per_node: 8
+  master_addr: 127.0.0.1
+  master_port: 29500
+
+fastwam:
+  mode: pilot
+  recipe: v6_scratch
+  init: random
+  require_cuda: true
+  mixed_precision: bf16
+  wandb: false
+  extra_overrides: []
+
+mode:
+  pilot:
+    # Start small for first validation. Increase to 200+ after the chain is stable.
+    max_steps: 20
+    batch_size: 1
+    num_workers: 4
+    save_every: 10

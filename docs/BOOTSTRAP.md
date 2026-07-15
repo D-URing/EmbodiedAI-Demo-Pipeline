@@ -77,8 +77,8 @@ bash scripts/lerobot/install_lerobot_cluster.sh
 FastWAM overlay 通常使用独立 `fastwam` 环境：
 
 ```bash
-FASTWAM_CREATE_CONDA=1 FASTWAM_INSTALL=1 CONDA_EXE="$CONDA" \
-bash scripts/fastwam/prepare_fastwam_overlay.sh
+CONDA_EXE="$CONDA" make prepare-env-custom-fastwam
+conda activate fastwam
 ```
 
 如果只准备源码 overlay、不安装 Python 包：
@@ -188,6 +188,14 @@ LeRobot 训练/推理：
 ```bash
 bash experiments/lerobot/pusht_act_smoke/launch.sh
 bash experiments/lerobot/fastwam_libero_infer/launch.sh
+```
+
+Custom FastWAM 单机 8 卡随机初始化，优先用于手动验证和短试验：
+
+```bash
+conda activate fastwam
+python experiments/custom/fastwam_realrobot_single8_random/run.py --dry-run
+python experiments/custom/fastwam_realrobot_single8_random/run.py
 ```
 
 Custom FastWAM 8 机随机初始化：

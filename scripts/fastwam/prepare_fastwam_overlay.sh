@@ -67,8 +67,12 @@ if [[ "$FASTWAM_CREATE_CONDA" == "1" ]]; then
     echo "ERROR: FASTWAM_CREATE_CONDA=1 but CONDA_EXE is not available: $CONDA_EXE" >&2
     exit 2
   }
-  # shellcheck disable=SC2086
-  "$CONDA_EXE" create -y -n "$FASTWAM_CONDA_ENV" $CONDA_CHANNEL_ARGS python=3.10 pip
+  if "$CONDA_EXE" env list | awk '{print $1}' | grep -Fxq "$FASTWAM_CONDA_ENV"; then
+    echo "Conda env already exists, reusing: $FASTWAM_CONDA_ENV"
+  else
+    # shellcheck disable=SC2086
+    "$CONDA_EXE" create -y -n "$FASTWAM_CONDA_ENV" $CONDA_CHANNEL_ARGS python=3.10 pip
+  fi
   # shellcheck disable=SC1091
   source "$("$CONDA_EXE" info --base)/etc/profile.d/conda.sh"
   conda activate "$FASTWAM_CONDA_ENV"
@@ -82,6 +86,7 @@ print(f"Python OK: {sys.version.split()[0]}")
 PY
 
 python -m pip install --upgrade pip setuptools wheel
+python -m pip install PyYAML
 python -m pip install torch==2.7.1+cu128 torchvision==0.22.1+cu128 --extra-index-url "$FASTWAM_TORCH_INDEX_URL"
 python -m pip install -e "$FASTWAM_WORKDIR"
 
