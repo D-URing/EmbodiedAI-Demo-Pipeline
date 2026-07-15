@@ -29,7 +29,7 @@ storage:
 
 models:
   lerobot_act_pusht:
-    status: implemented_scaffold
+    status: gpu_smoke_verified
     path_type: lerobot_native
     policy_type: act
     policy_class: lerobot.policies.act.modeling_act.ACTPolicy
@@ -44,10 +44,13 @@ models:
       - DOWNLOAD_LEROBOT_DATASET=0 DOWNLOAD_LEROBOT_POLICY=1 LEROBOT_POLICY_REPO_ID=<org>/<repo> make download-lerobot-artifacts
     artifact_location:
       dataset_root: "$EMBODIED_DATA_ROOT/lerobot/pusht"
+      torch_backbone: "$TORCH_HOME/hub/checkpoints/resnet18-f37072fd.pth"
       policy_path: "$EMBODIED_MODEL_ROOT/lerobot/act/pusht/<checkpoint-or-pretrained-dir>"
     capability_claim: offline_data_to_inference_smoke
     notes:
       - Current first LeRobot-native demo model.
+      - SCUT gpu11 verified 2-step GPU training with loss drop 96.987 -> 83.351.
+      - Training defaults use dataset.video_backend=pyav and policy.push_to_hub=false.
       - Downloads are disabled by default; set LEROBOT_ALLOW_DOWNLOAD=1 only intentionally.
 
   lerobot_fastwam:
@@ -81,10 +84,14 @@ models:
       - make demo-chain-fastwam
     download_targets:
       - make download-fastwam-artifacts
+      - HF_ENDPOINT=https://hf-mirror.com bash /home/scut/hfd.sh yuanty/LIBERO-fastwam --dataset --local-dir "$EMBODIED_DATA_ROOT/fastwam/libero-fastwam" --tool aria2c -x 10 -j 4
     artifact_location:
       release_weights: "$EMBODIED_MODEL_ROOT/fastwam_release/"
+      release_dataset: "$EMBODIED_DATA_ROOT/fastwam/libero-fastwam/"
       custom_outputs: "$EMBODIED_MODEL_ROOT/custom/fastwam_realrobot/<run>/"
     capability_claim: custom_finetuning_training_evidence
     notes:
       - This is not a from-scratch self-designed model.
       - It is a customized finetuning/realrobot overlay path.
+      - FastWAM LIBERO release data is LeRobot v2.1; convert a copy before using the current LeRobot v3 loader.
+      - SCUT private overlay clone currently needs GitHub private repository credentials.

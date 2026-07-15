@@ -2,7 +2,32 @@ PYTHON ?= python3.11
 VENV ?= .venv
 CONSTRAINTS ?= requirements/constraints-py311.txt
 
-.PHONY: setup doctor test validate dry-run demo demo-extended download-lerobot-artifacts download-fastwam-artifacts lerobot-check-scripts lerobot-data-smoke lerobot-train-smoke lerobot-infer-smoke demo-chain-lerobot-fastwam fastwam-check-scripts fastwam-train-smoke demo-chain-fastwam schemas reference-fetch clean
+.PHONY: help setup doctor test validate dry-run demo demo-extended download-lerobot-artifacts download-fastwam-artifacts lerobot-check-scripts lerobot-data-smoke lerobot-train-smoke lerobot-infer-smoke demo-chain-lerobot-fastwam fastwam-check-scripts fastwam-train-smoke demo-chain-fastwam schemas reference-fetch clean
+
+help:
+	@echo "EmbodiedAI Demo Pipeline"
+	@echo
+	@echo "Core / mock:"
+	@echo "  make setup                         Create local core .venv"
+	@echo "  make test                          Run unit tests"
+	@echo "  make validate                      Validate task/run configs"
+	@echo "  make demo                          Run minimal mock demos"
+	@echo
+	@echo "LeRobot pipeline:"
+	@echo "  make download-lerobot-artifacts    Download LeRobot PushT dataset"
+	@echo "  make lerobot-data-smoke            Inspect LeRobot dataset"
+	@echo "  make lerobot-train-smoke           Run ACT/PushT GPU training smoke"
+	@echo "  make lerobot-infer-smoke           Run offline policy inference smoke"
+	@echo
+	@echo "Custom / FastWAM pipeline:"
+	@echo "  make download-fastwam-artifacts    Download FastWAM release ckpt/stats"
+	@echo "  make fastwam-train-smoke           Run FastWAM custom smoke after overlay setup"
+	@echo "  make demo-chain-fastwam            Convert FastWAM run into demo report"
+	@echo
+	@echo "Start here:"
+	@echo "  docs/README.md"
+	@echo "  pipelines/lerobot/README.md"
+	@echo "  pipelines/custom_fastwam/README.md"
 
 setup:
 	$(PYTHON) -m venv $(VENV)
