@@ -264,7 +264,7 @@ PRECOMPUTE_ARGS=(
   "model.model_id=${FASTWAM_MODEL_ID}"
   "model.tokenizer_model_id=${FASTWAM_TOKENIZER_MODEL_ID}"
   "model.redirect_common_files=${FASTWAM_REDIRECT_COMMON_FILES}"
-  "overwrite=${FASTWAM_TEXT_EMBED_OVERWRITE}"
+  "+overwrite=${FASTWAM_TEXT_EMBED_OVERWRITE}"
 )
 
 TEXT_EMBED_GPUS="${FASTWAM_TEXT_EMBED_GPUS:-$GPUS_PER_NODE}"
