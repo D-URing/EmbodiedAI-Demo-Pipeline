@@ -84,6 +84,15 @@ CONDA_EXE="$CONDA" make prepare-env-custom-fastwam
 conda activate fastwam
 ```
 
+`make prepare-assets-custom-fastwam` 会下载三类真实训练资产：LIBERO 数据、FastWAM release ckpt/stats、Wan2.2 VAE/text encoder 和 Wan2.1 tokenizer。默认落盘在项目内：
+
+```text
+data/custom/fastwam/libero-fastwam/
+models/custom/fastwam/release/
+models/Wan-AI/Wan2.2-TI2V-5B/
+models/Wan-AI/Wan2.1-T2V-1.3B/google/umt5-xxl/
+```
+
 如果只准备源码 overlay、不安装 Python 包，使用联网同步模式：
 
 ```bash

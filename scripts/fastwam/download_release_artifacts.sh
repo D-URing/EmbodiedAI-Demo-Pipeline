@@ -12,6 +12,14 @@ export HF_DATASETS_CACHE="${HF_DATASETS_CACHE:-$HF_HOME/datasets}"
 FASTWAM_RELEASE_REPO_ID="${FASTWAM_RELEASE_REPO_ID:-yuanty/fastwam}"
 FASTWAM_RELEASE_LOCAL_DIR="${FASTWAM_RELEASE_LOCAL_DIR:-$EMBODIED_MODEL_ROOT/custom/fastwam/release}"
 FASTWAM_RELEASE_FILES="${FASTWAM_RELEASE_FILES:-libero_uncond_2cam224.pt libero_uncond_2cam224_dataset_stats.json}"
+FASTWAM_DOWNLOAD_RUNTIME_ASSETS="${FASTWAM_DOWNLOAD_RUNTIME_ASSETS:-1}"
+FASTWAM_WAN_MODEL_ID="${FASTWAM_WAN_MODEL_ID:-Wan-AI/Wan2.2-TI2V-5B}"
+FASTWAM_WAN_MODEL_LOCAL_DIR="${FASTWAM_WAN_MODEL_LOCAL_DIR:-$EMBODIED_MODEL_ROOT/Wan-AI/Wan2.2-TI2V-5B}"
+FASTWAM_WAN_MODEL_FILES="${FASTWAM_WAN_MODEL_FILES:-Wan2.2_VAE.pth models_t5_umt5-xxl-enc-bf16.pth}"
+FASTWAM_TOKENIZER_MODEL_ID="${FASTWAM_TOKENIZER_MODEL_ID:-Wan-AI/Wan2.1-T2V-1.3B}"
+FASTWAM_TOKENIZER_LOCAL_DIR="${FASTWAM_TOKENIZER_LOCAL_DIR:-$EMBODIED_MODEL_ROOT/Wan-AI/Wan2.1-T2V-1.3B}"
+FASTWAM_TOKENIZER_INCLUDE="${FASTWAM_TOKENIZER_INCLUDE:-google/umt5-xxl/**}"
+FASTWAM_RUNTIME_DOWNLOADER="${FASTWAM_RUNTIME_DOWNLOADER:-auto}"
 HF_HUB_ENABLE_HF_TRANSFER="${HF_HUB_ENABLE_HF_TRANSFER:-1}"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 HF_CLI_BIN="${HF_CLI_BIN:-}"
@@ -58,6 +66,8 @@ if [[ "${#release_files[@]}" -eq 0 ]]; then
   echo "FASTWAM_RELEASE_FILES must contain at least one filename." >&2
   exit 2
 fi
+read -r -a wan_model_files <<< "$FASTWAM_WAN_MODEL_FILES"
+read -r -a tokenizer_includes <<< "$FASTWAM_TOKENIZER_INCLUDE"
 
 MANIFEST_PATH="$EMBODIED_RUN_ROOT/artifact_manifests/fastwam_release_artifacts_manifest.json"
 
@@ -164,3 +174,100 @@ echo "Next FastWAM overlay env:"
 echo "  export FASTWAM_MODEL_BASE=\"$(dirname "$FASTWAM_RELEASE_LOCAL_DIR")\""
 echo "  export FASTWAM_RELEASE_CKPT=\"$FASTWAM_RELEASE_LOCAL_DIR/libero_uncond_2cam224.pt\""
 echo "  export FASTWAM_RELEASE_DATASET_STATS=\"$FASTWAM_RELEASE_LOCAL_DIR/libero_uncond_2cam224_dataset_stats.json\""
+
+runtime_downloader_kind=""
+if [[ "$FASTWAM_RUNTIME_DOWNLOADER" == "auto" ]]; then
+  if command -v modelscope >/dev/null 2>&1; then
+    runtime_downloader_kind="modelscope"
+  else
+    runtime_downloader_kind="$DOWNLOADER_KIND"
+  fi
+else
+  runtime_downloader_kind="$FASTWAM_RUNTIME_DOWNLOADER"
+fi
+
+download_runtime_files() {
+  local repo_id="$1"
+  local local_dir="$2"
+  shift 2
+  local files=("$@")
+  mkdir -p "$local_dir"
+
+  case "$runtime_downloader_kind" in
+    modelscope)
+      command -v modelscope >/dev/null 2>&1 || { echo "modelscope is required for FASTWAM_RUNTIME_DOWNLOADER=modelscope" >&2; exit 127; }
+      modelscope download "$repo_id" "${files[@]}" --local_dir "$local_dir"
+      ;;
+    hfd)
+      HF_ENDPOINT="$HF_ENDPOINT" \
+        bash "$HFD_BIN" "$repo_id" \
+          --include "${files[@]}" \
+          --local-dir "$local_dir" \
+          --tool "$HFD_TOOL" \
+          -x "$HFD_THREADS" \
+          -j "$HFD_JOBS"
+      ;;
+    hf_cli)
+      HF_HUB_ENABLE_HF_TRANSFER="$HF_HUB_ENABLE_HF_TRANSFER" \
+        "${HF_DOWNLOAD_CMD[@]}" "$repo_id" "${files[@]}" --local-dir "$local_dir"
+      ;;
+    *)
+      echo "FASTWAM_RUNTIME_DOWNLOADER must be auto|modelscope|hfd|hf_cli, got $runtime_downloader_kind" >&2
+      exit 2
+      ;;
+  esac
+}
+
+download_runtime_include() {
+  local repo_id="$1"
+  local local_dir="$2"
+  shift 2
+  local includes=("$@")
+  mkdir -p "$local_dir"
+
+  case "$runtime_downloader_kind" in
+    modelscope)
+      command -v modelscope >/dev/null 2>&1 || { echo "modelscope is required for FASTWAM_RUNTIME_DOWNLOADER=modelscope" >&2; exit 127; }
+      modelscope download "$repo_id" --include "${includes[@]}" --local_dir "$local_dir"
+      ;;
+    hfd)
+      HF_ENDPOINT="$HF_ENDPOINT" \
+        bash "$HFD_BIN" "$repo_id" \
+          --include "${includes[@]}" \
+          --local-dir "$local_dir" \
+          --tool "$HFD_TOOL" \
+          -x "$HFD_THREADS" \
+          -j "$HFD_JOBS"
+      ;;
+    hf_cli)
+      HF_HUB_ENABLE_HF_TRANSFER="$HF_HUB_ENABLE_HF_TRANSFER" \
+        "${HF_DOWNLOAD_CMD[@]}" "$repo_id" --include "${includes[@]}" --local-dir "$local_dir"
+      ;;
+    *)
+      echo "FASTWAM_RUNTIME_DOWNLOADER must be auto|modelscope|hfd|hf_cli, got $runtime_downloader_kind" >&2
+      exit 2
+      ;;
+  esac
+}
+
+if [[ "$FASTWAM_DOWNLOAD_RUNTIME_ASSETS" == "1" ]]; then
+  echo
+  echo "[download] FastWAM runtime Wan assets"
+  echo "[artifact] runtime_downloader=$runtime_downloader_kind"
+  echo "[artifact] wan_model=$FASTWAM_WAN_MODEL_ID -> $FASTWAM_WAN_MODEL_LOCAL_DIR"
+  echo "[artifact] wan_files=${wan_model_files[*]}"
+  download_runtime_files "$FASTWAM_WAN_MODEL_ID" "$FASTWAM_WAN_MODEL_LOCAL_DIR" "${wan_model_files[@]}"
+
+  echo "[artifact] tokenizer_model=$FASTWAM_TOKENIZER_MODEL_ID -> $FASTWAM_TOKENIZER_LOCAL_DIR"
+  echo "[artifact] tokenizer_include=${tokenizer_includes[*]}"
+  download_runtime_include "$FASTWAM_TOKENIZER_MODEL_ID" "$FASTWAM_TOKENIZER_LOCAL_DIR" "${tokenizer_includes[@]}"
+
+  echo
+  echo "FastWAM runtime assets ready:"
+  echo "  $FASTWAM_WAN_MODEL_LOCAL_DIR/Wan2.2_VAE.pth"
+  echo "  $FASTWAM_WAN_MODEL_LOCAL_DIR/models_t5_umt5-xxl-enc-bf16.pth"
+  echo "  $FASTWAM_TOKENIZER_LOCAL_DIR/google/umt5-xxl/"
+else
+  echo
+  echo "FASTWAM_DOWNLOAD_RUNTIME_ASSETS=0, skipped Wan VAE/text encoder/tokenizer assets."
+fi

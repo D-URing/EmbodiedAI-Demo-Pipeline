@@ -118,7 +118,12 @@ make download-fastwam-artifacts
 data/custom/fastwam/libero-fastwam/
 models/custom/fastwam/release/libero_uncond_2cam224.pt
 models/custom/fastwam/release/libero_uncond_2cam224_dataset_stats.json
+models/Wan-AI/Wan2.2-TI2V-5B/Wan2.2_VAE.pth
+models/Wan-AI/Wan2.2-TI2V-5B/models_t5_umt5-xxl-enc-bf16.pth
+models/Wan-AI/Wan2.1-T2V-1.3B/google/umt5-xxl/
 ```
+
+说明：Custom FastWAM 训练时 `model.load_text_encoder=false`，但训练前的 `text embedding cache` 预计算必须加载 Wan/T5 text encoder 和 tokenizer。`make download-fastwam-artifacts` 会把这些 runtime assets 放到项目内 `models/Wan-AI/...`，不要只下载 release checkpoint。
 
 如果要运行 realrobot overlay：
 

@@ -50,6 +50,7 @@ FastWAM LIBERO 数据已封装为 Make target，并按路线拆分：
 ```bash
 make download-custom-fastwam-libero-dataset   # data/custom/fastwam/libero-fastwam
 make download-lerobot-fastwam-libero-dataset  # data/lerobot/libero-fastwam/v2.1
+make download-fastwam-artifacts               # models/custom/fastwam/release + models/Wan-AI runtime assets
 ```
 
 LeRobot v3 转换入口：
