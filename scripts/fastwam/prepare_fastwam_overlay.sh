@@ -15,6 +15,9 @@ FASTWAM_CREATE_CONDA="${FASTWAM_CREATE_CONDA:-0}"
 FASTWAM_CONDA_ENV="${FASTWAM_CONDA_ENV:-fastwam}"
 FASTWAM_TORCH_INDEX_URL="${FASTWAM_TORCH_INDEX_URL:-https://download.pytorch.org/whl/cu128}"
 FASTWAM_SOURCE_MODE="${FASTWAM_SOURCE_MODE:-sync}"
+FASTWAM_PIP_TIMEOUT="${FASTWAM_PIP_TIMEOUT:-120}"
+FASTWAM_PIP_RETRIES="${FASTWAM_PIP_RETRIES:-20}"
+FASTWAM_PIP_RESUME_RETRIES="${FASTWAM_PIP_RESUME_RETRIES:-50}"
 CONDA_EXE="${CONDA_EXE:-conda}"
 CONDA_CHANNEL_ARGS="${CONDA_CHANNEL_ARGS:---override-channels -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge}"
 
@@ -110,10 +113,16 @@ if sys.version_info[:2] != (3, 10):
 print(f"Python OK: {sys.version.split()[0]}")
 PY
 
-python -m pip install --upgrade pip setuptools wheel
-python -m pip install PyYAML
-python -m pip install torch==2.7.1+cu128 torchvision==0.22.1+cu128 --extra-index-url "$FASTWAM_TORCH_INDEX_URL"
-python -m pip install -e "$FASTWAM_WORKDIR"
+PIP_NETWORK_ARGS=(
+  --timeout "$FASTWAM_PIP_TIMEOUT"
+  --retries "$FASTWAM_PIP_RETRIES"
+  --resume-retries "$FASTWAM_PIP_RESUME_RETRIES"
+)
+
+python -m pip install "${PIP_NETWORK_ARGS[@]}" --upgrade pip setuptools wheel
+python -m pip install "${PIP_NETWORK_ARGS[@]}" PyYAML
+python -m pip install "${PIP_NETWORK_ARGS[@]}" torch==2.7.1+cu128 torchvision==0.22.1+cu128 --extra-index-url "$FASTWAM_TORCH_INDEX_URL"
+python -m pip install "${PIP_NETWORK_ARGS[@]}" -e "$FASTWAM_WORKDIR"
 
 python - <<'PY'
 import importlib.metadata

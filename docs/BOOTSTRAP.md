@@ -92,6 +92,12 @@ FASTWAM_SOURCE_MODE=sync bash scripts/fastwam/prepare_fastwam_overlay.sh
 
 `make prepare-env-custom-fastwam` 默认使用 `FASTWAM_SOURCE_MODE=reuse`，只复用已经在共享盘准备好的 `upstreams/FastWAM-realrobot`，不会主动 `git clone`。但它仍会安装 Python/CUDA 依赖，因此也应放在能访问 conda/pip 镜像的管理节点执行。
 
+如果 PyTorch 大 wheel 下载不稳定，可以加大 pip 续传次数：
+
+```bash
+CONDA_EXE="$CONDA" FASTWAM_PIP_RESUME_RETRIES=100 make prepare-env-custom-fastwam
+```
+
 ## 2. 资产准备：LeRobot 路线
 
 下载 LeRobot 第一批数据、policy、FastWAM/LIBERO 数据和 base cache：

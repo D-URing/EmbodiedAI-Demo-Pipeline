@@ -79,6 +79,7 @@ def test_fastwam_prepare_uses_overlay_without_vendoring() -> None:
     assert "FASTWAM_OVERLAY_REPO" in prepare
     assert "FASTWAM_SOURCE_MODE" in prepare
     assert "sync|reuse" in prepare
+    assert "FASTWAM_PIP_RESUME_RETRIES" in prepare
     assert "rsync -a" in prepare
     assert "--exclude \"runs/\"" in prepare
     assert "--exclude \"checkpoints/\"" in prepare
