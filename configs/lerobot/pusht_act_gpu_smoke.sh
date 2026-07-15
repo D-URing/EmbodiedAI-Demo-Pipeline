@@ -7,6 +7,13 @@ export LEROBOT_UPSTREAM_COMMIT="${LEROBOT_UPSTREAM_COMMIT:-e40b58a8dfa9e7b86918c
 # Official lightweight LeRobot smoke target. Override these on the cluster when needed.
 export LEROBOT_DATASET_REPO_ID="${LEROBOT_DATASET_REPO_ID:-lerobot/pusht}"
 export LEROBOT_POLICY_TYPE="${LEROBOT_POLICY_TYPE:-act}"
+export LEROBOT_POLICY_REPO_ID="${LEROBOT_POLICY_REPO_ID:-local/pusht_act_gpu_smoke}"
+export LEROBOT_POLICY_PUSH_TO_HUB="${LEROBOT_POLICY_PUSH_TO_HUB:-false}"
+
+# SCUT gpu11 currently has an older host glibc. torchcodec + conda-forge ffmpeg
+# can trip over native library ABI mismatches on compute nodes, while pyav works
+# for the PushT smoke path and avoids runtime downloads.
+export LEROBOT_DATASET_VIDEO_BACKEND="${LEROBOT_DATASET_VIDEO_BACKEND:-pyav}"
 
 # Keep the first run short enough for a cluster smoke job while still producing loss logs.
 export LEROBOT_STEPS="${LEROBOT_STEPS:-1000}"
@@ -26,3 +33,4 @@ export LEROBOT_WANDB_ENABLE="${LEROBOT_WANDB_ENABLE:-false}"
 
 export LEROBOT_RUN_NAME="${LEROBOT_RUN_NAME:-pusht_act_gpu_smoke}"
 export LEROBOT_RUN_ROOT="${LEROBOT_RUN_ROOT:-$EMBODIED_REPO_ROOT/runs/lerobot}"
+export TORCH_HOME="${TORCH_HOME:-$EMBODIED_REPO_ROOT/hf_cache/torch}"

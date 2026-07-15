@@ -38,7 +38,7 @@ make setup
 make doctor
 ```
 
-`make setup` 创建 `.venv` 并使用 `requirements/constraints-py311.txt` 中经过验证的版本；不要在这个 core 环境里直接安装 CUDA、Isaac、VLA 或真机 SDK。macOS、Linux、离线节点和 NVIDIA 集群的准备方式见[环境配置指南](docs/ENVIRONMENT.md)。
+`make setup` 创建本地 `.venv` 并使用 `requirements/constraints-py311.txt` 中经过验证的版本；不要在这个 core 环境里直接安装 CUDA、Isaac、VLA 或真机 SDK。NVIDIA/SCUT 集群推荐使用共享盘 Miniconda，具体命令见[环境配置指南](docs/ENVIRONMENT.md)。
 
 验证四项任务和运行配置：
 
@@ -80,6 +80,8 @@ make demo-extended
 在 CUDA 集群上运行真实 LeRobot 训练 smoke，观察 loss 是否下降：
 
 ```bash
+CONDA_EXE=/mnt/gpu11_200T/dingxibo/miniconda3/bin/conda \
+LEROBOT_CREATE_CONDA=1 LEROBOT_CONDA_ENV=lerobot \
 bash scripts/lerobot/install_lerobot_cluster.sh
 make download-lerobot-artifacts
 make lerobot-train-smoke

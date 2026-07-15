@@ -14,6 +14,8 @@ FASTWAM_INSTALL="${FASTWAM_INSTALL:-0}"
 FASTWAM_CREATE_CONDA="${FASTWAM_CREATE_CONDA:-0}"
 FASTWAM_CONDA_ENV="${FASTWAM_CONDA_ENV:-fastwam}"
 FASTWAM_TORCH_INDEX_URL="${FASTWAM_TORCH_INDEX_URL:-https://download.pytorch.org/whl/cu128}"
+CONDA_EXE="${CONDA_EXE:-conda}"
+CONDA_CHANNEL_ARGS="${CONDA_CHANNEL_ARGS:---override-channels -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge}"
 
 command -v git >/dev/null || { echo "ERROR: git is required." >&2; exit 2; }
 command -v rsync >/dev/null || { echo "ERROR: rsync is required." >&2; exit 2; }
@@ -61,13 +63,14 @@ if [[ "$FASTWAM_INSTALL" != "1" ]]; then
 fi
 
 if [[ "$FASTWAM_CREATE_CONDA" == "1" ]]; then
-  command -v conda >/dev/null || {
-    echo "ERROR: FASTWAM_CREATE_CONDA=1 but conda is not available." >&2
+  command -v "$CONDA_EXE" >/dev/null || {
+    echo "ERROR: FASTWAM_CREATE_CONDA=1 but CONDA_EXE is not available: $CONDA_EXE" >&2
     exit 2
   }
-  conda create -y -n "$FASTWAM_CONDA_ENV" python=3.10
+  # shellcheck disable=SC2086
+  "$CONDA_EXE" create -y -n "$FASTWAM_CONDA_ENV" $CONDA_CHANNEL_ARGS python=3.10 pip
   # shellcheck disable=SC1091
-  source "$(conda info --base)/etc/profile.d/conda.sh"
+  source "$("$CONDA_EXE" info --base)/etc/profile.d/conda.sh"
   conda activate "$FASTWAM_CONDA_ENV"
 fi
 

@@ -7,16 +7,19 @@ LEROBOT_REF="${LEROBOT_REF:-e40b58a8dfa9e7b86918c374791599d070518d11}"
 LEROBOT_SOURCE_DIR="${LEROBOT_SOURCE_DIR:-$REPO_ROOT/upstreams/lerobot}"
 TORCH_INDEX_URL="${TORCH_INDEX_URL:-https://download.pytorch.org/whl/cu128}"
 LEROBOT_EXTRAS="${LEROBOT_EXTRAS:-training,pusht}"
+CONDA_EXE="${CONDA_EXE:-conda}"
+CONDA_CHANNEL_ARGS="${CONDA_CHANNEL_ARGS:---override-channels -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge}"
 
 if [[ "${LEROBOT_CREATE_CONDA:-0}" == "1" ]]; then
-  if ! command -v conda >/dev/null 2>&1; then
-    echo "ERROR: LEROBOT_CREATE_CONDA=1 but conda is not available." >&2
+  if ! command -v "$CONDA_EXE" >/dev/null 2>&1; then
+    echo "ERROR: LEROBOT_CREATE_CONDA=1 but CONDA_EXE is not available: $CONDA_EXE" >&2
     exit 2
   fi
   LEROBOT_CONDA_ENV="${LEROBOT_CONDA_ENV:-lerobot}"
-  conda create -y -n "$LEROBOT_CONDA_ENV" python=3.12
+  # shellcheck disable=SC2086
+  "$CONDA_EXE" create -y -n "$LEROBOT_CONDA_ENV" $CONDA_CHANNEL_ARGS python=3.12 pip
   # shellcheck disable=SC1091
-  source "$(conda info --base)/etc/profile.d/conda.sh"
+  source "$("$CONDA_EXE" info --base)/etc/profile.d/conda.sh"
   conda activate "$LEROBOT_CONDA_ENV"
 fi
 
