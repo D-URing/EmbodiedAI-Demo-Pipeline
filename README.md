@@ -156,6 +156,7 @@ make lerobot-data-smoke
 make download-lerobot-pusht-dataset
 make download-lerobot-svla-so100-pickplace-dataset
 make download-lerobot-fastwam-libero-dataset
+make convert-lerobot-fastwam-libero-v3
 make download-lerobot-diffusion-pusht-policy
 make download-lerobot-smolvla-base-policy
 make download-lerobot-fastwam-libero-policy
@@ -256,6 +257,7 @@ Make 只作为环境、下载和检查入口；训练/推理实验请使用 `exp
 | `make download-lerobot-artifacts` | 下载 LeRobot PushT |
 | `make download-lerobot-svla-so100-pickplace-dataset` | 下载 SmolVLA SO100 pick-place 数据 |
 | `make download-lerobot-fastwam-libero-dataset` | 下载 FastWAM LIBERO 原始数据到 LeRobot 路线 |
+| `make convert-lerobot-fastwam-libero-v3` | 转换 LeRobot 路线 FastWAM LIBERO v2.1 → v3.0 |
 | `make download-lerobot-diffusion-pusht-policy` | 下载 LeRobot diffusion PushT 预训练 policy |
 | `make download-lerobot-smolvla-base-policy` | 下载 LeRobot SmolVLA base policy |
 | `make download-lerobot-fastwam-libero-policy` | 下载 LeRobot-compatible FastWAM LIBERO policy |
@@ -272,6 +274,6 @@ Make 只作为环境、下载和检查入口；训练/推理实验请使用 `exp
 - LeRobot ACT/PushT 是当前已验证真实训练链路；
 - Diffusion/PushT 与 SmolVLA/SO100 已进入可运行 profile，待集群执行验证；
 - FastWAM release 权重和 custom/FastWAM LIBERO 数据已准备，但 private overlay 还没在 SCUT 完整跑通；
-- LeRobot-FastWAM LIBERO 已拆出独立目录；`v2.1` 是原始副本，当前 LeRobot v3 loader 直接读需要在 `v3` 目录生成转换副本；
+- LeRobot-FastWAM LIBERO 已拆出独立目录；`v2.1` 是原始副本，`v3` 通过 `make convert-lerobot-fastwam-libero-v3` 生成；
 - household/mock demo 是展示层，不代表模型能力；
 - viewer、真实仿真器、真机闭环暂缓。

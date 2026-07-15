@@ -278,6 +278,18 @@ data/lerobot/libero-fastwam/v3/
 data/lerobot/libero-fastwam/v3/libero_10_no_noops_lerobot/
 ```
 
+转换命令：
+
+```bash
+make convert-lerobot-fastwam-libero-v3
+```
+
+该命令会调用 LeRobot 官方 `lerobot.scripts.convert_dataset_v21_to_v30`，并把日志写到：
+
+```text
+runs/artifact_manifests/lerobot_fastwam_libero_v3_conversion/
+```
+
 其中 4 个子集分别是：
 
 ```text

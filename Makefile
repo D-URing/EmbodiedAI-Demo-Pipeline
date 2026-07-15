@@ -2,7 +2,7 @@ PYTHON ?= python3.11
 VENV ?= .venv
 CONSTRAINTS ?= requirements/constraints-py311.txt
 
-.PHONY: help setup doctor test validate download-lerobot-artifacts download-lerobot-pusht-dataset download-lerobot-svla-so100-pickplace-dataset download-lerobot-fastwam-libero-dataset download-lerobot-diffusion-pusht-policy download-lerobot-smolvla-base-policy download-lerobot-fastwam-libero-policy download-data-rovid20k download-data-rovidx download-data-mdm-depth download-data-xperience10m-sample download-data-abc130k download-data-agibotworld-alpha download-data-interndata-a1 download-custom-fastwam-libero-dataset download-fastwam-artifacts prepare-imagewam-upstream download-imagewam-artifacts download-imagewam-flux2-base lerobot-check-scripts fastwam-check-scripts imagewam-check-scripts experiments-check-scripts lerobot-data-smoke schemas reference-fetch clean
+.PHONY: help setup doctor test validate download-lerobot-artifacts download-lerobot-pusht-dataset download-lerobot-svla-so100-pickplace-dataset download-lerobot-fastwam-libero-dataset convert-lerobot-fastwam-libero-v3 download-lerobot-diffusion-pusht-policy download-lerobot-smolvla-base-policy download-lerobot-fastwam-libero-policy download-data-rovid20k download-data-rovidx download-data-mdm-depth download-data-xperience10m-sample download-data-abc130k download-data-agibotworld-alpha download-data-interndata-a1 download-custom-fastwam-libero-dataset download-fastwam-artifacts prepare-imagewam-upstream download-imagewam-artifacts download-imagewam-flux2-base lerobot-check-scripts fastwam-check-scripts imagewam-check-scripts experiments-check-scripts lerobot-data-smoke schemas reference-fetch clean
 
 help:
 	@echo "EmbodiedAI Demo Pipeline"
@@ -22,6 +22,8 @@ help:
 	@echo "                                      Download SmolVLA SO100 pick-place dataset"
 	@echo "  make download-lerobot-fastwam-libero-dataset"
 	@echo "                                      Download FastWAM LIBERO raw dataset into the LeRobot route"
+	@echo "  make convert-lerobot-fastwam-libero-v3"
+	@echo "                                      Convert LeRobot-route FastWAM LIBERO v2.1 subsets to v3.0"
 	@echo "  make download-lerobot-diffusion-pusht-policy"
 	@echo "                                      Download LeRobot diffusion PushT policy"
 	@echo "  make download-lerobot-smolvla-base-policy"
@@ -91,6 +93,9 @@ download-lerobot-fastwam-libero-dataset:
 	LEROBOT_DATASET_REPO_ID=yuanty/LIBERO-fastwam \
 	LEROBOT_DATASET_LOCAL_DIR="$${EMBODIED_DATA_ROOT:-$$(pwd)/data}/lerobot/libero-fastwam/v2.1" \
 	bash scripts/lerobot/download_artifacts.sh
+
+convert-lerobot-fastwam-libero-v3:
+	bash scripts/lerobot/convert_fastwam_libero_v21_to_v30.sh
 
 download-lerobot-diffusion-pusht-policy:
 	DOWNLOAD_LEROBOT_DATASET=0 DOWNLOAD_LEROBOT_POLICY=1 \
@@ -182,6 +187,7 @@ download-imagewam-flux2-base: prepare-imagewam-upstream
 lerobot-check-scripts:
 	bash -n scripts/lerobot/install_lerobot_cluster.sh
 	bash -n scripts/lerobot/download_artifacts.sh
+	bash -n scripts/lerobot/convert_fastwam_libero_v21_to_v30.sh
 	bash -n scripts/lerobot/run_pusht_act_gpu_smoke.sh
 	bash -n scripts/lerobot/run_dataset_smoke.sh
 	bash -n scripts/lerobot/run_inference_smoke.sh

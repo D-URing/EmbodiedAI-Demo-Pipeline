@@ -22,3 +22,9 @@ data/lerobot/libero-fastwam/v3/libero_10_no_noops_lerobot/
 ```
 
 不要让这个实验直接读写 `data/custom/fastwam/libero-fastwam/`；那是 custom/FastWAM pipeline 的数据。
+
+如果 `v3` 目录还没有转换：
+
+```bash
+make convert-lerobot-fastwam-libero-v3
+```

@@ -52,6 +52,12 @@ make download-custom-fastwam-libero-dataset   # data/custom/fastwam/libero-fastw
 make download-lerobot-fastwam-libero-dataset  # data/lerobot/libero-fastwam/v2.1
 ```
 
+LeRobot v3 转换入口：
+
+```bash
+make convert-lerobot-fastwam-libero-v3
+```
+
 ## ImageWAM / custom
 
 ```text

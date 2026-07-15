@@ -324,6 +324,19 @@ data/lerobot/libero-fastwam/v3/       # 转换后的 LeRobot-current 副本
 data/lerobot/libero-fastwam/v3/libero_10_no_noops_lerobot/
 ```
 
+转换：
+
+```bash
+make convert-lerobot-fastwam-libero-v3
+```
+
+只转换默认推理子集：
+
+```bash
+LEROBOT_FASTWAM_LIBERO_SUBSETS="libero_10_no_noops_lerobot" \
+make convert-lerobot-fastwam-libero-v3
+```
+
 如果 SmolVLA 显存或 dataloader 压力偏大：
 
 ```bash
