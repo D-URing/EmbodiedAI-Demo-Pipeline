@@ -13,7 +13,10 @@ source "$CONFIG_PATH"
 FASTWAM_INSTALL="${FASTWAM_INSTALL:-0}"
 FASTWAM_CREATE_CONDA="${FASTWAM_CREATE_CONDA:-0}"
 FASTWAM_CONDA_ENV="${FASTWAM_CONDA_ENV:-fastwam}"
-FASTWAM_TORCH_INDEX_URL="${FASTWAM_TORCH_INDEX_URL:-https://download.pytorch.org/whl/cu128}"
+FASTWAM_TORCH_SPEC="${FASTWAM_TORCH_SPEC:-torch==2.7.1+cu128}"
+FASTWAM_TORCHVISION_SPEC="${FASTWAM_TORCHVISION_SPEC:-torchvision==0.22.1+cu128}"
+FASTWAM_TORCH_EXTRA_INDEX_URL="${FASTWAM_TORCH_EXTRA_INDEX_URL-https://download.pytorch.org/whl/cu128}"
+FASTWAM_PIP_INDEX_URL="${FASTWAM_PIP_INDEX_URL:-}"
 FASTWAM_SOURCE_MODE="${FASTWAM_SOURCE_MODE:-sync}"
 FASTWAM_PIP_TIMEOUT="${FASTWAM_PIP_TIMEOUT:-120}"
 FASTWAM_PIP_RETRIES="${FASTWAM_PIP_RETRIES:-20}"
@@ -118,11 +121,19 @@ PIP_NETWORK_ARGS=(
   --retries "$FASTWAM_PIP_RETRIES"
   --resume-retries "$FASTWAM_PIP_RESUME_RETRIES"
 )
+PIP_INDEX_ARGS=()
+if [[ -n "$FASTWAM_PIP_INDEX_URL" ]]; then
+  PIP_INDEX_ARGS+=(--index-url "$FASTWAM_PIP_INDEX_URL")
+fi
+TORCH_INDEX_ARGS=("${PIP_INDEX_ARGS[@]}")
+if [[ -n "$FASTWAM_TORCH_EXTRA_INDEX_URL" ]]; then
+  TORCH_INDEX_ARGS+=(--extra-index-url "$FASTWAM_TORCH_EXTRA_INDEX_URL")
+fi
 
-python -m pip install "${PIP_NETWORK_ARGS[@]}" --upgrade pip setuptools wheel
-python -m pip install "${PIP_NETWORK_ARGS[@]}" PyYAML
-python -m pip install "${PIP_NETWORK_ARGS[@]}" torch==2.7.1+cu128 torchvision==0.22.1+cu128 --extra-index-url "$FASTWAM_TORCH_INDEX_URL"
-python -m pip install "${PIP_NETWORK_ARGS[@]}" -e "$FASTWAM_WORKDIR"
+python -m pip install "${PIP_NETWORK_ARGS[@]}" "${PIP_INDEX_ARGS[@]}" --upgrade pip setuptools wheel
+python -m pip install "${PIP_NETWORK_ARGS[@]}" "${PIP_INDEX_ARGS[@]}" PyYAML
+python -m pip install "${PIP_NETWORK_ARGS[@]}" "${TORCH_INDEX_ARGS[@]}" "$FASTWAM_TORCH_SPEC" "$FASTWAM_TORCHVISION_SPEC"
+python -m pip install "${PIP_NETWORK_ARGS[@]}" "${PIP_INDEX_ARGS[@]}" -e "$FASTWAM_WORKDIR"
 
 python - <<'PY'
 import importlib.metadata

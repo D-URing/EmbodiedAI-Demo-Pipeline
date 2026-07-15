@@ -98,6 +98,17 @@ FASTWAM_SOURCE_MODE=sync bash scripts/fastwam/prepare_fastwam_overlay.sh
 CONDA_EXE="$CONDA" FASTWAM_PIP_RESUME_RETRIES=100 make prepare-env-custom-fastwam
 ```
 
+在 SCUT 管理节点，如果 `download.pytorch.org` 的 `+cu128` wheel 反复中断，可以切到 PyPI 镜像版 CUDA wheel：
+
+```bash
+CONDA_EXE="$CONDA" \
+FASTWAM_PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple \
+FASTWAM_TORCH_SPEC='torch==2.7.1' \
+FASTWAM_TORCHVISION_SPEC='torchvision==0.22.1' \
+FASTWAM_TORCH_EXTRA_INDEX_URL= \
+make prepare-env-custom-fastwam
+```
+
 ## 2. 资产准备：LeRobot 路线
 
 下载 LeRobot 第一批数据、policy、FastWAM/LIBERO 数据和 base cache：
