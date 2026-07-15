@@ -6,12 +6,13 @@ LeRobot 是第一阶段的主线。它回答：
 
 > 我们能不能基于开源 LeRobot，把 dataset read → policy train/load → offline inference → evidence report 跑通？
 
-当前默认 demo：
+当前第一组训练 profile：
 
 ```text
-dataset: lerobot/pusht
-policy:  ACT
-device:  CUDA only
+P0: dataset=lerobot/pusht, policy=ACT
+P0: dataset=lerobot/pusht, policy=Diffusion
+P1: dataset=lerobot/svla_so100_pickplace, policy=SmolVLA from lerobot/smolvla_base
+device: CUDA only
 ```
 
 资产来自根目录全局池：
@@ -41,7 +42,9 @@ dataset frames: 25650
 
 ```text
 data/lerobot/pusht
+data/lerobot/svla_so100_pickplace                  # SmolVLA fine-tune 数据
 models/lerobot/diffusion/diffusion_pusht        # 可选开源预训练 policy
+models/lerobot/smolvla/smolvla_base             # SmolVLA base policy
 hf_cache/torch/hub/checkpoints/resnet18-f37072fd.pth
 runs/lerobot/<run_name>/<run_id>/loss_summary.json
 ```
@@ -81,6 +84,7 @@ LeRobot 主线的资产分四层：
 | Dataset | `data/lerobot/pusht` | ACT/PushT 训练和 dataset smoke |
 | Backbone cache | `hf_cache/torch/hub/checkpoints/resnet18-f37072fd.pth` | ACT 默认 ResNet18 视觉 backbone |
 | Open policy | `models/lerobot/diffusion/diffusion_pusht` | 可直接下载的 LeRobot diffusion PushT 预训练 policy |
+| VLA base policy | `models/lerobot/smolvla/smolvla_base` | SmolVLA fine-tune 起点 |
 | Local checkpoint | `runs/lerobot/<run>/lerobot_output` 或整理到 `models/lerobot/act/pusht/<name>` | 我们自己训练得到的 ACT checkpoint |
 
 注意：ACT/PushT 当前主线优先用于训练 smoke。开源预训练 policy 先用 `lerobot/diffusion_pusht` 作为“可下载、可管理”的 policy 样例，后续再补 ACT 或 FastWAM 的 LeRobot-native checkpoint。
@@ -99,6 +103,12 @@ export HFD_JOBS=4
 make download-lerobot-artifacts
 ```
 
+SmolVLA SO100 pick-place 数据：
+
+```bash
+make download-lerobot-svla-so100-pickplace-dataset
+```
+
 LeRobot diffusion PushT 预训练 policy：
 
 ```bash
@@ -109,6 +119,18 @@ make download-lerobot-diffusion-pusht-policy
 
 ```text
 models/lerobot/diffusion/diffusion_pusht
+```
+
+LeRobot SmolVLA base policy：
+
+```bash
+make download-lerobot-smolvla-base-policy
+```
+
+默认落盘：
+
+```text
+models/lerobot/smolvla/smolvla_base
 ```
 
 ResNet18 backbone，如果不存在：
@@ -150,7 +172,7 @@ make lerobot-infer-smoke
 
 如果 policy 类型和 inference 脚本版本不匹配，优先记录错误并修 adapter，不要把 policy 复制到别的位置。
 
-## 跑 GPU training smoke
+## 跑 GPU training
 
 快速 2-step 环境检查：
 
@@ -169,7 +191,7 @@ export LEROBOT_RUN_NAME=pusht_act_gpu_make_check
 make lerobot-train-smoke
 ```
 
-正式一点的 loss 下降观察：
+ACT / PushT：
 
 ```bash
 export LEROBOT_STEPS=1000
@@ -177,9 +199,35 @@ export LEROBOT_BATCH_SIZE=8
 export LEROBOT_NUM_WORKERS=4
 export LEROBOT_LOG_FREQ=20
 export LEROBOT_SAVE_FREQ=1000
-export LEROBOT_RUN_NAME=pusht_act_gpu_smoke
 
-make lerobot-train-smoke
+make lerobot-train-act
+```
+
+Diffusion / PushT：
+
+```bash
+export LEROBOT_STEPS=1000
+export LEROBOT_BATCH_SIZE=8
+
+make lerobot-train-diffusion
+```
+
+SmolVLA / SO100：
+
+```bash
+export LEROBOT_STEPS=2000
+export LEROBOT_BATCH_SIZE=8
+
+make lerobot-train-smolvla
+```
+
+如果 SmolVLA 显存或 dataloader 压力偏大：
+
+```bash
+export LEROBOT_BATCH_SIZE=2
+export LEROBOT_NUM_WORKERS=2
+
+make lerobot-train-smolvla
 ```
 
 输出：
@@ -210,4 +258,6 @@ scripts/lerobot/
 demo_chains/lerobot_fastwam_data_to_inference_v0.yaml
 docs/LEROBOT_FIRST_PIPELINE.md
 docs/LEROBOT_REPLICATION.md
+docs/LEROBOT_MULTI_MODEL_PLAN.md
+docs/OPEN_DATA_AND_EVAL_PLAN.md
 ```

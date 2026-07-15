@@ -55,8 +55,10 @@ export PIP_CACHE_DIR="$PROJECT_ROOT/hf_cache/pip"
 | 资产 | 路径 | 说明 |
 |---|---|---|
 | LeRobot PushT | `data/lerobot/pusht` | ACT/PushT demo 数据 |
+| LeRobot SVLA SO100 pick-place | `data/lerobot/svla_so100_pickplace` | SmolVLA fine-tune 数据 |
 | ResNet18 backbone | `hf_cache/torch/hub/checkpoints/resnet18-f37072fd.pth` | ACT 默认视觉 backbone |
 | LeRobot diffusion PushT policy | `models/lerobot/diffusion/diffusion_pusht` | 可选开源预训练 policy |
+| LeRobot SmolVLA base | `models/lerobot/smolvla/smolvla_base` | SmolVLA fine-tune 起点 |
 | FastWAM release ckpt | `models/fastwam_release/libero_uncond_2cam224.pt` | 约 12G |
 | FastWAM release stats | `models/fastwam_release/libero_uncond_2cam224_dataset_stats.json` | stats / normalizer |
 | FastWAM LIBERO 数据 | `data/fastwam/libero-fastwam` | LeRobot v2.1，已解压 |
@@ -68,6 +70,10 @@ export PIP_CACHE_DIR="$PROJECT_ROOT/hf_cache/pip"
 ```text
 runs/artifact_manifests/
 ├── lerobot_artifacts_manifest.json
+├── lerobot_pusht_dataset_manifest.json
+├── lerobot_svla_so100_pickplace_dataset_manifest.json
+├── lerobot_diffusion_pusht_policy_manifest.json
+├── lerobot_smolvla_base_policy_manifest.json
 ├── fastwam_release_artifacts_manifest.json
 └── fastwam_libero_dataset_manifest.json
 ```

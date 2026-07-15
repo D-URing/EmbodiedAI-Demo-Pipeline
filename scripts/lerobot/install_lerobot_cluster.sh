@@ -6,7 +6,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 LEROBOT_REF="${LEROBOT_REF:-e40b58a8dfa9e7b86918c374791599d070518d11}"
 LEROBOT_SOURCE_DIR="${LEROBOT_SOURCE_DIR:-$REPO_ROOT/upstreams/lerobot}"
 TORCH_INDEX_URL="${TORCH_INDEX_URL:-https://download.pytorch.org/whl/cu128}"
-LEROBOT_EXTRAS="${LEROBOT_EXTRAS:-training,pusht}"
+LEROBOT_EXTRAS="${LEROBOT_EXTRAS:-training,pusht,smolvla,pi}"
 CONDA_EXE="${CONDA_EXE:-conda}"
 CONDA_CHANNEL_ARGS="${CONDA_CHANNEL_ARGS:---override-channels -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge}"
 

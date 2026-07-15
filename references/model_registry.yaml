@@ -90,6 +90,57 @@ models:
       - This complements ACT/PushT training smoke with a downloadable open LeRobot policy.
       - Keep it in the root models pool; pipelines should reference it, not duplicate it.
 
+  lerobot_diffusion_pusht_train:
+    status: configured_pending_cluster_verification
+    path_type: lerobot_native
+    policy_type: diffusion
+    dataset_repo_id: lerobot/pusht
+    default_config: configs/lerobot/train/pusht_diffusion.sh
+    smoke_targets:
+      - make lerobot-train-diffusion
+    download_targets:
+      - make download-lerobot-pusht-dataset
+      - make download-lerobot-diffusion-pusht-policy
+    artifact_location:
+      dataset_root: "$EMBODIED_DATA_ROOT/lerobot/pusht"
+      pretrained_policy_path: "$EMBODIED_MODEL_ROOT/lerobot/diffusion/diffusion_pusht"
+      training_runs: "$EMBODIED_RUN_ROOT/lerobot/pusht_diffusion_train/"
+    capability_claim: second_lerobot_il_training_path
+    notes:
+      - Use this as the second LeRobot-native policy after ACT.
+      - Inference adapter now includes the expected DiffusionPolicy class path.
+
+  lerobot_smolvla_so100:
+    status: configured_pending_cluster_verification
+    path_type: lerobot_native
+    policy_type: smolvla
+    dataset_repo_id: lerobot/svla_so100_pickplace
+    policy_repo_id: lerobot/smolvla_base
+    default_config: configs/lerobot/train/svla_so100_smolvla.sh
+    smoke_targets:
+      - make lerobot-train-smolvla
+    download_targets:
+      - make download-lerobot-svla-so100-pickplace-dataset
+      - make download-lerobot-smolvla-base-policy
+    artifact_location:
+      dataset_root: "$EMBODIED_DATA_ROOT/lerobot/svla_so100_pickplace"
+      pretrained_policy_path: "$EMBODIED_MODEL_ROOT/lerobot/smolvla/smolvla_base"
+      training_runs: "$EMBODIED_RUN_ROOT/lerobot/svla_so100_smolvla_train/"
+    capability_claim: first_lerobot_vla_finetuning_path
+    notes:
+      - This is the first VLA/foundation-model training profile in the LeRobot route.
+      - Keep batch size adjustable; start with batch_size=8 on A100/A800 and reduce if needed.
+
+  lerobot_pi0fast_template:
+    status: template_only
+    path_type: lerobot_native
+    policy_type: pi0_fast
+    dataset_repo_id: lerobot/aloha_sim_insertion_human
+    default_config: configs/lerobot/train/aloha_pi0fast_template.sh
+    capability_claim: heavy_vla_candidate
+    notes:
+      - Do not put this in first acceptance; keep as the next heavy VLA candidate.
+
   custom_fastwam_realrobot_overlay:
     status: implemented_scaffold
     path_type: custom_backend
