@@ -117,6 +117,29 @@ def build_env(config: dict[str, Any], project_root: Path, config_path: Path) -> 
         "FASTWAM_EXTRA_OVERRIDES": flatten_overrides(fastwam.get("extra_overrides")),
     }
 
+    # Model assets and the text embedding cache are part of the real FastWAM
+    # training path. They are exposed in YAML so experiments can switch weights
+    # without editing shell wrappers.
+    if "model_id" in fastwam:
+        env["FASTWAM_MODEL_ID"] = str(fastwam["model_id"])
+    if "tokenizer_model_id" in fastwam:
+        env["FASTWAM_TOKENIZER_MODEL_ID"] = str(fastwam["tokenizer_model_id"])
+    if "redirect_common_files" in fastwam:
+        env["FASTWAM_REDIRECT_COMMON_FILES"] = bool_text(fastwam["redirect_common_files"])
+
+    text_embeddings = fastwam.get("text_embeddings") or {}
+    if text_embeddings:
+        if not isinstance(text_embeddings, dict):
+            raise SystemExit("ERROR: fastwam.text_embeddings must be a mapping")
+        if "precompute" in text_embeddings:
+            env["FASTWAM_PRECOMPUTE_TEXT_EMBEDS"] = str(text_embeddings["precompute"])
+        if "gpus" in text_embeddings:
+            env["FASTWAM_TEXT_EMBED_GPUS"] = str(text_embeddings["gpus"])
+        if "overwrite" in text_embeddings:
+            env["FASTWAM_TEXT_EMBED_OVERWRITE"] = bool_text(text_embeddings["overwrite"])
+        if "wait_timeout" in text_embeddings:
+            env["FASTWAM_TEXT_EMBED_WAIT_TIMEOUT"] = str(text_embeddings["wait_timeout"])
+
     if "task_name" in fastwam:
         env["FASTWAM_TASK_NAME"] = str(fastwam["task_name"])
     if "pin_stats" in fastwam:

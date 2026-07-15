@@ -220,6 +220,8 @@ python experiments/custom/fastwam_realrobot_single8_random/run.py --dry-run
 python experiments/custom/fastwam_realrobot_single8_random/run.py
 ```
 
+首次运行会先生成 FastWAM 训练必需的 text embedding cache；如果失败，先看本次 run 目录下的 `precompute_text_embeds.log`，不要跳过这一步直接训练。
+
 Custom FastWAM 8 机随机初始化：
 
 ```bash

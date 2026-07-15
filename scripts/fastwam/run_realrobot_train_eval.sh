@@ -65,6 +65,29 @@ PY
   echo "0"
 }
 
+truthy_or_auto() {
+  local value
+  value="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')"
+  case "$value" in
+    1|true|yes|y|auto) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+wait_for_file() {
+  local path="$1"
+  local timeout_s="$2"
+  local waited=0
+  while [[ ! -f "$path" ]]; do
+    if (( waited >= timeout_s )); then
+      echo "ERROR: timed out waiting for $path after ${timeout_s}s" >&2
+      return 1
+    fi
+    sleep 5
+    waited=$((waited + 5))
+  done
+}
+
 require_file() {
   local path="$1"
   local hint="$2"
@@ -236,9 +259,25 @@ else
   EXTRA_ARGS=()
 fi
 
+PRECOMPUTE_ARGS=(
+  "task=${TASK_NAME}"
+  "model.model_id=${FASTWAM_MODEL_ID}"
+  "model.tokenizer_model_id=${FASTWAM_TOKENIZER_MODEL_ID}"
+  "model.redirect_common_files=${FASTWAM_REDIRECT_COMMON_FILES}"
+  "overwrite=${FASTWAM_TEXT_EMBED_OVERWRITE}"
+)
+
+TEXT_EMBED_GPUS="${FASTWAM_TEXT_EMBED_GPUS:-$GPUS_PER_NODE}"
+if [[ ! "${TEXT_EMBED_GPUS}" =~ ^[0-9]+$ ]] || (( TEXT_EMBED_GPUS < 1 )); then
+  echo "ERROR: FASTWAM_TEXT_EMBED_GPUS must be a positive integer, got ${TEXT_EMBED_GPUS}" >&2
+  exit 2
+fi
+
 CMD=(bash scripts/train_zero1.sh "$GPUS_PER_NODE" "${MODEL_ARGS[@]}" "${RUN_ARGS[@]}" "${EXTRA_ARGS[@]}")
 if (( IS_MAIN_RANK == 1 )); then
   printf "%q " "${CMD[@]}" > "$RUN_DIR/command.txt"
+  PRECOMPUTE_CMD=(torchrun --standalone --nproc_per_node "$TEXT_EMBED_GPUS" scripts/precompute_text_embeds.py "${PRECOMPUTE_ARGS[@]}")
+  printf "%q " "${PRECOMPUTE_CMD[@]}" > "$RUN_DIR/precompute_text_embeds_command.txt"
   echo "$FASTWAM_NATIVE_OUTPUT_DIR" > "$RUN_DIR/fastwam_native_output_dir.txt"
 
   python - <<PY
@@ -266,6 +305,9 @@ manifest = {
     "model_id": "${FASTWAM_MODEL_ID}",
     "redirect_common_files": "${FASTWAM_REDIRECT_COMMON_FILES}",
     "cuda_home": "${CUDA_HOME:-}",
+    "precompute_text_embeds": "${FASTWAM_PRECOMPUTE_TEXT_EMBEDS}",
+    "text_embed_gpus": int("${TEXT_EMBED_GPUS}"),
+    "text_embed_overwrite": "${FASTWAM_TEXT_EMBED_OVERWRITE}",
     "release_checkpoint": "${FASTWAM_RELEASE_CKPT}",
     "pin_stats": "${FASTWAM_PIN_STATS}",
 }
@@ -277,6 +319,32 @@ PY
 fi
 
 echo "FASTWAM_TRAIN_START task=${TASK_NAME} mode=${FASTWAM_MODE} recipe=${FASTWAM_RECIPE} run_dir=${RUN_DIR}"
+
+TEXT_EMBED_MARKER="$RUN_DIR/precompute_text_embeds.done"
+TEXT_EMBED_LOG="$RUN_DIR/precompute_text_embeds.log"
+if truthy_or_auto "${FASTWAM_PRECOMPUTE_TEXT_EMBEDS}"; then
+  if (( IS_MAIN_RANK == 1 )); then
+    echo "FASTWAM_TEXT_EMBED_PRECOMPUTE_START task=${TASK_NAME} gpus=${TEXT_EMBED_GPUS} log=${TEXT_EMBED_LOG}"
+    set +e
+    (
+      cd "$FASTWAM_WORKDIR"
+      "${PRECOMPUTE_CMD[@]}"
+    ) 2>&1 | tee "$TEXT_EMBED_LOG"
+    precompute_status=${PIPESTATUS[0]}
+    set -e
+    if (( precompute_status != 0 )); then
+      echo "ERROR: FastWAM text embedding precompute failed with status ${precompute_status}. See $TEXT_EMBED_LOG" >&2
+      exit "$precompute_status"
+    fi
+    date -Is > "$TEXT_EMBED_MARKER"
+    echo "FASTWAM_TEXT_EMBED_PRECOMPUTE_COMPLETE marker=${TEXT_EMBED_MARKER}"
+  else
+    echo "FASTWAM_TEXT_EMBED_WAIT marker=${TEXT_EMBED_MARKER} timeout=${FASTWAM_TEXT_EMBED_WAIT_TIMEOUT}s"
+    wait_for_file "$TEXT_EMBED_MARKER" "$FASTWAM_TEXT_EMBED_WAIT_TIMEOUT"
+  fi
+else
+  echo "FASTWAM_TEXT_EMBED_PRECOMPUTE_DISABLED; expecting existing cache under ${FASTWAM_WORKDIR}/data/text_embeds_cache/."
+fi
 
 if (( IS_MAIN_RANK == 1 )); then
   TRAIN_LOG="$RUN_DIR/train_stdout.log"

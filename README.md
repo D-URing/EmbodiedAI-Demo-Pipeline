@@ -158,7 +158,7 @@ bash experiments/lerobot/smolvla_so100_infer/launch.sh
 bash experiments/lerobot/fastwam_libero_infer/launch.sh
 ```
 
-## Custom FastWAM 8 机随机初始化训练
+## Custom FastWAM 真实训练
 
 准备 overlay、数据和 FastWAM conda 环境。计算节点若不能联网，请在管理节点执行这一步，落盘到共享项目目录：
 
@@ -175,20 +175,34 @@ python experiments/custom/fastwam_realrobot_single8_random/run.py --dry-run
 python experiments/custom/fastwam_realrobot_single8_random/run.py
 ```
 
+`run.py` 会在训练前自动执行 FastWAM 必需的 text embedding cache 预计算：
+
+```text
+runs/experiments/custom/fastwam_realrobot_single8_random/<run_id>/precompute_text_embeds.log
+runs/experiments/custom/fastwam_realrobot_single8_random/<run_id>/precompute_text_embeds_command.txt
+upstreams/FastWAM-realrobot/data/text_embeds_cache/libero/*.pt
+```
+
+已有缓存时会以 `overwrite=false` 跳过，不会重复计算。
+
 Slurm 启动 8 机 × 8 卡：
 
 ```bash
 sbatch experiments/custom/fastwam_realrobot_8node_random/slurm.sbatch
 ```
 
-这个实验默认：
+单机八卡实验默认：
 
 ```text
 FASTWAM_MODE=pilot
-FASTWAM_RECIPE=v6_scratch
+FASTWAM_RECIPE=joint_base
+FASTWAM_TASK_NAME=libero_joint_2cam224_1e-4
 FASTWAM_INIT=random
-FASTWAM_NNODES=8
+FASTWAM_NNODES=1
 FASTWAM_GPUS_PER_NODE=8
+FASTWAM_MODEL_ID=Wan-AI/Wan2.2-TI2V-5B
+FASTWAM_TOKENIZER_MODEL_ID=Wan-AI/Wan2.1-T2V-1.3B
+FASTWAM_PRECOMPUTE_TEXT_EMBEDS=auto
 ```
 
 `FASTWAM_INIT=random` 会显式传入：
@@ -199,7 +213,7 @@ model.skip_dit_load_from_pretrain=true
 model.action_dit_pretrained_path=null
 ```
 
-如果不是 Slurm，需要每台机器分别启动：
+如果不是 Slurm，多机任务需要每台机器分别启动：
 
 ```bash
 export FASTWAM_NNODES=8

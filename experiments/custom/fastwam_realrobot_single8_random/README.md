@@ -46,6 +46,22 @@ python experiments/custom/fastwam_realrobot_single8_random/run.py --dry-run
 python experiments/custom/fastwam_realrobot_single8_random/run.py
 ```
 
+训练前会自动补齐真实 FastWAM dataloader 需要的 text embedding cache：
+
+```text
+precompute_text_embeds.log
+precompute_text_embeds_command.txt
+precompute_text_embeds.done
+```
+
+这些文件写在本次 `run_id` 的 run 目录下；实际缓存写入 upstream runnable tree：
+
+```text
+upstreams/FastWAM-realrobot/data/text_embeds_cache/libero/*.pt
+```
+
+如果这里失败，训练不会继续启动，先看 `precompute_text_embeds.log`。
+
 默认配置在 `config.yaml`：
 
 ```text
@@ -55,6 +71,9 @@ init=random
 mode=pilot
 recipe=joint_base
 task_name=libero_joint_2cam224_1e-4
+model_id=Wan-AI/Wan2.2-TI2V-5B
+tokenizer_model_id=Wan-AI/Wan2.1-T2V-1.3B
+text_embeddings.precompute=auto
 max_steps=20
 batch_size=1
 ```

@@ -54,6 +54,16 @@ export FASTWAM_MODEL_ID="${FASTWAM_MODEL_ID:-Wan-AI/Wan2.2-TI2V-5B}"
 export FASTWAM_TOKENIZER_MODEL_ID="${FASTWAM_TOKENIZER_MODEL_ID:-Wan-AI/Wan2.1-T2V-1.3B}"
 export FASTWAM_REDIRECT_COMMON_FILES="${FASTWAM_REDIRECT_COMMON_FILES:-false}"
 
+# FastWAM reads cached T5/Wan text embeddings during training. The cache is a
+# real prerequisite, not a smoke-test artifact. Keep it enabled by default so a
+# training run first materializes missing prompt embeddings under the upstream
+# runnable tree, which points back to project-local data/ through a symlink.
+# Values: auto|1|true|yes to run, 0|false|no to require pre-existing cache.
+export FASTWAM_PRECOMPUTE_TEXT_EMBEDS="${FASTWAM_PRECOMPUTE_TEXT_EMBEDS:-auto}"
+export FASTWAM_TEXT_EMBED_GPUS="${FASTWAM_TEXT_EMBED_GPUS:-}"
+export FASTWAM_TEXT_EMBED_OVERWRITE="${FASTWAM_TEXT_EMBED_OVERWRITE:-false}"
+export FASTWAM_TEXT_EMBED_WAIT_TIMEOUT="${FASTWAM_TEXT_EMBED_WAIT_TIMEOUT:-3600}"
+
 # Manual run artifact mirror owned by this demo pipeline. Experiment launchers
 # override this to runs/experiments/custom/<experiment>/.
 # FastWAM still writes its native checkpoints under FASTWAM_WORKDIR/runs/<task>/<run_id>/.

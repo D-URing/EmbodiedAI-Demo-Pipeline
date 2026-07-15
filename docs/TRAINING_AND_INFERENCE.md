@@ -332,6 +332,14 @@ python experiments/custom/fastwam_realrobot_single8_random/run.py --dry-run
 python experiments/custom/fastwam_realrobot_single8_random/run.py
 ```
 
+该入口不是 mock。它会先按同一个 task/model 配置运行 upstream FastWAM 的 `scripts/precompute_text_embeds.py`，生成训练 dataloader 需要的 Wan/T5 text embedding cache；已有缓存时 `overwrite=false` 跳过。相关证据会写入：
+
+```text
+runs/experiments/custom/fastwam_realrobot_single8_random/<run_id>/precompute_text_embeds.log
+runs/experiments/custom/fastwam_realrobot_single8_random/<run_id>/precompute_text_embeds_command.txt
+upstreams/FastWAM-realrobot/data/text_embeds_cache/libero/*.pt
+```
+
 配置入口：
 
 ```text
@@ -361,6 +369,7 @@ bash experiments/custom/fastwam_realrobot_8node_random/launch.sh
 
 - `smoke/pilot/full` 是底层 FastWAM runner 支持的真实训练规模开关；
 - 当前公开入口使用 `config.yaml + run.py`，不要直接手写一串 `FASTWAM_*` 环境变量；
+- `pilot` 默认是 20 step 小规模真实训练，用来先观察 loss；长期实验把 `config.yaml` 中 `mode.pilot.max_steps` 调大，或切到 `mode: full`；
 - FastWAM native 输出仍会写到 `upstreams/FastWAM-realrobot/runs/...`，本项目会在 `runs/experiments/custom/fastwam_realrobot_single8_random/` 留 manifest、stdout 和解析结果。
 
 ### ImageWAM FLUX.2 4B LIBERO
