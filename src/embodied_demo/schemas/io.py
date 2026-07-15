@@ -7,9 +7,9 @@ from pydantic import Field, model_validator
 
 from embodied_demo.schemas.base import StrictModel
 from embodied_demo.schemas.enums import ActionRepresentation, CoordinateFrame
-from embodied_demo.schemas.task import SchemaVersion
 
 JsonObject = dict[str, Any]
+SchemaVersion = Annotated[str, Field(pattern=r"^\d+\.\d+$")]
 
 
 class VisionFrame(StrictModel):

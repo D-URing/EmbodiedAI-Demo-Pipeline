@@ -34,9 +34,9 @@ def test_successful_episode_contract() -> None:
     result = EpisodeResult(
         run_id="run-001",
         episode_id="episode-001",
-        task_id="tabletop_sorting_v1",
+        task_id="offline_replay_v1",
         task_version="1.0.0",
-        backend="mock_2d",
+        backend="dataset_replay",
         profile="smoke",
         seed=0,
         layout_id="layout_a",
@@ -57,9 +57,9 @@ def test_success_reason_is_consistent() -> None:
         EpisodeResult(
             run_id="run-001",
             episode_id="episode-001",
-            task_id="tabletop_sorting_v1",
+            task_id="offline_replay_v1",
             task_version="1.0.0",
-            backend="mock_2d",
+            backend="dataset_replay",
             profile="smoke",
             seed=0,
             layout_id="layout_a",

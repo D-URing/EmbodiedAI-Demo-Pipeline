@@ -8,7 +8,6 @@ import yaml
 from pydantic import BaseModel, ValidationError
 
 from embodied_demo.errors import ConfigurationError, SchemaValidationError
-from embodied_demo.schemas import ResolvedRun, RunSpec, TaskRegistry, TaskSpec
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
 
@@ -83,31 +82,6 @@ def _validate(model: type[ModelT], payload: dict[str, Any], source: Path) -> Mod
         return model.model_validate(payload)
     except ValidationError as exc:
         raise SchemaValidationError(f"schema validation failed for {source}:\n{exc}") from exc
-
-
-def load_task(path: str | Path) -> TaskSpec:
-    source = Path(path).expanduser().resolve()
-    return _validate(TaskSpec, _read_yaml(source), source)
-
-
-def load_registry(path: str | Path) -> TaskRegistry:
-    source = Path(path).expanduser().resolve()
-    return _validate(TaskRegistry, _read_yaml(source), source)
-
-
-def load_resolved_run(path: str | Path) -> ResolvedRun:
-    source = Path(path).expanduser().resolve()
-    payload, sources = compose_yaml(source)
-    run = _validate(RunSpec, payload, source)
-    task_path = (source.parent / run.task.file).resolve()
-    task = load_task(task_path)
-    resolved_payload = {
-        "schema_version": "1.0",
-        "sources": [str(item) for item in sources] + [str(task_path)],
-        "run": run,
-        "task_spec": task,
-    }
-    return _validate(ResolvedRun, resolved_payload, source)
 
 
 def dump_yaml(payload: BaseModel | Mapping[str, Any]) -> str:

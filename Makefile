@@ -2,7 +2,7 @@ PYTHON ?= python3.11
 VENV ?= .venv
 CONSTRAINTS ?= requirements/constraints-py311.txt
 
-.PHONY: help setup doctor test validate download-lerobot-artifacts download-lerobot-pusht-dataset download-lerobot-svla-so100-pickplace-dataset download-lerobot-fastwam-libero-dataset convert-lerobot-fastwam-libero-v3 download-lerobot-fastwam-base-cache download-lerobot-diffusion-pusht-policy download-lerobot-smolvla-base-policy download-lerobot-fastwam-libero-policy download-data-rovid20k download-data-rovidx download-data-mdm-depth download-data-xperience10m-sample download-data-abc130k download-data-agibotworld-alpha download-data-interndata-a1 download-custom-fastwam-libero-dataset download-fastwam-artifacts prepare-imagewam-upstream download-imagewam-artifacts download-imagewam-flux2-base lerobot-check-scripts fastwam-check-scripts imagewam-check-scripts experiments-check-scripts lerobot-data-smoke schemas reference-fetch clean
+.PHONY: help setup doctor test validate download-lerobot-artifacts download-lerobot-pusht-dataset download-lerobot-svla-so100-pickplace-dataset download-lerobot-fastwam-libero-dataset convert-lerobot-fastwam-libero-v3 download-lerobot-fastwam-base-cache download-lerobot-diffusion-pusht-policy download-lerobot-smolvla-base-policy download-lerobot-fastwam-libero-policy download-data-rovid20k download-data-rovidx download-data-mdm-depth download-data-xperience10m-sample download-data-abc130k download-data-agibotworld-alpha download-data-interndata-a1 download-custom-fastwam-libero-dataset download-fastwam-artifacts prepare-imagewam-upstream download-imagewam-artifacts download-imagewam-flux2-base lerobot-check-scripts fastwam-check-scripts imagewam-check-scripts experiments-check-scripts lerobot-data-smoke schemas clean
 
 help:
 	@echo "EmbodiedAI Demo Pipeline"
@@ -10,7 +10,7 @@ help:
 	@echo "Environment / checks:"
 	@echo "  make setup                         Create local core .venv"
 	@echo "  make test                          Run unit tests"
-	@echo "  make validate                      Validate task/run configs"
+	@echo "  make validate                      Run script syntax checks and schema export"
 	@echo "  make lerobot-check-scripts         Check LeRobot wrapper syntax/parsers"
 	@echo "  make fastwam-check-scripts         Check FastWAM wrapper syntax/parsers"
 	@echo "  make imagewam-check-scripts        Check ImageWAM wrapper syntax"
@@ -69,11 +69,11 @@ test:
 	$(VENV)/bin/python -m pytest
 
 validate:
-	$(VENV)/bin/embodied-demo list-tasks
-	$(VENV)/bin/embodied-demo validate --config configs/runs/tabletop_sorting_mock.yaml
-	$(VENV)/bin/embodied-demo validate --config configs/runs/towel_folding_mock.yaml
-	$(VENV)/bin/embodied-demo validate --config configs/runs/kitchen_counter_sorting_mock.yaml
-	$(VENV)/bin/embodied-demo validate --config configs/runs/drawer_pick_place_mock.yaml
+	$(MAKE) lerobot-check-scripts
+	$(MAKE) fastwam-check-scripts
+	$(MAKE) imagewam-check-scripts
+	$(MAKE) experiments-check-scripts
+	$(MAKE) schemas
 
 download-lerobot-artifacts:
 	bash scripts/lerobot/download_artifacts.sh
@@ -230,9 +230,6 @@ experiments-check-scripts:
 
 schemas:
 	$(VENV)/bin/embodied-demo export-schema --output-dir build/schemas
-
-reference-fetch:
-	bash scripts/reference/fetch_xpolicylab.sh
 
 clean:
 	rm -rf .pytest_cache build dist htmlcov

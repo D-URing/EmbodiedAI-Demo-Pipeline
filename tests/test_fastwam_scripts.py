@@ -34,6 +34,9 @@ def test_fastwam_runner_refuses_cpu_fallback_and_wraps_train_zero1() -> None:
     assert "scripts/train_zero1.sh" in runner
     assert "parse_train_log.py" in runner
     assert "FASTWAM_NATIVE_OUTPUT_DIR" in runner
+    assert "FASTWAM_INIT" in runner
+    assert "model.skip_dit_load_from_pretrain=true" in runner
+    assert "FASTWAM_NNODES" in runner
 
 
 def test_fastwam_prepare_uses_overlay_without_vendoring() -> None:
@@ -78,3 +81,5 @@ def test_fastwam_config_uses_repo_local_artifact_roots() -> None:
     assert 'FASTWAM_MODEL_BASE="${FASTWAM_MODEL_BASE:-$EMBODIED_REPO_ROOT/models}"' in config
     assert 'FASTWAM_RUN_ROOT="${FASTWAM_RUN_ROOT:-$EMBODIED_REPO_ROOT/runs/manual/fastwam}"' in config
     assert "$EMBODIED_REPO_ROOT/checkpoints/fastwam/ActionDiT" in config
+    assert 'FASTWAM_INIT="${FASTWAM_INIT:-release}"' in config
+    assert 'FASTWAM_NNODES="${FASTWAM_NNODES:-${NNODES:-1}}"' in config

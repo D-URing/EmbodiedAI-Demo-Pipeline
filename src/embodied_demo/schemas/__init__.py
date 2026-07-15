@@ -5,9 +5,6 @@ from embodied_demo.schemas.evaluation import (
     TaskAggregate,
 )
 from embodied_demo.schemas.io import ActionChunk, Observation, VisionFrame
-from embodied_demo.schemas.registry import TaskRegistry, TaskRegistryEntry
-from embodied_demo.schemas.run import ResolvedRun, RunSpec
-from embodied_demo.schemas.task import TaskSpec
 from embodied_demo.schemas.training import (
     DatasetEvidence,
     InferenceEvidence,
@@ -23,11 +20,6 @@ __all__ = [
     "EvaluationManifest",
     "InferenceEvidence",
     "Observation",
-    "ResolvedRun",
-    "RunSpec",
-    "TaskRegistry",
-    "TaskRegistryEntry",
-    "TaskSpec",
     "TaskAggregate",
     "TrainingCheckpointSummary",
     "TrainingEvidence",

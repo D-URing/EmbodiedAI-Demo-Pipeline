@@ -1,146 +1,76 @@
-# 工程架构：Pipeline 分层与代码结构
+# Architecture
 
 > 状态：当前架构说明<br>
 > 日期：2026-07-15<br>
 > 关联：[`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md)、[`TRAINING_AND_INFERENCE.md`](TRAINING_AND_INFERENCE.md)
 
-## 1. 核心数据流
+本仓库现在只维护训练、推理和证据归档基座，不再维护本地符号 rollout。
+
+## 核心数据流
 
 ```text
-RunConfig
-  -> TaskSpec + Scene
-  -> PolicyAdapter
-  -> EnvironmentBackend
-  -> Rollout Runner
-  -> Events / Result / Metrics / Manifest / Report
+Open dataset / local dataset
+  -> LeRobot or custom backend training
+  -> checkpoint / policy loading
+  -> offline inference or train-log parsing
+  -> evidence JSON + report
 ```
 
-LeRobot-first 训练/推理链路是当前主干：
-
-```text
-LeRobotDataset
-  -> LeRobot policy train/load
-  -> offline inference
-  -> TrainingEvidence + InferenceEvidence
-  -> Report / Handoff
-```
-
-私有 FastWAM overlay 是 custom backend extension，不进入 core `.venv`，也不替代 LeRobot-native 主线。household mock demo 走 rollout，用于应用层任务展示和后续评测，不作为 LeRobot data-to-inference 的第一验收。
-
-## 2. 分层职责
+## 分层职责
 
 | 层 | 职责 | 当前位置 |
 |---|---|---|
-| Task Layer | 任务语义、物体、阶段、成功/失败条件 | `tasks/`、`scenes/` |
-| Config Layer | local/headless/profile/run 配置组合 | `configs/`、`embodied_demo.config` |
-| Schema Layer | Task/Run/Observation/Action/Evaluation/TrainingEvidence 合同 | `src/embodied_demo/schemas/` |
-| Policy Layer | policy lifecycle 与动作生成 | `src/embodied_demo/policies/` |
-| Environment Layer | mock/replay/sim/real 后端状态推进 | `src/embodied_demo/environments/` |
-| Rollout Layer | reset/observe/action/step/log/finalize 主循环 | `src/embodied_demo/rollout/` |
-| Evidence Layer | result、metrics、manifest、report、handoff | `rollout/` 与 `fastwam_report.py` |
-| Integration Layer | LeRobot-native、custom backend、外部评测生态接入 | `scripts/lerobot/`、`scripts/fastwam/`、`references/` |
+| Pipeline | LeRobot 与 custom WAM 两条主线 | `pipelines/` |
+| Experiment | 多次训练/推理实验的启动入口 | `experiments/` |
+| Config | backend 默认参数 | `configs/` |
+| Script | 下载、转换、训练、推理、解析 | `scripts/` |
+| Evidence | schema、report、handoff | `src/embodied_demo/` |
+| Asset registry | 数据、权重、cache、上游 pin | `references/`、`data/`、`models/`、`hf_cache/` |
 
-## 3. 当前代码结构
+## Python core
 
 ```text
 src/embodied_demo/
-├── cli.py                         # embodied-demo 命令入口
-├── config.py                      # YAML extends、resolved run、task/registry loading
-├── registry.py                    # 任务注册表遍历
-├── demo_runner.py                 # 兼容入口；转发到 rollout.mock_runner
-├── fastwam_report.py              # FastWAM training evidence importer/report
-├── schemas/                       # 公共数据合同
-├── policies/
-│   └── scripted.py                # R1 mock demo 的 scripted policy
-├── environments/
-│   └── mock.py                    # R1 mock environment 状态推进
-└── rollout/
-    └── mock_runner.py             # deterministic mock rollout + artifacts
+├── cli.py              # embodied-demo report/export entry
+├── config.py           # YAML compose + dump helpers
+├── fastwam_report.py   # FastWAM training evidence importer/report
+└── schemas/            # observation/action/evaluation/training evidence contracts
 ```
 
-`demo_runner.py` 保留是为了兼容旧 import；新增代码应优先放到对应分层里。
+`src/embodied_demo/` 不安装 CUDA、LeRobot、FastWAM、Isaac 或真机 SDK。它只处理轻量合同和报告。
 
-## 4. Household mock demo 的执行路径
-
-以 `kitchen_counter_sorting_v1` 为例：
+## LeRobot path
 
 ```text
-configs/runs/kitchen_counter_sorting_mock.yaml
-  -> tasks/kitchen_counter_sorting_v1/task.yaml
-  -> scenes/mock/kitchen_counter_sorting_v1/scene.yaml
-  -> ScriptedPolicy
-  -> MockEnvironment
-  -> run_mock_demo
-  -> runs/kitchen_counter_sorting_mock/<episode>/
+data/lerobot/
+models/lerobot/
+configs/lerobot/
+scripts/lerobot/
+experiments/lerobot/
+runs/experiments/lerobot/
 ```
 
-输出目录包含：
+目标是复刻 LeRobot 的 data → train/load → inference 路径。当前已覆盖 ACT、Diffusion、SmolVLA 和 FastWAM/LIBERO 推理入口。
+
+## Custom WAM path
 
 ```text
-manifest.yaml
-resolved_config.yaml
-task_snapshot.yaml
-events.jsonl
-result.json
-metrics.json
-report.md
+data/custom/
+models/custom/
+configs/fastwam/
+configs/imagewam/
+scripts/fastwam/
+scripts/imagewam/
+experiments/custom/
+runs/experiments/custom/
 ```
 
-这些产物用于证明 pipeline 和 evaluator wiring，不用于声明真机成功率。
+目标是保留自建模型或外部项目 overlay 的训练/评测入口。当前 custom 后端包括 FastWAM 和 ImageWAM。
 
-## 5. LeRobot / FastWAM training evidence 的执行路径
+## 边界
 
-LeRobot-native 路径是第一优先级：
-
-```text
-scripts/lerobot/inspect_dataset.py              # planned
-  -> scripts/lerobot/run_*_train*.sh
-  -> scripts/lerobot/run_policy_inference_smoke.py   # planned
-  -> embodied-demo report-lerobot                    # planned
-```
-
-私有 FastWAM overlay 是 custom extension：
-
-```text
-scripts/fastwam/prepare_fastwam_overlay.sh
-  -> scripts/fastwam/run_realrobot_train_eval.sh
-  -> scripts/fastwam/parse_train_log.py
-  -> embodied-demo report-fastwam
-  -> training_evidence.json / report.md / handoff.md
-```
-
-这两个路径共同用于证明：
-
-- 是否调用真实 LeRobot/FastWAM CUDA 训练或 checkpoint 加载；
-- loss 是否下降；
-- policy inference 是否产生 action；
-- checkpoint、dataset、policy type 和版本是否记录；
-- 使用的是 LeRobot-native FastWAM 还是 custom FastWAM overlay。
-
-它不证明 household task 的 closed-loop capability。
-
-## 6. 新增任务时放哪里
-
-新增一个 R1 household demo，至少需要：
-
-```text
-tasks/<task_id>/task.yaml
-scenes/mock/<task_id>/scene.yaml
-configs/runs/<task_id>_mock.yaml
-src/embodied_demo/policies/scripted.py          # 加 scripted action plan
-src/embodied_demo/environments/mock.py          # 加 mock state transition
-tasks/registry.yaml
-tests/test_demo_runner.py
-```
-
-如果一个任务只是规划，还没有 mock rollout，只放入 `DEMO_COVERAGE_ROADMAP.md`，不要急着进 `tasks/registry.yaml`。
-
-## 7. 后续优化方向
-
-当前拆分已经把“一个大 runner 文件”变成了三块，但还不是最终形态。下一步可继续优化：
-
-1. 将 `MockEnvironment` 内部按 task family 拆成 tabletop/kitchen/drawer/towel primitives；
-2. 抽象 `object-in-region`、`category routing`、`articulated state`、`fold state`；
-3. 把 report writer 从 rollout 中独立到 `evidence/`；
-4. 增加 demo pack summary，把多个 R1 demo 结果合并成一个交付页面；
-5. 增加 replay/offline action runner，与 mock runner 并列。
+- 不维护 CPU toy trainer；
+- 不维护本地符号 rollout；
+- 不声明仿真或真机 closed-loop 成功；
+- Make 只负责下载、环境、转换和检查；
+- 训练/推理统一从 `experiments/` 启动。

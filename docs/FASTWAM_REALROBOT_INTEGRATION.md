@@ -226,28 +226,18 @@ runs/demo_chains/fastwam_realrobot_v0/<run_id>/
 ├── chain_manifest.yaml
 ├── training_evidence.json
 ├── checkpoint_summary.json
-├── mock_summary.json
 ├── report.md
 └── handoff.md
 ```
 
 其中 `training_evidence.json` 是给工程侧消费的稳定摘要，`report.md` 是给团队同步/交差的可读报告，`handoff.md` 写明最小复现步骤和边界。
 
-如果已经跑过 mock demo，也可以把 mock artifact 一起挂进报告：
-
-```bash
-embodied-demo report-fastwam \
-  --run-dir runs/experiments/custom/fastwam_realrobot_smoke/<run_id> \
-  --mock-run-dir runs/tabletop_sorting_mock/tabletop_sorting_mock-seed0-episode000 \
-  --mock-run-dir runs/towel_folding_mock/towel_folding_mock-seed0-episode000
-```
-
 ## 9. 与 demo pipeline 的契约映射
 
 | demo pipeline 概念 | FastWAM 当前对应 |
 |---|---|
-| `task.yaml` | FastWAM Hydra task，例如 `real_robot_joint_2cam224_v6_decision` |
-| `scene/` | 当前不接仿真 scene；由真实数据 episode 和相机视角承载 |
+| experiment config | FastWAM Hydra task，例如 `real_robot_joint_2cam224_v6_decision` |
+| dataset episodes | 当前不接仿真 scene；由真实数据 episode 和相机视角承载 |
 | `observation` | LeRobot v3 风格样本：`video[3,9,224,448] / proprio / context` |
 | `policy interface` | 训练时 `training_loss(sample)`；离线/部署时 `infer_action()` |
 | `action output` | action horizon/chunk，7D joint 或 10D pose |

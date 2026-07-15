@@ -6,12 +6,13 @@
 
 | 环境 | 当前状态 | 主要内容 | 不应包含 |
 |---|---|---|---|
-| Core | 当前必需 | schema、配置、CLI、logger/evaluator、mock/replay | CUDA、Isaac、VLA 权重、厂商 SDK |
-| Policy | M7 接入 | LeRobot/OpenPI/GR00T 等策略及其 PyTorch/CUDA | simulator 私有依赖 |
+| Core | 当前必需 | schema、CLI、evidence report、测试 | CUDA、Isaac、VLA 权重、厂商 SDK |
+| LeRobot | 当前必需 | LeRobot、PyTorch/CUDA、torchcodec、policy extras | FastWAM 私有 overlay、simulator 私有依赖 |
+| Custom FastWAM | 按需 | FastWAM official + private realrobot overlay | LeRobot 训练环境、simulator 私有依赖 |
 | Simulator | M6 接入 | RoboDojo/Isaac、RoboCasa 或其他首选后端 | 多个互相冲突的 simulator |
 | Real robot | 硬件确定后 | ROS 2 或厂商 SDK、安全控制 | 训练和仿真工具链 |
 
-本地调试时，轻量 policy 可以与 core 同进程；集群和重量级模型默认通过 WebSocket 等 transport 独立运行。跨环境只交换 Observation、ActionChunk、RunSpec 和 artifact contract。
+不同环境之间只交换 dataset/model 路径、evidence JSON、report 和 checkpoint 位置，不共享 Python site-packages。
 
 ## 2. 当前支持基线
 
@@ -22,9 +23,9 @@
 | 包管理 | 本地 core 默认 `venv` + pip；NVIDIA/SCUT 集群推荐 Miniconda |
 | 依赖声明 | `pyproject.toml` |
 | 已验证约束 | `requirements/constraints-py311.txt` |
-| 默认运行 | local、CPU、headless、inproc、mock |
+| 默认运行 | local、CPU、schema/report only |
 
-`pyproject.toml` 表达允许的依赖范围；constraints 文件记录最后一次完整验收的精确版本。升级 constraints 必须重新运行测试、配置校验和 dry-run。
+`pyproject.toml` 表达允许的依赖范围；constraints 文件记录最后一次完整验收的精确版本。升级 constraints 必须重新运行测试和脚本检查。
 
 ## 3. macOS 开发环境
 
@@ -292,25 +293,16 @@ bash scripts/fastwam/run_realrobot_train_eval.sh
 
 ## 6. 配置开关
 
-当前默认配置位于 `configs/base.yaml`：
+当前配置开关按 backend 分布：
 
-```yaml
-runtime:
-  mode: mock
-  launcher: local
-policy:
-  transport: inproc
-  supports_batch: false
-environment:
-  num_envs: 1
-  headless: true
-features:
-  enable_viewer: false
-  enable_simulation: false
-  enable_real_robot: false
+```text
+configs/lerobot/
+configs/fastwam/
+configs/imagewam/
+experiments/<route>/<experiment>/config.sh
 ```
 
-切换环境时创建新的 `configs/runs/*.yaml` 并通过 `extends` 覆盖，不直接修改团队公共默认值。sim、real、remote policy 与 viewer 都必须显式开启；未实现的 adapter 即使配置可表达，也不代表运行能力已存在。
+不要直接改团队共享默认值。多次实验应复制或新增 `experiments/<route>/<experiment>/`，把 run-specific 覆盖写在该实验的 `config.sh` 或提交脚本里。
 
 ## 7. 密钥与本地变量
 
@@ -321,7 +313,7 @@ features:
 
 ## 8. 日常验证与故障定位
 
-一条命令检查 Python、虚拟环境、依赖和两个 run config：
+一条命令检查 Python、虚拟环境和基础依赖：
 
 ```bash
 make doctor
@@ -332,7 +324,6 @@ make doctor
 ```bash
 make test
 make validate
-make dry-run
 make schemas
 ```
 
@@ -346,6 +337,6 @@ make schemas
 | GitHub 登录失败 | `gh auth status`，必要时重新执行 `gh auth login` |
 | 浏览器可访问但 `github.com:443` 超时 | 对比 `scutil --proxy` 与 `env | grep -i proxy`，让 shell 继承 HTTP/HTTPS proxy |
 | 集群没有公网 | 使用同平台 wheelhouse，或等待 M5 提供正式容器 |
-| 没有 `nvidia-smi` | core/mock 开发正常；只有 sim/policy GPU 环境才要求 NVIDIA runtime |
+| 没有 `nvidia-smi` | core 开发正常；只有 LeRobot/FastWAM/ImageWAM GPU 环境才要求 NVIDIA runtime |
 
 环境发生变化时，把 Python、依赖约束、容器镜像、driver/CUDA 和验证命令结果写入对应里程碑记录，避免“在某台机器上能跑”成为隐含条件。

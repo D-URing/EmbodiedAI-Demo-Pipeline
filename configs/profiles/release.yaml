@@ -1,5 +1,0 @@
-evaluation:
-  profile: release
-  episodes_per_seed: 25
-  seeds: [0, 1, 2]
-  save_video: sample

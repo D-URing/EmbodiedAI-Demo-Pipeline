@@ -22,6 +22,7 @@ scripts/fastwam/prepare_fastwam_overlay.sh
 scripts/fastwam/run_realrobot_train_eval.sh
 experiments/custom/fastwam_realrobot_smoke/slurm.sbatch
 experiments/custom/fastwam_realrobot_smoke/
+experiments/custom/fastwam_realrobot_8node_random/
 pipelines/custom/fastwam/README.md
 docs/FASTWAM_REALROBOT_INTEGRATION.md
 ```
@@ -46,6 +47,21 @@ bash experiments/custom/fastwam_realrobot_smoke/launch.sh
 ```bash
 FASTWAM_MODE=pilot FASTWAM_RECIPE=joint_base \
 bash experiments/custom/fastwam_realrobot_smoke/launch.sh
+```
+
+8 机 × 8 卡随机初始化：
+
+```bash
+sbatch experiments/custom/fastwam_realrobot_8node_random/slurm.sbatch
+```
+
+等价关键开关：
+
+```text
+FASTWAM_RECIPE=v6_scratch
+FASTWAM_INIT=random
+FASTWAM_NNODES=8
+FASTWAM_GPUS_PER_NODE=8
 ```
 
 注意：private overlay clone 需要 GitHub 私有仓库权限。

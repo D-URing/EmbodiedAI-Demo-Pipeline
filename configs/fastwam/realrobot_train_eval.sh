@@ -43,10 +43,13 @@ export FASTWAM_TASK_NAME="${FASTWAM_TASK_NAME:-}"
 # CUDA-only. The runner refuses to execute without CUDA by default.
 export FASTWAM_REQUIRE_CUDA="${FASTWAM_REQUIRE_CUDA:-1}"
 export FASTWAM_GPUS_PER_NODE="${FASTWAM_GPUS_PER_NODE:-}"
+export FASTWAM_NNODES="${FASTWAM_NNODES:-${NNODES:-1}}"
+export FASTWAM_NODE_RANK="${FASTWAM_NODE_RANK:-${NODE_RANK:-0}}"
 export FASTWAM_MIXED_PRECISION="${FASTWAM_MIXED_PRECISION:-bf16}"
 export FASTWAM_WANDB_ENABLE="${FASTWAM_WANDB_ENABLE:-false}"
 export FASTWAM_MASTER_ADDR="${FASTWAM_MASTER_ADDR:-${MASTER_ADDR:-127.0.0.1}}"
 export FASTWAM_MASTER_PORT="${FASTWAM_MASTER_PORT:-${MASTER_PORT:-29500}}"
+export FASTWAM_INIT="${FASTWAM_INIT:-release}"
 
 # Manual run artifact mirror owned by this demo pipeline. Experiment launchers
 # override this to runs/experiments/custom/<experiment>/.
@@ -71,6 +74,11 @@ export FASTWAM_FULL_NUM_WORKERS="${FASTWAM_FULL_NUM_WORKERS:-8}"
 export FASTWAM_FULL_NUM_EPOCHS="${FASTWAM_FULL_NUM_EPOCHS:-5}"
 export FASTWAM_FULL_SAVE_EVERY="${FASTWAM_FULL_SAVE_EVERY:-500}"
 
+# FASTWAM_INIT:
+#   release: use recipe defaults; non-scratch recipes require the public release ckpt.
+#   base:    do not resume release ckpt; keep Wan/ActionDiT base initialization.
+#   random:  do not resume release ckpt; skip Wan/ActionDiT pretrained loading.
+#
 # Additional Hydra overrides, space-separated. Example:
 #   FASTWAM_EXTRA_OVERRIDES='learning_rate=3e-5 keep_last_n_checkpoints=5'
 export FASTWAM_EXTRA_OVERRIDES="${FASTWAM_EXTRA_OVERRIDES:-}"

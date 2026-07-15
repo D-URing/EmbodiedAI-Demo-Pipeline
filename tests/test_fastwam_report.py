@@ -45,7 +45,6 @@ def test_generate_fastwam_report_writes_demo_chain_artifacts(tmp_path: Path) -> 
     assert (artifact_dir / "chain_manifest.yaml").is_file()
     assert (artifact_dir / "training_evidence.json").is_file()
     assert (artifact_dir / "checkpoint_summary.json").is_file()
-    assert (artifact_dir / "mock_summary.json").is_file()
     assert (artifact_dir / "report.md").is_file()
     assert (artifact_dir / "handoff.md").is_file()
 

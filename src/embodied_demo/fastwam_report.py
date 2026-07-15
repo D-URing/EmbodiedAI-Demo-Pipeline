@@ -131,25 +131,6 @@ def _build_training_evidence(
     )
 
 
-def _load_mock_summaries(mock_run_dirs: list[Path]) -> list[JsonObject]:
-    summaries: list[JsonObject] = []
-    for mock_dir in mock_run_dirs:
-        result = _read_json(mock_dir / "result.json")
-        summaries.append(
-            {
-                "run_dir": str(mock_dir),
-                "task_id": result.get("task_id"),
-                "task_version": result.get("task_version"),
-                "backend": result.get("backend"),
-                "episode_success": result.get("episode_success"),
-                "progress_score": result.get("progress_score"),
-                "episode_steps": result.get("episode_steps"),
-                "report": str(mock_dir / "report.md"),
-            }
-        )
-    return summaries
-
-
 def _default_output_dir(chain_id: str, evidence: TrainingEvidence) -> Path:
     return Path("runs") / "demo_chains" / chain_id / evidence.run_id
 
@@ -162,7 +143,6 @@ def _render_report(
     chain_id: str,
     evidence: TrainingEvidence,
     loss_summary: JsonObject,
-    mock_summaries: list[JsonObject],
 ) -> str:
     status = evidence.validation_status.upper()
     checkpoint = evidence.latest_checkpoint
@@ -187,19 +167,7 @@ def _render_report(
         f"- weights: {checkpoint.weights if checkpoint else None}",
         f"- state: {checkpoint.state if checkpoint else None}",
         f"- native_output_dir: {evidence.native_output_dir}",
-        "",
-        "## Mock Demo Evidence",
-        "",
     ]
-    if mock_summaries:
-        for item in mock_summaries:
-            lines.append(
-                f"- {item.get('task_id')} success={str(item.get('episode_success')).lower()} "
-                f"progress={item.get('progress_score')} steps={item.get('episode_steps')} "
-                f"report={item.get('report')}"
-            )
-    else:
-        lines.append("- not attached; run `make demo` and pass `--mock-run-dir` to include mock evidence.")
 
     lines.extend(["", "## Loss Metrics", ""])
     metric_summary = loss_summary.get("metric_summary")
@@ -218,7 +186,7 @@ def _render_report(
             "## Boundary",
             "",
             "这份报告证明 demo 工程链路已经包含真实 CUDA 训练后端、loss 证据和 checkpoint 归档。",
-            "它不声称已经完成 RoboDojo 仿真 benchmark 或真机闭环家庭任务。",
+            "它不声称已经完成 RoboDojo 仿真 benchmark 或真机闭环。",
             "",
         ]
     )
@@ -233,7 +201,6 @@ def _render_handoff(chain_id: str, evidence: TrainingEvidence, output_dir: Path)
             "给团队的最小复现顺序：",
             "",
             "```bash",
-            "make demo",
             "FASTWAM_MODE=pilot FASTWAM_RECIPE=joint_base bash scripts/fastwam/run_realrobot_train_eval.sh",
             f"embodied-demo report-fastwam --run-dir {evidence.source_run_dir} --output-dir {output_dir}",
             "```",
@@ -252,7 +219,6 @@ def _render_handoff(chain_id: str, evidence: TrainingEvidence, output_dir: Path)
 def generate_fastwam_report(
     run_dir: str | Path,
     output_dir: str | Path | None = None,
-    mock_run_dirs: list[str | Path] | None = None,
     chain_config: str | Path = "demo_chains/fastwam_realrobot_v0.yaml",
 ) -> Path:
     source_run_dir = Path(run_dir).expanduser().resolve()
@@ -263,8 +229,6 @@ def generate_fastwam_report(
     chain_id = str(chain_payload.get("chain_id") or "fastwam_realrobot_v0")
 
     evidence = _build_training_evidence(source_run_dir, backend_manifest, loss_summary)
-    mock_paths = [Path(item).expanduser().resolve() for item in (mock_run_dirs or [])]
-    mock_summaries = _load_mock_summaries(mock_paths)
 
     destination = (
         Path(output_dir).expanduser().resolve()
@@ -281,13 +245,11 @@ def generate_fastwam_report(
         "artifacts": {
             "training_evidence": "training_evidence.json",
             "checkpoint_summary": "checkpoint_summary.json",
-            "mock_summary": "mock_summary.json",
             "report": "report.md",
             "handoff": "handoff.md",
         },
         "source": {
             "fastwam_run_dir": str(source_run_dir),
-            "mock_run_dirs": [str(item) for item in mock_paths],
         },
     }
 
@@ -303,7 +265,6 @@ def generate_fastwam_report(
     _write_text(destination / "chain_manifest.yaml", dump_yaml(chain_manifest))
     _write_json(destination / "training_evidence.json", evidence.model_dump(mode="json"))
     _write_json(destination / "checkpoint_summary.json", checkpoint_summary)
-    _write_json(destination / "mock_summary.json", {"mock_runs": mock_summaries})
-    _write_text(destination / "report.md", _render_report(chain_id, evidence, loss_summary, mock_summaries))
+    _write_text(destination / "report.md", _render_report(chain_id, evidence, loss_summary))
     _write_text(destination / "handoff.md", _render_handoff(chain_id, evidence, destination))
     return destination

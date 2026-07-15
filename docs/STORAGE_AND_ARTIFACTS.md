@@ -32,7 +32,6 @@ data/custom/fastwam/libero-fastwam # custom/FastWAM route: native release copy
 | `configs/` | 是 | 底层默认参数 |
 | `scripts/` | 是 | 下载、训练、解析、报告执行器 |
 | `src/` | 是 | 本项目 core Python 包 |
-| `tasks/` | 是 | household/mock 任务定义 |
 | `docs/` | 是 | 文档 |
 | `references/` | 是 | 上游项目 pin 和 registry |
 | `data/` | 只提交 `README.md` | 全局数据集资产池 |

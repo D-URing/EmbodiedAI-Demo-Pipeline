@@ -67,7 +67,7 @@ EmbodiedAI-Demo-Pipeline/
 ├── checkpoints/   # 本项目生成或整理的 checkpoint
 ├── runs/          # smoke、训练、评测、manifest 和 report
 ├── artifacts/     # 后续可视化/导出包
-├── upstreams/     # LeRobot/FastWAM/XPolicyLab 等上游源码 checkout
+├── upstreams/     # LeRobot/FastWAM/ImageWAM 等上游源码 checkout
 └── hf_cache/      # Hugging Face hub/datasets cache
 ```
 
@@ -114,7 +114,7 @@ $PROJECT_ROOT/upstreams/
 ├── lerobot/
 ├── FastWAM-realrobot/
 ├── fastwam-realrobot-pipeline/
-└── XPolicyLab/
+└── ImageWAM/
 
 $PROJECT_ROOT/checkpoints/
 └── fastwam/

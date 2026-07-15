@@ -21,7 +21,6 @@
 | [`ENVIRONMENT.md`](ENVIRONMENT.md) | macOS / Linux / SCUT Miniconda 环境细节 |
 | [`MODEL_ARTIFACTS.md`](MODEL_ARTIFACTS.md) | 模型、数据、checkpoint 规范 |
 | [`OPEN_DATA_AND_EVAL_PLAN.md`](OPEN_DATA_AND_EVAL_PLAN.md) | 开源数据下载分层与评测路线 |
-| [`DEMO_COVERAGE_ROADMAP.md`](DEMO_COVERAGE_ROADMAP.md) | household demo 覆盖与 readiness |
 | [`01_ARCHITECTURE.md`](01_ARCHITECTURE.md) | pipeline 分层和代码结构 |
 | [`FASTWAM_REALROBOT_INTEGRATION.md`](FASTWAM_REALROBOT_INTEGRATION.md) | FastWAM realrobot overlay 细节 |
 | [`IMAGEWAM_INTEGRATION.md`](IMAGEWAM_INTEGRATION.md) | ImageWAM 后端接入规划和命令 |

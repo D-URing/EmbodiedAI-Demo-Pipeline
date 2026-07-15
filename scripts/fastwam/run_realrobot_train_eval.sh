@@ -71,11 +71,24 @@ fi
 
 require_file "$FASTWAM_WORKDIR/scripts/train_zero1.sh" "FastWAM train launcher"
 require_file "$FASTWAM_WORKDIR/configs/task/${TASK_NAME}.yaml" "FastWAM task config"
-if [[ "${FASTWAM_RECIPE}" == "v6_scratch" ]]; then
-  require_file "$FASTWAM_ACTION_DIT_BACKBONE" "FastWAM ActionDiT backbone"
-else
-  require_file "$FASTWAM_RELEASE_CKPT" "FastWAM release checkpoint"
-fi
+case "${FASTWAM_INIT}" in
+  release)
+    if [[ "${FASTWAM_RECIPE}" == "v6_scratch" ]]; then
+      require_file "$FASTWAM_ACTION_DIT_BACKBONE" "FastWAM ActionDiT backbone"
+    else
+      require_file "$FASTWAM_RELEASE_CKPT" "FastWAM release checkpoint"
+    fi
+    ;;
+  base)
+    require_file "$FASTWAM_ACTION_DIT_BACKBONE" "FastWAM ActionDiT backbone"
+    ;;
+  random)
+    ;;
+  *)
+    echo "ERROR: FASTWAM_INIT must be release|base|random, got ${FASTWAM_INIT}" >&2
+    exit 2
+    ;;
+esac
 
 if [[ "${FASTWAM_REQUIRE_CUDA}" == "1" ]]; then
   python - <<'PY'
@@ -87,16 +100,27 @@ print(f"torch={torch.__version__}")
 PY
 fi
 
+if (( FASTWAM_NNODES > 1 )) && [[ -z "${FASTWAM_RUN_ID:-}" ]]; then
+  echo "ERROR: FASTWAM_RUN_ID must be set for multi-node runs so all nodes share one output id." >&2
+  exit 2
+fi
+
 RUN_ID="${FASTWAM_RUN_ID:-$(date +%Y%m%d-%H%M%S)}"
 RUN_DIR="${FASTWAM_RUN_ROOT}/${FASTWAM_RUN_NAME}/${RUN_ID}"
 FASTWAM_NATIVE_OUTPUT_DIR="${FASTWAM_WORKDIR}/runs/${TASK_NAME}/${RUN_ID}"
+IS_MAIN_RANK=0
+if [[ "${FASTWAM_NODE_RANK}" == "0" ]]; then
+  IS_MAIN_RANK=1
+fi
 
-if [[ -e "$RUN_DIR" ]]; then
+if (( IS_MAIN_RANK == 1 )) && [[ -e "$RUN_DIR" && -z "${FASTWAM_RUN_ID:-}" ]]; then
   echo "ERROR: run directory already exists: $RUN_DIR" >&2
   exit 2
 fi
 mkdir -p "$RUN_DIR"
-cp "$CONFIG_PATH" "$RUN_DIR/config.sh"
+if (( IS_MAIN_RANK == 1 )); then
+  cp "$CONFIG_PATH" "$RUN_DIR/config.sh"
+fi
 
 export PYTHONPATH="${FASTWAM_WORKDIR}/src:${PYTHONPATH:-}"
 export DIFFSYNTH_MODEL_BASE_PATH="${FASTWAM_MODEL_BASE}"
@@ -126,6 +150,21 @@ case "${FASTWAM_RECIPE}" in
     ;;
   *)
     MODEL_ARGS+=(model.skip_dit_load_from_pretrain=true model.action_dit_pretrained_path=null)
+    ;;
+esac
+
+case "${FASTWAM_INIT}" in
+  release)
+    ;;
+  base)
+    MODEL_ARGS+=(
+      resume=null
+      model.skip_dit_load_from_pretrain=false
+      "model.action_dit_pretrained_path=${FASTWAM_ACTION_DIT_BACKBONE}"
+    )
+    ;;
+  random)
+    MODEL_ARGS+=(resume=null model.skip_dit_load_from_pretrain=true model.action_dit_pretrained_path=null)
     ;;
 esac
 
@@ -202,10 +241,11 @@ else
 fi
 
 CMD=(bash scripts/train_zero1.sh "$GPUS_PER_NODE" "${MODEL_ARGS[@]}" "${RUN_ARGS[@]}" "${EXTRA_ARGS[@]}")
-printf "%q " "${CMD[@]}" > "$RUN_DIR/command.txt"
-echo "$FASTWAM_NATIVE_OUTPUT_DIR" > "$RUN_DIR/fastwam_native_output_dir.txt"
+if (( IS_MAIN_RANK == 1 )); then
+  printf "%q " "${CMD[@]}" > "$RUN_DIR/command.txt"
+  echo "$FASTWAM_NATIVE_OUTPUT_DIR" > "$RUN_DIR/fastwam_native_output_dir.txt"
 
-python - <<PY
+  python - <<PY
 import json
 from pathlib import Path
 
@@ -223,7 +263,10 @@ manifest = {
     "overlay_repo": "${FASTWAM_OVERLAY_REPO}",
     "overlay_ref": "${FASTWAM_OVERLAY_REF}",
     "gpus_per_node": int("${GPUS_PER_NODE}"),
+    "nnodes": int("${FASTWAM_NNODES}"),
+    "node_rank": int("${FASTWAM_NODE_RANK}"),
     "mixed_precision": "${FASTWAM_MIXED_PRECISION}",
+    "init": "${FASTWAM_INIT}",
     "release_checkpoint": "${FASTWAM_RELEASE_CKPT}",
     "pin_stats": "${FASTWAM_PIN_STATS}",
 }
@@ -232,26 +275,35 @@ Path("${RUN_DIR}/backend_manifest.json").write_text(
     encoding="utf-8",
 )
 PY
+fi
 
 echo "FASTWAM_TRAIN_START task=${TASK_NAME} mode=${FASTWAM_MODE} recipe=${FASTWAM_RECIPE} run_dir=${RUN_DIR}"
+
+if (( IS_MAIN_RANK == 1 )); then
+  TRAIN_LOG="$RUN_DIR/train_stdout.log"
+else
+  TRAIN_LOG="$RUN_DIR/train_stdout_rank${FASTWAM_NODE_RANK}.log"
+fi
 
 set +e
 (
   cd "$FASTWAM_WORKDIR"
-  NNODES="${NNODES:-1}" \
-  NODE_RANK="${NODE_RANK:-0}" \
+  NNODES="${FASTWAM_NNODES}" \
+  NODE_RANK="${FASTWAM_NODE_RANK}" \
   MASTER_ADDR="${MASTER_ADDR}" \
   MASTER_PORT="${MASTER_PORT}" \
   RUN_ID="${RUN_ID}" \
   "${CMD[@]}"
-) 2>&1 | tee "$RUN_DIR/train_stdout.log"
+) 2>&1 | tee "$TRAIN_LOG"
 train_status=${PIPESTATUS[0]}
 set -e
 
-if python scripts/fastwam/parse_train_log.py --log "$RUN_DIR/train_stdout.log" --output-dir "$RUN_DIR"; then
-  echo "FASTWAM_LOSS_REPORT $RUN_DIR/loss_summary.json"
-else
-  echo "WARNING: FastWAM loss parser did not find complete train records in $RUN_DIR/train_stdout.log" >&2
+if (( IS_MAIN_RANK == 1 )); then
+  if python scripts/fastwam/parse_train_log.py --log "$RUN_DIR/train_stdout.log" --output-dir "$RUN_DIR"; then
+    echo "FASTWAM_LOSS_REPORT $RUN_DIR/loss_summary.json"
+  else
+    echo "WARNING: FastWAM loss parser did not find complete train records in $RUN_DIR/train_stdout.log" >&2
+  fi
 fi
 
 if (( train_status != 0 )); then

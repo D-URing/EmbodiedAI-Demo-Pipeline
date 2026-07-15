@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Annotated
+
 from pydantic import Field, model_validator
 
 from embodied_demo.schemas.base import StrictModel
@@ -11,7 +13,10 @@ from embodied_demo.schemas.enums import (
     TerminationReason,
     VerificationStatus,
 )
-from embodied_demo.schemas.task import Identifier, SchemaVersion, TaskVersion
+
+Identifier = Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]*$")]
+SchemaVersion = Annotated[str, Field(pattern=r"^\d+\.\d+$")]
+TaskVersion = Annotated[str, Field(pattern=r"^\d+\.\d+\.\d+$")]
 
 
 class LatencyStatistics(StrictModel):

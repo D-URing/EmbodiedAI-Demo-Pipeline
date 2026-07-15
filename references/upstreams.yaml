@@ -6,39 +6,6 @@ purpose: >
   vendored dependencies.
 
 sources:
-  xpolicylab:
-    role: primary_replication_baseline
-    repository: https://github.com/XPolicyLab/XPolicyLab
-    default_branch: main
-    pinned_commit: fe71eb54675cef495fea817a637386a4f4529153
-    pinned_commit_date_utc: "2026-07-09T05:59:47Z"
-    license: Apache-2.0
-    referenced_paths:
-      - README.md
-      - model_template.py
-      - debug_env_client.py
-      - setup_policy_server.py
-      - client_server/ws/
-      - policy/demo_policy/README.md
-      - policy/demo_policy/model.py
-      - policy/demo_policy/deploy.py
-      - policy/demo_policy/deploy.yml
-      - policy/demo_policy/eval.sh
-      - policy/demo_policy/setup_eval_policy_server.sh
-      - policy/demo_policy/setup_eval_env_client.sh
-      - utils/run_debug_env_client.sh
-    in_scope:
-      - policy_environment_dependency_isolation
-      - policy_server_environment_client_boundary
-      - websocket_transport_as_future_remote_policy_target
-      - demo_policy_lifecycle_contract
-      - debug_mode_shape_and_action_key_smoke
-    out_of_scope:
-      - vendoring_upstream_code
-      - adopting_all_policy_zoo_dependencies
-      - requiring_simulator_for_m2_m3
-      - using_demo_policy_as_model_capability_claim
-
   robodojo:
     role: external_simulation_and_evaluation_target
     repository: https://github.com/RoboDojo-Benchmark/RoboDojo
@@ -52,7 +19,6 @@ sources:
     license: MIT
     referenced_paths:
       - README.md
-      - XPolicyLab/
       - env_cfg/
       - scripts/eval_policy.sh
       - scripts/internal/smoke_all_tasks.sh
@@ -68,8 +34,7 @@ sources:
       - evaluation_dimensions
       - smoke_single_benchmark_summary_flow
       - standard_random_task_pairing
-      - fold_clothes_mapping_for_towel_folding
-      - organize_table_classify_objects_mapping_for_tabletop_sorting
+      - external_simulation_evaluation_reference
       - future_nvidia_isaac_sim_acceptance_target
     out_of_scope:
       - running_robo_dojo_on_macos
@@ -135,7 +100,7 @@ sources:
     out_of_scope:
       - vendoring_fastwam_code
       - installing_cuda_dependencies_in_core_environment
-      - claiming_household_demo_task_success_from_base_fastwam_alone
+      - claiming_closed_loop_task_success_from_base_fastwam_alone
 
   imagewam:
     role: image_editing_world_action_model_custom_backend

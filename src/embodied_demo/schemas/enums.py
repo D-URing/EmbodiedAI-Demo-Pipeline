@@ -25,7 +25,6 @@ class Capability(StringEnum):
 
 
 class RuntimeMode(StringEnum):
-    MOCK = "mock"
     REPLAY = "replay"
     SIM = "sim"
     REAL = "real"
@@ -58,7 +57,6 @@ class CoordinateFrame(StringEnum):
 
 
 class EnvironmentBackend(StringEnum):
-    MOCK_2D = "mock_2d"
     DATASET_REPLAY = "dataset_replay"
     ROBODOJO = "robodojo"
     ROBOCASA = "robocasa"
@@ -77,7 +75,6 @@ class EvaluationProfile(StringEnum):
 class EvaluationLevel(StringEnum):
     E0_SCHEMA = "e0_schema"
     E1_WIRING_SMOKE = "e1_wiring_smoke"
-    E2_DETERMINISTIC_MOCK = "e2_deterministic_mock"
     E3_OFFLINE_REPLAY = "e3_offline_replay"
     E4_SIMULATION = "e4_simulation"
     E5_REAL_SHADOW = "e5_real_shadow"
@@ -99,13 +96,6 @@ class FailureType(StringEnum):
     ENVIRONMENT_INSTABILITY = "environment_instability"
     RESOURCE_EXHAUSTED = "resource_exhausted"
     MANUAL_ABORT = "manual_abort"
-
-
-class MockRealism(StringEnum):
-    CONTRACT_ONLY = "contract_only"
-    SYMBOLIC = "symbolic"
-    KINEMATIC = "kinematic"
-    PHYSICS = "physics"
 
 
 class RegistryStatus(StringEnum):

@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+
+EXPERIMENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$EXPERIMENT_DIR/../../.." && pwd)}"
+
+# shellcheck disable=SC1091
+source "$PROJECT_ROOT/configs/fastwam/realrobot_train_eval.sh"
+
+export EXPERIMENT_ROUTE="custom"
+export EXPERIMENT_NAME="fastwam_realrobot_8node_random"
+export FASTWAM_RUN_ROOT="${EXPERIMENT_RUN_ROOT:-$PROJECT_ROOT/runs/experiments/$EXPERIMENT_ROUTE}"
+export FASTWAM_RUN_NAME="${EXPERIMENT_RUN_NAME:-$EXPERIMENT_NAME}"
+
+export FASTWAM_MODE="${FASTWAM_MODE:-pilot}"
+export FASTWAM_RECIPE="${FASTWAM_RECIPE:-v6_scratch}"
+export FASTWAM_INIT="${FASTWAM_INIT:-random}"
+
+export FASTWAM_GPUS_PER_NODE="${FASTWAM_GPUS_PER_NODE:-8}"
+export FASTWAM_NNODES="${FASTWAM_NNODES:-${NNODES:-8}}"
+export FASTWAM_NODE_RANK="${FASTWAM_NODE_RANK:-${NODE_RANK:-0}}"
+
+export FASTWAM_PILOT_MAX_STEPS="${FASTWAM_PILOT_MAX_STEPS:-200}"
+export FASTWAM_PILOT_BATCH_SIZE="${FASTWAM_PILOT_BATCH_SIZE:-1}"
+export FASTWAM_PILOT_NUM_WORKERS="${FASTWAM_PILOT_NUM_WORKERS:-4}"
+export FASTWAM_PILOT_SAVE_EVERY="${FASTWAM_PILOT_SAVE_EVERY:-50}"
+export FASTWAM_WANDB_ENABLE="${FASTWAM_WANDB_ENABLE:-false}"

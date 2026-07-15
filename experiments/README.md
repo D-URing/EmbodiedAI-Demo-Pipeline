@@ -21,6 +21,7 @@ experiments/
 │   └── fastwam_libero_infer/          # FastWAM / LIBERO inference
 └── custom/
     ├── fastwam_realrobot_smoke/       # custom FastWAM realrobot smoke/pilot/full
+    ├── fastwam_realrobot_8node_random/# custom FastWAM 8-node random-init training
     └── imagewam_flux2_4b_libero_pilot/# ImageWAM FLUX.2 4B LIBERO metadata/pilot
 ```
 
@@ -112,6 +113,12 @@ FastWAM：
 FASTWAM_MODE=offline-smoke bash experiments/custom/fastwam_realrobot_smoke/launch.sh
 FASTWAM_MODE=smoke FASTWAM_RECIPE=joint_base bash experiments/custom/fastwam_realrobot_smoke/launch.sh
 FASTWAM_MODE=pilot FASTWAM_RECIPE=joint_base bash experiments/custom/fastwam_realrobot_smoke/launch.sh
+```
+
+FastWAM 8 机随机初始化：
+
+```bash
+sbatch experiments/custom/fastwam_realrobot_8node_random/slurm.sbatch
 ```
 
 ImageWAM metadata smoke：

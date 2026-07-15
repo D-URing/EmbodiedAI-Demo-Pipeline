@@ -328,6 +328,33 @@ FASTWAM_MODE=smoke FASTWAM_RECIPE=joint_base bash experiments/custom/fastwam_rea
 FASTWAM_MODE=pilot FASTWAM_RECIPE=joint_base bash experiments/custom/fastwam_realrobot_smoke/launch.sh
 ```
 
+初始化方式：
+
+```text
+FASTWAM_INIT=release  # 默认，按 recipe 使用 release/base 权重
+FASTWAM_INIT=base     # 不 resume release ckpt，保留 Wan/ActionDiT base 初始化
+FASTWAM_INIT=random   # 不 resume release ckpt，也不加载 Wan/ActionDiT pretrained
+```
+
+8 机 × 8 卡随机初始化：
+
+```bash
+sbatch experiments/custom/fastwam_realrobot_8node_random/slurm.sbatch
+```
+
+无 Slurm 时，在每台机器上分别启动：
+
+```bash
+export FASTWAM_NNODES=8
+export FASTWAM_NODE_RANK=<0-7>
+export FASTWAM_MASTER_ADDR=<rank0-host-or-ip>
+export FASTWAM_MASTER_PORT=29500
+export FASTWAM_GPUS_PER_NODE=8
+export FASTWAM_RUN_ID=<shared-run-id>
+
+bash experiments/custom/fastwam_realrobot_8node_random/launch.sh
+```
+
 说明：
 
 - `offline-smoke` 只验证 release checkpoint/stats 路径，不等价于训练；
