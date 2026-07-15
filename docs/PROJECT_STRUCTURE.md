@@ -178,6 +178,7 @@ pipelines/lerobot/README.md
 pipelines/custom/README.md
 experiments/README.md
 docs/STORAGE_AND_ARTIFACTS.md
+docs/TRAINING_AND_INFERENCE.md
 ```
 
-长文档保留历史、规划和细节，不作为第一入口。
+其他文档只保留当前可维护的结构、资产、环境和 backend 细节，不作为第一入口。

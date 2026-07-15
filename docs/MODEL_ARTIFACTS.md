@@ -304,9 +304,7 @@ libero_object_no_noops_lerobot/
 libero_spatial_no_noops_lerobot/
 ```
 
-该 release 是 LeRobot v2.1 格式；当前 LeRobot v3 主线如需直接读取，应在 `data/lerobot/libero-fastwam/v3/` 生成转换副本。完整命令见 [`CLUSTER_ARTIFACTS_RUNBOOK.md`](CLUSTER_ARTIFACTS_RUNBOOK.md)。
-
-更完整的集群下载、项目内目录和 smoke 验证步骤见 [`CLUSTER_ARTIFACTS_RUNBOOK.md`](CLUSTER_ARTIFACTS_RUNBOOK.md)。
+该 release 是 LeRobot v2.1 格式；当前 LeRobot v3 主线如需直接读取，应在 `data/lerobot/libero-fastwam/v3/` 生成转换副本。完整命令见 [`TRAINING_AND_INFERENCE.md`](TRAINING_AND_INFERENCE.md)。
 
 ## 7. 新模型接入清单
 

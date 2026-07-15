@@ -1,44 +1,30 @@
 # Documentation Index
 
-如果你刚接手项目，按下面顺序读，不要从所有文档里随机找。
+如果你刚接手项目，按下面顺序读。本文档目录只保留当前可维护的公开项目文档。
 
-## 第一层：必须读
+## 必须读
 
 | 文档 | 用途 |
 |---|---|
 | [`../README.md`](../README.md) | 项目现在是什么，怎么快速跑 |
-| [`TRAINING_AND_INFERENCE.md`](TRAINING_AND_INFERENCE.md) | 当前训练/推理唯一主入口 |
+| [`TRAINING_AND_INFERENCE.md`](TRAINING_AND_INFERENCE.md) | 训练、推理、下载、结果路径和排障的唯一主入口 |
 | [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) | 仓库结构，LeRobot / Custom 两条线怎么分 |
 | [`STORAGE_AND_ARTIFACTS.md`](STORAGE_AND_ARTIFACTS.md) | 数据、权重、cache、runs 分别放哪里 |
 | [`../pipelines/lerobot/README.md`](../pipelines/lerobot/README.md) | LeRobot 主线说明和入口索引 |
 | [`../experiments/README.md`](../experiments/README.md) | 训练/推理实验从哪里启动，结果怎么存 |
-| [`OPEN_DATA_AND_EVAL_PLAN.md`](OPEN_DATA_AND_EVAL_PLAN.md) | 开源数据下载分层与评测路线 |
 | [`../pipelines/custom/README.md`](../pipelines/custom/README.md) | Custom WAM 主线怎么跑 |
 
-## 第二层：需要细节时读
+## 需要细节时读
 
 | 文档 | 用途 |
 |---|---|
 | [`ENVIRONMENT.md`](ENVIRONMENT.md) | macOS / Linux / SCUT Miniconda 环境细节 |
 | [`MODEL_ARTIFACTS.md`](MODEL_ARTIFACTS.md) | 模型、数据、checkpoint 规范 |
-| [`CLUSTER_ARTIFACTS_RUNBOOK.md`](CLUSTER_ARTIFACTS_RUNBOOK.md) | 集群下载和排障长说明 |
-| [`LEROBOT_MULTI_MODEL_PLAN.md`](LEROBOT_MULTI_MODEL_PLAN.md) | LeRobot 多模型计划，命令以 Training Runbook 为准 |
-| [`LEROBOT_FIRST_PIPELINE.md`](LEROBOT_FIRST_PIPELINE.md) | LeRobot-first 历史设计说明 |
-| [`LEROBOT_REPLICATION.md`](LEROBOT_REPLICATION.md) | LeRobot GPU 复刻历史细节 |
+| [`OPEN_DATA_AND_EVAL_PLAN.md`](OPEN_DATA_AND_EVAL_PLAN.md) | 开源数据下载分层与评测路线 |
+| [`DEMO_COVERAGE_ROADMAP.md`](DEMO_COVERAGE_ROADMAP.md) | household demo 覆盖与 readiness |
+| [`01_ARCHITECTURE.md`](01_ARCHITECTURE.md) | pipeline 分层和代码结构 |
 | [`FASTWAM_REALROBOT_INTEGRATION.md`](FASTWAM_REALROBOT_INTEGRATION.md) | FastWAM realrobot overlay 细节 |
 | [`IMAGEWAM_INTEGRATION.md`](IMAGEWAM_INTEGRATION.md) | ImageWAM 后端接入规划和命令 |
-
-## 第三层：规划和历史
-
-| 文档 | 用途 |
-|---|---|
-| [`00_PROJECT_OVERVIEW.md`](00_PROJECT_OVERVIEW.md) | 项目背景和汇报口径 |
-| [`01_ARCHITECTURE.md`](01_ARCHITECTURE.md) | 早期架构设计 |
-| [`MASTER_PLAN.md`](MASTER_PLAN.md) | 大规划、任务库、资源映射 |
-| [`DEMO_COVERAGE_ROADMAP.md`](DEMO_COVERAGE_ROADMAP.md) | demo 覆盖路线图 |
-| [`IMPLEMENTATION_STATUS.md`](IMPLEMENTATION_STATUS.md) | 阶段性实现状态 |
-| [`REFERENCE_BASELINE.md`](REFERENCE_BASELINE.md) | 外部基准选择 |
-| [`adr/`](adr/) | 架构决策记录 |
 
 ## 当前最重要的事实
 

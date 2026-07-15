@@ -266,7 +266,7 @@ embodied-demo report-fastwam \
 | E1 | data sample smoke | dataset 可实例化，shape 与 action dim 正确 | data/contract |
 | E2 | train smoke | 真实前反传、loss 有数、checkpoint 落盘 | training/runtime |
 | E3 | train pilot | 多个 log 点 loss 下降，无 NaN/inf | training/convergence |
-| E4 | offline action check | `infer_action()` 对训练样本输出正常，L1 与历史基线可比 | policy/regression |
+| E4 | offline action check | `infer_action()` 对训练样本输出正常，L1 与既有基线可比 | policy/regression |
 | E5 | sim benchmark | 映射 RoboDojo/RoboTwin/RoboCasa 任务，输出 success/progress | simulation |
 | E6 | real robot gated eval | 安全栅栏下执行真机闭环 | safety/real_robot |
 

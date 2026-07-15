@@ -1,8 +1,8 @@
 # Demo 覆盖路线图：从可交付证据链到家庭任务库
 
 > 状态：v0.1<br>
-> 日期：2026-07-14<br>
-> 关联：[`MASTER_PLAN.md`](MASTER_PLAN.md)、[`FASTWAM_REALROBOT_INTEGRATION.md`](FASTWAM_REALROBOT_INTEGRATION.md)、[`adr/0002-fastwam-evidence-chain.md`](adr/0002-fastwam-evidence-chain.md)
+> 日期：2026-07-15<br>
+> 关联：[`TRAINING_AND_INFERENCE.md`](TRAINING_AND_INFERENCE.md)、[`FASTWAM_REALROBOT_INTEGRATION.md`](FASTWAM_REALROBOT_INTEGRATION.md)
 
 ## 1. 新格局
 

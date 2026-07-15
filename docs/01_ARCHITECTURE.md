@@ -1,8 +1,8 @@
 # 工程架构：Pipeline 分层与代码结构
 
 > 状态：当前架构说明<br>
-> 日期：2026-07-14<br>
-> 关联：[`00_PROJECT_OVERVIEW.md`](00_PROJECT_OVERVIEW.md)、[`MASTER_PLAN.md`](MASTER_PLAN.md)
+> 日期：2026-07-15<br>
+> 关联：[`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md)、[`TRAINING_AND_INFERENCE.md`](TRAINING_AND_INFERENCE.md)
 
 ## 1. 核心数据流
 
