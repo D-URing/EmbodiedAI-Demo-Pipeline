@@ -213,6 +213,14 @@ export PIP_CACHE_DIR="$PROJECT_ROOT/hf_cache/pip"
 
 对应目录 `data/`、`models/`、`checkpoints/`、`runs/`、`artifacts/`、`upstreams/` 和 `hf_cache/` 均已被 `.gitignore` 忽略。若某个集群必须使用独立 scratch/cache，再显式覆盖这些变量。
 
+LeRobot ACT/PushT 训练还会使用 torchvision ResNet18 backbone。若计算节点不能联网，需要提前准备：
+
+```bash
+mkdir -p "$TORCH_HOME/hub/checkpoints"
+wget -O "$TORCH_HOME/hub/checkpoints/resnet18-f37072fd.pth" \
+  https://download.pytorch.org/models/resnet18-f37072fd.pth
+```
+
 ### 4.4 无公网计算节点
 
 当前 core 依赖很小，可在有网络的同架构节点准备 wheelhouse，再复制到受限环境：

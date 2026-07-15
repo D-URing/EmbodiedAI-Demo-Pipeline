@@ -47,7 +47,10 @@ CMD=(
   lerobot-train
   --policy.type="$LEROBOT_POLICY_TYPE"
   --policy.device="$LEROBOT_POLICY_DEVICE"
+  --policy.repo_id="$LEROBOT_POLICY_REPO_ID"
+  --policy.push_to_hub="$LEROBOT_POLICY_PUSH_TO_HUB"
   --dataset.repo_id="$LEROBOT_DATASET_REPO_ID"
+  --dataset.video_backend="$LEROBOT_DATASET_VIDEO_BACKEND"
   --output_dir="$OUTPUT_DIR"
   --job_name="$LEROBOT_RUN_NAME"
   --steps="$LEROBOT_STEPS"
@@ -63,10 +66,6 @@ CMD=(
 
 if [[ -n "${LEROBOT_DATASET_ROOT:-}" ]]; then
   CMD+=(--dataset.root="$LEROBOT_DATASET_ROOT")
-fi
-
-if [[ -n "${LEROBOT_POLICY_REPO_ID:-}" ]]; then
-  CMD+=(--policy.repo_id="$LEROBOT_POLICY_REPO_ID")
 fi
 
 cat > "$RUN_DIR/command.txt" <<EOF

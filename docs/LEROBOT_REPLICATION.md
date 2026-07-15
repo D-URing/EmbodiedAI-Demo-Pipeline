@@ -82,6 +82,17 @@ bash scripts/lerobot/install_lerobot_cluster.sh
 make lerobot-train-smoke
 ```
 
+SCUT `gpu11` 默认使用：
+
+```text
+dataset.video_backend = pyav
+policy.repo_id        = local/pusht_act_gpu_smoke
+policy.push_to_hub    = false
+TORCH_HOME            = <repo>/hf_cache/torch
+```
+
+这样做是为了避免计算节点联网下载 ResNet18 backbone，以及绕开旧 host glibc 下 `torchcodec + conda-forge ffmpeg` 的 native ABI 问题。
+
 或显式指定配置：
 
 ```bash

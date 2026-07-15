@@ -36,6 +36,7 @@ export EMBODIED_RUN_ROOT="$PROJECT_ROOT/runs"
 export HF_HOME="$PROJECT_ROOT/hf_cache"
 export HUGGINGFACE_HUB_CACHE="$HF_HOME/hub"
 export HF_DATASETS_CACHE="$HF_HOME/datasets"
+export TORCH_HOME="$PROJECT_ROOT/hf_cache/torch"
 export HF_HUB_ENABLE_HF_TRANSFER=1
 export PYTHON_BIN=python3
 ```
@@ -81,6 +82,20 @@ LeRobot/FastWAM 是独立 CUDA policy 环境，不装进 `embodied-core`。在 G
 ```bash
 CONDA_EXE="$CONDA" LEROBOT_CREATE_CONDA=1 LEROBOT_CONDA_ENV=lerobot \
 bash scripts/lerobot/install_lerobot_cluster.sh
+```
+
+SCUT `gpu11` 已验证需要额外注意三点：
+
+- LeRobot ACT 会默认加载 torchvision ResNet18 backbone，计算节点不能联网时要预先把 `resnet18-f37072fd.pth` 放到 `$TORCH_HOME/hub/checkpoints/`；
+- 当前 `gpu11` host glibc 较老，训练默认使用 `dataset.video_backend=pyav`，避免 `torchcodec + conda-forge ffmpeg` 的 native ABI 问题；
+- `policy.repo_id` 必须非空，但第一阶段 smoke 不 push Hub，默认使用 `local/pusht_act_gpu_smoke` 并设置 `policy.push_to_hub=false`。
+
+ResNet18 权重下载命令：
+
+```bash
+mkdir -p "$TORCH_HOME/hub/checkpoints"
+wget -O "$TORCH_HOME/hub/checkpoints/resnet18-f37072fd.pth" \
+  https://download.pytorch.org/models/resnet18-f37072fd.pth
 ```
 
 管理节点已确认存在 `/home/scut/hfd.sh`，并且 `hf-mirror.com + aria2c` 明显快于 `hf download`。下载脚本会优先使用：
@@ -173,8 +188,21 @@ make lerobot-infer-smoke
 source /mnt/gpu11_200T/dingxibo/miniconda3/etc/profile.d/conda.sh
 conda activate lerobot
 export LEROBOT_DATASET_ROOT="$EMBODIED_DATA_ROOT/lerobot/pusht"
+export TORCH_HOME="$PROJECT_ROOT/hf_cache/torch"
 make lerobot-train-smoke
 ```
+
+当前 SCUT `gpu11` 已通过 2-step GPU env check：
+
+```text
+CUDA OK: NVIDIA A800-SXM4-80GB
+dataset.num_frames=25650
+dataset.num_episodes=206
+loss: 96.987 -> 83.351
+loss_decreased=true, drop=14.06%
+```
+
+该检查只证明真实 LeRobot GPU 训练链路能启动并产生 loss，不代表正式收敛结果。正式回答“loss 是否正常下降”建议把 `LEROBOT_STEPS` 提高到 500-1000。
 
 训练输出在 `runs/lerobot/...` 下。脚本会解析 stdout 并生成 loss summary，用来回答“loss 是否正常下降”。
 
