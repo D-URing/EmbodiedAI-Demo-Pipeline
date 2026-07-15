@@ -151,7 +151,7 @@ sources:
       - scripts/flux2/run_train_flux2_klein_imagewam.sh
       - scripts/flux2/run_eval_flux2_libero.sh
     in_scope:
-      - custom_wam_backend_extension_path
+      - custom_backend_extension_path
       - image_editing_backbone_for_action_prediction
       - flux2_4b_libero_release_checkpoint
       - libero_train_eval_wrapper

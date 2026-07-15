@@ -53,6 +53,7 @@ if [[ -e "$OUTPUT_DIR" && "${LEROBOT_RESUME:-0}" != "1" ]]; then
 fi
 
 mkdir -p "$RUN_DIR" "$(dirname "$OUTPUT_DIR")"
+cp "$CONFIG_PATH" "$RUN_DIR/config.sh"
 
 TRAIN_CMD=(
   lerobot-train

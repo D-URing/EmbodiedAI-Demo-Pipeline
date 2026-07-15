@@ -10,9 +10,10 @@
 | [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) | 仓库结构，LeRobot / Custom 两条线怎么分 |
 | [`STORAGE_AND_ARTIFACTS.md`](STORAGE_AND_ARTIFACTS.md) | 数据、权重、cache、runs 分别放哪里 |
 | [`../pipelines/lerobot/README.md`](../pipelines/lerobot/README.md) | LeRobot 主线怎么跑 |
+| [`../experiments/README.md`](../experiments/README.md) | 训练/推理实验从哪里启动，结果怎么存 |
 | [`LEROBOT_MULTI_MODEL_PLAN.md`](LEROBOT_MULTI_MODEL_PLAN.md) | LeRobot 多模型训练计划和集群命令 |
 | [`OPEN_DATA_AND_EVAL_PLAN.md`](OPEN_DATA_AND_EVAL_PLAN.md) | 开源数据下载分层与评测路线 |
-| [`../pipelines/custom_wam/README.md`](../pipelines/custom_wam/README.md) | Custom WAM 主线怎么跑 |
+| [`../pipelines/custom/README.md`](../pipelines/custom/README.md) | Custom WAM 主线怎么跑 |
 
 ## 第二层：需要细节时读
 

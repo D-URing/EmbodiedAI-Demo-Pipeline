@@ -5,18 +5,21 @@ LEROBOT_TRAIN_CONFIG ?= configs/lerobot/pusht_act_gpu_smoke.sh
 LEROBOT_ACCELERATE_CONFIG ?= configs/lerobot/train/svla_so100_smolvla_8gpu_long.sh
 LEROBOT_INFER_CONFIG ?= configs/lerobot/native_pusht_act_pipeline.sh
 
-.PHONY: help setup doctor test validate dry-run demo demo-extended download-lerobot-artifacts download-lerobot-pusht-dataset download-lerobot-svla-so100-pickplace-dataset download-lerobot-diffusion-pusht-policy download-lerobot-smolvla-base-policy download-lerobot-fastwam-libero-policy download-data-rovid20k download-data-rovidx download-data-mdm-depth download-data-xperience10m-sample download-data-abc130k download-data-agibotworld-alpha download-data-interndata-a1 download-fastwam-artifacts prepare-imagewam-upstream download-imagewam-artifacts download-imagewam-flux2-base lerobot-check-scripts lerobot-data-smoke lerobot-train-smoke lerobot-train-act lerobot-train-diffusion lerobot-train-smolvla lerobot-train-8gpu-smolvla lerobot-infer-smoke lerobot-infer-diffusion lerobot-infer-smolvla lerobot-infer-fastwam demo-chain-lerobot-fastwam fastwam-check-scripts fastwam-train-smoke demo-chain-fastwam imagewam-check-scripts imagewam-train-smoke schemas reference-fetch clean
+.PHONY: help setup doctor test validate dry-run demo demo-extended download-lerobot-artifacts download-lerobot-pusht-dataset download-lerobot-svla-so100-pickplace-dataset download-lerobot-diffusion-pusht-policy download-lerobot-smolvla-base-policy download-lerobot-fastwam-libero-policy download-data-rovid20k download-data-rovidx download-data-mdm-depth download-data-xperience10m-sample download-data-abc130k download-data-agibotworld-alpha download-data-interndata-a1 download-fastwam-artifacts prepare-imagewam-upstream download-imagewam-artifacts download-imagewam-flux2-base lerobot-check-scripts fastwam-check-scripts imagewam-check-scripts experiments-check-scripts lerobot-data-smoke lerobot-train-smoke lerobot-train-act lerobot-train-diffusion lerobot-train-smolvla lerobot-train-8gpu-smolvla lerobot-infer-smoke lerobot-infer-diffusion lerobot-infer-smolvla lerobot-infer-fastwam demo-chain-lerobot-fastwam fastwam-train-smoke demo-chain-fastwam imagewam-train-smoke schemas reference-fetch clean
 
 help:
 	@echo "EmbodiedAI Demo Pipeline"
 	@echo
-	@echo "Core / mock:"
+	@echo "Environment / checks:"
 	@echo "  make setup                         Create local core .venv"
 	@echo "  make test                          Run unit tests"
 	@echo "  make validate                      Validate task/run configs"
-	@echo "  make demo                          Run minimal mock demos"
+	@echo "  make lerobot-check-scripts         Check LeRobot wrapper syntax/parsers"
+	@echo "  make fastwam-check-scripts         Check FastWAM wrapper syntax/parsers"
+	@echo "  make imagewam-check-scripts        Check ImageWAM wrapper syntax"
+	@echo "  make experiments-check-scripts     Check experiment launch/config scripts"
 	@echo
-	@echo "LeRobot pipeline:"
+	@echo "LeRobot downloads:"
 	@echo "  make download-lerobot-artifacts    Download LeRobot PushT dataset"
 	@echo "  make download-lerobot-svla-so100-pickplace-dataset"
 	@echo "                                      Download SmolVLA SO100 pick-place dataset"
@@ -26,16 +29,6 @@ help:
 	@echo "                                      Download LeRobot SmolVLA base policy"
 	@echo "  make download-lerobot-fastwam-libero-policy"
 	@echo "                                      Download LeRobot-compatible FastWAM LIBERO policy"
-	@echo "  make lerobot-data-smoke            Inspect LeRobot dataset"
-	@echo "  make lerobot-train-smoke           Run LeRobot train with LEROBOT_TRAIN_CONFIG"
-	@echo "  make lerobot-train-act             Run ACT/PushT train profile"
-	@echo "  make lerobot-train-diffusion       Run Diffusion/PushT train profile"
-	@echo "  make lerobot-train-smolvla         Run SmolVLA/SO100 fine-tune profile"
-	@echo "  make lerobot-train-8gpu-smolvla    Run SmolVLA/SO100 long profile with accelerate"
-	@echo "  make lerobot-infer-smoke           Run offline policy inference with LEROBOT_INFER_CONFIG"
-	@echo "  make lerobot-infer-diffusion       Run Diffusion/PushT offline inference"
-	@echo "  make lerobot-infer-smolvla         Run SmolVLA/SO100 offline inference"
-	@echo "  make lerobot-infer-fastwam         Run FastWAM/LIBERO offline inference after v3 data conversion"
 	@echo
 	@echo "Open data shortcuts:"
 	@echo "  make download-data-rovid20k        Download practical RoVid-X subset"
@@ -43,19 +36,21 @@ help:
 	@echo "                                      Download Xperience-10M sample episode"
 	@echo "  make download-data-abc130k         Download ABC-130k after HF access approval"
 	@echo
-	@echo "Custom WAM pipeline:"
+	@echo "Custom downloads / upstreams:"
 	@echo "  make download-fastwam-artifacts    Download FastWAM release ckpt/stats"
-	@echo "  make fastwam-train-smoke           Run FastWAM custom smoke after overlay setup"
-	@echo "  make demo-chain-fastwam            Convert FastWAM run into demo report"
 	@echo "  make prepare-imagewam-upstream     Clone/update official ImageWAM repo"
 	@echo "  make download-imagewam-artifacts   Download ImageWAM FLUX.2 4B LIBERO release"
 	@echo "  make download-imagewam-flux2-base  Download FLUX.2 4B base/AE via official script"
-	@echo "  make imagewam-train-smoke          Run ImageWAM metadata smoke"
+	@echo
+	@echo "Training / inference:"
+	@echo "  Use experiments/<route>/<experiment>/launch.sh, not make."
+	@echo "  Start with experiments/README.md"
 	@echo
 	@echo "Start here:"
 	@echo "  docs/README.md"
 	@echo "  pipelines/lerobot/README.md"
-	@echo "  pipelines/custom_wam/README.md"
+	@echo "  pipelines/custom/README.md"
+	@echo "  experiments/README.md"
 
 setup:
 	$(PYTHON) -m venv $(VENV)
@@ -257,6 +252,10 @@ imagewam-check-scripts:
 	bash -n scripts/imagewam/download_artifacts.sh
 	bash -n scripts/imagewam/run_train_eval.sh
 	bash -n scripts/imagewam/slurm_libero_pilot.sbatch
+
+experiments-check-scripts:
+	find experiments -name '*.sh' -print0 | xargs -0 -n 1 bash -n
+	find experiments -name '*.sbatch' -print0 | xargs -0 -n 1 bash -n
 
 imagewam-train-smoke:
 	IMAGEWAM_MODE=metadata-smoke IMAGEWAM_REQUIRE_CUDA=0 bash scripts/imagewam/run_train_eval.sh

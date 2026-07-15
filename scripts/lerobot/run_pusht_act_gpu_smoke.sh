@@ -42,6 +42,7 @@ if [[ -e "$OUTPUT_DIR" ]]; then
 fi
 
 mkdir -p "$RUN_DIR"
+cp "$CONFIG_PATH" "$RUN_DIR/config.sh"
 
 CMD=(
   lerobot-train

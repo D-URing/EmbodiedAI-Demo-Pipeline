@@ -8,10 +8,10 @@ ImageWAM 是与 FastWAM 并列的 custom WAM 后端。它的官方项目把 imag
 upstreams/ImageWAM/        # 官方源码 checkout，本地 ignored
 data/fastwam/libero-fastwam/
 models/imagewam/
-runs/imagewam/
+runs/experiments/custom/imagewam_flux2_4b_libero_pilot/
 ```
 
-## 为什么先放 custom_wam，而不是 LeRobot
+## 为什么先放 custom，而不是 LeRobot
 
 ImageWAM 当前更像一个完整研究代码库：
 
@@ -103,7 +103,8 @@ make download-imagewam-artifacts
 先跑 metadata smoke，确认路径、源码、权重和 CUDA 可见性：
 
 ```bash
-make imagewam-train-smoke
+IMAGEWAM_MODE=metadata-smoke IMAGEWAM_REQUIRE_CUDA=0 \
+bash experiments/custom/imagewam_flux2_4b_libero_pilot/launch.sh
 ```
 
 真正训练建议在 `upstreams/ImageWAM/` 准备好官方环境后运行：
@@ -117,7 +118,7 @@ IMAGEWAM_VARIANT=flux2_4b \
 IMAGEWAM_FLUX2_VARIANT=4b \
 IMAGEWAM_TASK_TYPE=libero \
 IMAGEWAM_PRECOMPUTE_QWEN3_CACHE=true \
-bash scripts/imagewam/run_train_eval.sh
+bash experiments/custom/imagewam_flux2_4b_libero_pilot/launch.sh
 ```
 
 当前 wrapper 会优先调用官方 FLUX.2 训练入口：
@@ -133,7 +134,7 @@ upstreams/ImageWAM/scripts/flux2/run_train_flux2_klein_imagewam.sh
 ImageWAM 可以复用 FastWAM release 数据，但不是 FastWAM overlay 的子目录。两者并列：
 
 ```text
-custom_wam/
+custom/
 ├── fastwam/
 └── imagewam/
 ```

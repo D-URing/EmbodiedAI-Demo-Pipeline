@@ -1,8 +1,8 @@
 # Custom WAM / FastWAM
 
-这是 FastWAM 在 `custom_wam` 结构下的规范入口。
+这是 FastWAM 在 `custom` 结构下的规范入口。
 
-历史兼容入口仍保留在 [`../../custom_fastwam/`](../../custom_fastwam/)，但后续文档和新增后端都以 `custom_wam/<backend>` 为准。
+历史兼容入口仍保留在 [`../../custom_fastwam/`](../../custom_fastwam/)，但后续文档和新增后端都以 `custom/<backend>` 为准。
 
 ## 当前定位
 
@@ -23,22 +23,31 @@ scripts/fastwam/download_release_artifacts.sh
 scripts/fastwam/prepare_fastwam_overlay.sh
 scripts/fastwam/run_realrobot_train_eval.sh
 scripts/fastwam/slurm_realrobot_pilot.sbatch
+experiments/custom/fastwam_realrobot_smoke/
 pipelines/custom_fastwam/README.md
 docs/FASTWAM_REALROBOT_INTEGRATION.md
 ```
 
-## 常用命令
+## 准备资产
 
 ```bash
 make download-fastwam-artifacts
-make fastwam-train-smoke
 ```
 
-在 SCUT 上如果要继续 realrobot overlay：
+## 启动实验
+
+训练/评测入口放在 `experiments/`，不要用 Makefile 启动：
 
 ```bash
 bash scripts/fastwam/prepare_fastwam_overlay.sh
-FASTWAM_MODE=pilot FASTWAM_RECIPE=joint_base bash scripts/fastwam/run_realrobot_train_eval.sh
+bash experiments/custom/fastwam_realrobot_smoke/launch.sh
+```
+
+切换 pilot：
+
+```bash
+FASTWAM_MODE=pilot FASTWAM_RECIPE=joint_base \
+bash experiments/custom/fastwam_realrobot_smoke/launch.sh
 ```
 
 注意：private overlay clone 需要 GitHub 私有仓库权限。

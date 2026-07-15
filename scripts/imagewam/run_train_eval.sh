@@ -13,6 +13,7 @@ source "$CONFIG_PATH"
 timestamp="$(date +%Y%m%d_%H%M%S)"
 run_dir="$IMAGEWAM_RUN_ROOT/$IMAGEWAM_RUN_NAME/$timestamp"
 mkdir -p "$run_dir"
+cp "$CONFIG_PATH" "$run_dir/config.sh"
 
 cuda_visible="${CUDA_VISIBLE_DEVICES:-}"
 if [[ "$IMAGEWAM_REQUIRE_CUDA" == "1" ]]; then

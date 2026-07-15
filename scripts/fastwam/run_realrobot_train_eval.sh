@@ -96,6 +96,7 @@ if [[ -e "$RUN_DIR" ]]; then
   exit 2
 fi
 mkdir -p "$RUN_DIR"
+cp "$CONFIG_PATH" "$RUN_DIR/config.sh"
 
 export PYTHONPATH="${FASTWAM_WORKDIR}/src:${PYTHONPATH:-}"
 export DIFFSYNTH_MODEL_BASE_PATH="${FASTWAM_MODEL_BASE}"

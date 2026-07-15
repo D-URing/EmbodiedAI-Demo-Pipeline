@@ -1,6 +1,6 @@
 # Configs
 
-配置按 pipeline 分层：
+配置按 pipeline 分层。注意：`configs/` 是底层默认参数库，不是日常实验启动目录；多次训练/推理实验请复制或新增 `experiments/<route>/<experiment>/config.sh`。
 
 ```text
 configs/
@@ -45,6 +45,8 @@ configs/lerobot/infer/
 
 默认入口见 [`../pipelines/lerobot/README.md`](../pipelines/lerobot/README.md)。
 
+实验入口见 [`../experiments/README.md`](../experiments/README.md)。
+
 ## `configs/fastwam/`
 
 用于 custom backend / FastWAM overlay：
@@ -53,7 +55,9 @@ configs/lerobot/infer/
 - realrobot overlay；
 - smoke / pilot / full 训练配置。
 
-默认入口见 [`../pipelines/custom_wam/fastwam/README.md`](../pipelines/custom_wam/fastwam/README.md)。
+默认入口见 [`../pipelines/custom/fastwam/README.md`](../pipelines/custom/fastwam/README.md)。
+
+实验入口见 [`../experiments/custom/fastwam_realrobot_smoke/`](../experiments/custom/fastwam_realrobot_smoke/)。
 
 ## `configs/imagewam/`
 
@@ -64,7 +68,9 @@ configs/lerobot/infer/
 - LIBERO smoke/pilot/full 运行参数；
 - A100 单机八卡 pilot profile。
 
-默认入口见 [`../pipelines/custom_wam/imagewam/README.md`](../pipelines/custom_wam/imagewam/README.md)。
+默认入口见 [`../pipelines/custom/imagewam/README.md`](../pipelines/custom/imagewam/README.md)。
+
+实验入口见 [`../experiments/custom/imagewam_flux2_4b_libero_pilot/`](../experiments/custom/imagewam_flux2_4b_libero_pilot/)。
 
 ## `configs/runs/`
 

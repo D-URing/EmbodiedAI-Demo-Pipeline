@@ -7,7 +7,7 @@
 | 主线 | 当前目标 | 入口 |
 |---|---|---|
 | LeRobot 主线 | 复刻 LeRobot data-to-train-to-inference，并真实训练多个 policy | [`pipelines/lerobot/`](pipelines/lerobot/) |
-| Custom WAM 主线 | 保留自拟模型/custom backend 路径，FastWAM 和 ImageWAM 并列接入 | [`pipelines/custom_wam/`](pipelines/custom_wam/) |
+| Custom WAM 主线 | 保留自拟模型/custom backend 路径，FastWAM 和 ImageWAM 并列接入 | [`pipelines/custom/`](pipelines/custom/) |
 
 Household/mock demo 仍保留，但它是应用展示层，不是当前训练能力验收主线。
 
@@ -20,7 +20,7 @@ Household/mock demo 仍保留，但它是应用展示层，不是当前训练能
 - LeRobot 开源 policy 下载入口已补齐：Diffusion PushT、SmolVLA base、FastWAM LIBERO；
 - FastWAM release 权重已下载到 `models/fastwam_release/`；
 - FastWAM LIBERO 数据已下载并解压到 `data/fastwam/libero-fastwam/`；
-- ImageWAM 已作为 `custom_wam/imagewam` 后端接入，默认走 FLUX.2 4B + LIBERO；
+- ImageWAM 已作为 `custom/imagewam` 后端接入，默认走 FLUX.2 4B + LIBERO；
 - FastWAM 私有 realrobot overlay 还需要远端 GitHub 私有仓库权限。
 
 如果你刚接手项目，按这个顺序读：
@@ -31,8 +31,9 @@ Household/mock demo 仍保留，但它是应用展示层，不是当前训练能
 4. [`pipelines/lerobot/README.md`](pipelines/lerobot/README.md)；
 5. [`docs/LEROBOT_MULTI_MODEL_PLAN.md`](docs/LEROBOT_MULTI_MODEL_PLAN.md)；
 6. [`docs/OPEN_DATA_AND_EVAL_PLAN.md`](docs/OPEN_DATA_AND_EVAL_PLAN.md)；
-7. [`pipelines/custom_wam/README.md`](pipelines/custom_wam/README.md)；
-8. [`docs/IMAGEWAM_INTEGRATION.md`](docs/IMAGEWAM_INTEGRATION.md)。
+7. [`pipelines/custom/README.md`](pipelines/custom/README.md)；
+8. [`experiments/README.md`](experiments/README.md)；
+9. [`docs/IMAGEWAM_INTEGRATION.md`](docs/IMAGEWAM_INTEGRATION.md)。
 
 ## 仓库结构
 
@@ -40,8 +41,9 @@ Household/mock demo 仍保留，但它是应用展示层，不是当前训练能
 .
 ├── pipelines/
 │   ├── lerobot/          # LeRobot 主线：dataset -> train/load -> inference -> report
-│   ├── custom_wam/       # 自拟/custom WAM 后端族：FastWAM / ImageWAM / future backends
+│   ├── custom/           # 自拟/custom WAM 后端族：FastWAM / ImageWAM / future backends
 │   └── custom_fastwam/   # 兼容入口：历史 FastWAM 说明
+├── experiments/          # 训练/推理启动入口：config.sh + launch.sh + 可选 slurm.sbatch
 ├── configs/
 │   ├── lerobot/          # LeRobot 配置
 │   ├── fastwam/          # FastWAM/custom 配置
@@ -159,34 +161,25 @@ make download-lerobot-smolvla-base-policy
 make download-lerobot-fastwam-libero-policy
 ```
 
-在 GPU 节点上跑多模型训练：
+在 GPU 节点上跑训练/推理实验时，不从 Makefile 启动，而是使用 `experiments/`：
 
 ```bash
-make lerobot-train-act
-make lerobot-train-diffusion
-make lerobot-train-smolvla
+bash experiments/lerobot/pusht_act_smoke/launch.sh
+bash experiments/lerobot/diffusion_pusht_infer/launch.sh
 ```
 
 单机八卡长期实验：
 
 ```bash
-make lerobot-train-8gpu-smolvla
+bash experiments/lerobot/smolvla_so100_8gpu_long/launch.sh
 ```
 
 对应配置：
 
 ```text
-configs/lerobot/train/svla_so100_smolvla_8gpu_long.sh
-scripts/lerobot/run_train_accelerate.sh
-scripts/lerobot/slurm_smolvla_8gpu_long.sbatch
-```
-
-推理：
-
-```bash
-make lerobot-infer-diffusion
-make lerobot-infer-smolvla
-make lerobot-infer-fastwam
+experiments/lerobot/smolvla_so100_8gpu_long/config.sh
+experiments/lerobot/smolvla_so100_8gpu_long/launch.sh
+experiments/lerobot/smolvla_so100_8gpu_long/slurm.sbatch
 ```
 
 快速 2-step 验环境见 [`pipelines/lerobot/README.md`](pipelines/lerobot/README.md)。
@@ -219,7 +212,7 @@ make download-lerobot-diffusion-pusht-policy
 make download-fastwam-artifacts
 ```
 
-FastWAM LIBERO 数据下载、v2.1/v3 格式说明和 private overlay 权限问题见 [`pipelines/custom_wam/fastwam/README.md`](pipelines/custom_wam/fastwam/README.md)。
+FastWAM LIBERO 数据下载、v2.1/v3 格式说明和 private overlay 权限问题见 [`pipelines/custom/fastwam/README.md`](pipelines/custom/fastwam/README.md)。
 
 ImageWAM 第一阶段默认 FLUX.2 4B + LIBERO：
 
@@ -227,7 +220,12 @@ ImageWAM 第一阶段默认 FLUX.2 4B + LIBERO：
 make prepare-imagewam-upstream
 make download-imagewam-artifacts
 make download-imagewam-flux2-base
-make imagewam-train-smoke
+```
+
+启动 ImageWAM pilot 使用实验入口：
+
+```bash
+bash experiments/custom/imagewam_flux2_4b_libero_pilot/launch.sh
 ```
 
 路径：
@@ -236,37 +234,34 @@ make imagewam-train-smoke
 upstreams/ImageWAM/
 models/imagewam/flux2_klein_4b_libero/
 models/imagewam/flux2/
-runs/imagewam/
+runs/experiments/custom/imagewam_flux2_4b_libero_pilot/
 ```
 
-说明见 [`pipelines/custom_wam/imagewam/README.md`](pipelines/custom_wam/imagewam/README.md)。
+说明见 [`pipelines/custom/imagewam/README.md`](pipelines/custom/imagewam/README.md)。
 
 ## 常用 Make targets
+
+Make 只作为环境、下载和检查入口；训练/推理实验请使用 `experiments/*/*/launch.sh`。
 
 | Target | 作用 |
 |---|---|
 | `make test` | core 单测 |
 | `make validate` | mock task/config 校验 |
-| `make demo` | 跑两个 mock demo |
+| `make lerobot-check-scripts` | 检查 LeRobot wrapper 和 parser |
+| `make fastwam-check-scripts` | 检查 FastWAM wrapper 和 parser |
+| `make imagewam-check-scripts` | 检查 ImageWAM wrapper |
+| `make experiments-check-scripts` | 检查 experiments 启动脚本 |
 | `make download-lerobot-artifacts` | 下载 LeRobot PushT |
 | `make download-lerobot-svla-so100-pickplace-dataset` | 下载 SmolVLA SO100 pick-place 数据 |
 | `make download-lerobot-diffusion-pusht-policy` | 下载 LeRobot diffusion PushT 预训练 policy |
 | `make download-lerobot-smolvla-base-policy` | 下载 LeRobot SmolVLA base policy |
 | `make download-lerobot-fastwam-libero-policy` | 下载 LeRobot-compatible FastWAM LIBERO policy |
-| `make lerobot-data-smoke` | LeRobot dataset inspection |
-| `make lerobot-train-act` | LeRobot ACT/PushT training |
-| `make lerobot-train-diffusion` | LeRobot Diffusion/PushT training |
-| `make lerobot-train-smolvla` | LeRobot SmolVLA/SO100 fine-tune |
-| `make lerobot-train-8gpu-smolvla` | LeRobot SmolVLA/SO100 单机八卡长期训练 |
-| `make lerobot-infer-smoke` | LeRobot offline inference，使用 `LEROBOT_INFER_CONFIG` |
-| `make lerobot-infer-diffusion` | Diffusion/PushT offline inference |
-| `make lerobot-infer-smolvla` | SmolVLA/SO100 offline inference |
-| `make lerobot-infer-fastwam` | FastWAM/LIBERO offline inference，需 v3 数据 |
 | `make download-data-rovid20k` | 下载 RoVid-X 实用子集 |
 | `make download-data-xperience10m-sample` | 下载 Xperience-10M sample |
 | `make download-fastwam-artifacts` | 下载 FastWAM release 权重和 stats |
-| `make fastwam-train-smoke` | FastWAM custom smoke，依赖 overlay 准备 |
-| `make demo-chain-fastwam` | 将 FastWAM 训练产物整理成报告 |
+| `make prepare-imagewam-upstream` | 准备 ImageWAM 官方源码 |
+| `make download-imagewam-artifacts` | 下载 ImageWAM release checkpoint |
+| `make download-imagewam-flux2-base` | 下载 FLUX.2 4B base / AE |
 
 ## 当前边界
 

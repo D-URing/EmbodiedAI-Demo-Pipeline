@@ -1,6 +1,6 @@
 # Custom / FastWAM Pipeline
 
-> 兼容说明：这是历史入口。新的 canonical 结构是 [`../custom_wam/fastwam/`](../custom_wam/fastwam/)，ImageWAM 等新后端放在 [`../custom_wam/`](../custom_wam/) 下，与 FastWAM 并列。
+> 兼容说明：这是历史入口。新的 canonical 结构是 [`../custom/fastwam/`](../custom/fastwam/)，ImageWAM 等新后端放在 [`../custom/`](../custom/) 下，与 FastWAM 并列。
 
 ## 这条线解决什么
 

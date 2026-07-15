@@ -1,6 +1,12 @@
 # Scripts
 
-脚本按 pipeline 分层。优先通过 `make` 或 `pipelines/*/README.md` 里的命令调用，不建议新同事直接猜脚本参数。
+脚本按 pipeline 分层，但这里不是日常实验入口。
+
+约定：
+
+- `make` 只做环境、下载、检查；
+- `experiments/<route>/<experiment>/launch.sh` 负责启动训练/推理；
+- `scripts/` 只放可复用执行器，不建议新同事直接猜脚本参数。
 
 ```text
 scripts/
@@ -25,15 +31,7 @@ scripts/lerobot/
 └── generate_data_to_inference_report.py
 ```
 
-主要 Make target：
-
-```bash
-make download-lerobot-artifacts
-make lerobot-data-smoke
-make lerobot-train-smoke
-make lerobot-infer-smoke
-make demo-chain-lerobot-fastwam
-```
+训练/推理入口见 [`../experiments/README.md`](../experiments/README.md)。
 
 ## FastWAM / custom
 
@@ -46,13 +44,7 @@ scripts/fastwam/
 └── slurm_realrobot_pilot.sbatch
 ```
 
-主要 Make target：
-
-```bash
-make download-fastwam-artifacts
-make fastwam-train-smoke
-make demo-chain-fastwam
-```
+训练入口见 [`../experiments/custom/fastwam_realrobot_smoke/`](../experiments/custom/fastwam_realrobot_smoke/)。
 
 注意：FastWAM LIBERO 数据当前用 `/home/scut/hfd.sh yuanty/LIBERO-fastwam --dataset` 手动下载，尚未封装为 Make target。
 
@@ -66,10 +58,12 @@ scripts/imagewam/
 └── slurm_libero_pilot.sbatch
 ```
 
-主要 Make target：
+下载 / upstream target：
 
 ```bash
 make prepare-imagewam-upstream
 make download-imagewam-artifacts
-make imagewam-train-smoke
+make download-imagewam-flux2-base
 ```
+
+训练入口见 [`../experiments/custom/imagewam_flux2_4b_libero_pilot/`](../experiments/custom/imagewam_flux2_4b_libero_pilot/)。

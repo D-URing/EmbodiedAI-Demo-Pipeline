@@ -6,10 +6,13 @@
 .
 ├── pipelines/
 │   ├── lerobot/          # 第一主线：LeRobot data→train→infer
-│   ├── custom_wam/       # 第二主线：自拟/custom WAM 后端族
+│   ├── custom/           # 第二主线：自拟/custom WAM 后端族
 │   │   ├── fastwam/
 │   │   └── imagewam/
 │   └── custom_fastwam/   # 历史兼容入口
+├── experiments/          # 训练/推理启动入口
+│   ├── lerobot/
+│   └── custom/
 ├── configs/
 │   ├── lerobot/          # LeRobot 主线配置
 │   ├── fastwam/          # Custom WAM / FastWAM 配置
@@ -64,14 +67,15 @@ policy  = ACT
 ```text
 configs/lerobot/
 scripts/lerobot/
-runs/lerobot/
+experiments/lerobot/
+runs/experiments/lerobot/
 data/lerobot/
 models/lerobot/        # pretrained policy / stable local checkpoint
 ```
 
 ### 2. Custom WAM pipeline
 
-入口：[`pipelines/custom_wam/README.md`](../pipelines/custom_wam/README.md)
+入口：[`pipelines/custom/README.md`](../pipelines/custom/README.md)
 
 目标：
 
@@ -98,7 +102,8 @@ release data = yuanty/LIBERO-fastwam
 ```text
 configs/fastwam/
 scripts/fastwam/
-runs/fastwam/
+experiments/custom/fastwam_realrobot_smoke/
+runs/experiments/custom/
 data/fastwam/
 models/fastwam_release/
 upstreams/FastWAM-realrobot/
@@ -117,11 +122,26 @@ release ckpt = yuyangalin/ImageWAM-FLUX.2-4B-LIBERO
 ```text
 configs/imagewam/
 scripts/imagewam/
-pipelines/custom_wam/imagewam/
-runs/imagewam/
+pipelines/custom/imagewam/
+experiments/custom/imagewam_flux2_4b_libero_pilot/
+runs/experiments/custom/
 models/imagewam/
 upstreams/ImageWAM/
 ```
+
+## Experiments 是启动层
+
+训练和推理实验从 `experiments/` 启动，不从 Makefile 启动：
+
+```text
+experiments/<route>/<experiment>/
+├── README.md
+├── config.sh
+├── launch.sh
+└── slurm.sbatch     # 可选
+```
+
+`configs/` 放底层默认参数，`scripts/` 放可复用执行器，`experiments/` 才是多次试验时复制、改名、保存配置的地方。
 
 ## Core 不是训练环境
 
@@ -156,7 +176,8 @@ src/embodied_demo/demo_runner.py
 README.md
 docs/README.md
 pipelines/lerobot/README.md
-pipelines/custom_wam/README.md
+pipelines/custom/README.md
+experiments/README.md
 docs/STORAGE_AND_ARTIFACTS.md
 ```
 

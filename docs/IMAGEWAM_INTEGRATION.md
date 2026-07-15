@@ -18,16 +18,17 @@ official ImageWAM repo
 ## 结构
 
 ```text
-pipelines/custom_wam/imagewam/README.md
+pipelines/custom/imagewam/README.md
 configs/imagewam/libero_train_eval.sh
 scripts/imagewam/
 ├── prepare_imagewam_upstream.sh
 ├── download_artifacts.sh
 ├── run_train_eval.sh
 └── slurm_libero_pilot.sbatch
+experiments/custom/imagewam_flux2_4b_libero_pilot/
 models/imagewam/
 upstreams/ImageWAM/
-runs/imagewam/
+runs/experiments/custom/imagewam_flux2_4b_libero_pilot/
 ```
 
 ## 第一阶段范围
@@ -52,23 +53,18 @@ runs/imagewam/
 make prepare-imagewam-upstream
 make download-imagewam-artifacts
 make download-imagewam-flux2-base
-make imagewam-train-smoke
 ```
 
 pilot：
 
 ```bash
-IMAGEWAM_MODE=pilot \
-IMAGEWAM_VARIANT=flux2_4b \
-IMAGEWAM_TASK_TYPE=libero \
-IMAGEWAM_PRECOMPUTE_QWEN3_CACHE=true \
-bash scripts/imagewam/run_train_eval.sh
+bash experiments/custom/imagewam_flux2_4b_libero_pilot/launch.sh
 ```
 
 SLURM：
 
 ```bash
-sbatch scripts/imagewam/slurm_libero_pilot.sbatch
+sbatch scripts/imagewam/slurm_libero_pilot.sbatch  # legacy wrapper
 ```
 
 ## 资产约定
@@ -80,7 +76,7 @@ sbatch scripts/imagewam/slurm_libero_pilot.sbatch
 | FLUX.2 9B LIBERO ckpt | `models/imagewam/flux2_klein_9b_libero/` |
 | FLUX.2 base / AE | `models/imagewam/flux2/` |
 | LIBERO 数据 | `data/fastwam/libero-fastwam/` |
-| 运行日志 | `runs/imagewam/` |
+| 运行日志 | `runs/experiments/custom/imagewam_flux2_4b_libero_pilot/` |
 | manifest | `runs/artifact_manifests/imagewam_*.json` |
 
 ## 验收标准
@@ -91,12 +87,12 @@ M1：
 - `make prepare-imagewam-upstream` 能 clone 官方代码；
 - `make download-imagewam-artifacts` 能下载 release checkpoint；
 - `make download-imagewam-flux2-base` 能下载 FLUX.2 4B base 和 AE；
-- `make imagewam-train-smoke` 能产出 `backend_manifest.json`。
+- `IMAGEWAM_MODE=metadata-smoke IMAGEWAM_REQUIRE_CUDA=0 bash experiments/custom/imagewam_flux2_4b_libero_pilot/launch.sh` 能产出 `backend_manifest.json`。
 
 M2：
 
 - 在 A100 节点完成 `IMAGEWAM_MODE=pilot`；
-- `runs/imagewam/<run>/train_stdout.log` 能解析出训练 step / loss；
+- `runs/experiments/custom/imagewam_flux2_4b_libero_pilot/<run>/train_stdout.log` 能解析出训练 step / loss；
 - checkpoint 和 config 产物路径进入 manifest。
 
 M3：
