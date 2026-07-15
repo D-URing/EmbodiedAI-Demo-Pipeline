@@ -82,6 +82,8 @@ def test_fastwam_prepare_uses_overlay_without_vendoring() -> None:
     assert "FASTWAM_PIP_RESUME_RETRIES" in prepare
     assert "FASTWAM_TORCH_SPEC" in prepare
     assert "FASTWAM_PIP_INDEX_URL" in prepare
+    assert "--no-deps -e" in prepare
+    assert 'name not in {"torch", "torchvision"}' in prepare
     assert "rsync -a" in prepare
     assert "--exclude \"runs/\"" in prepare
     assert "--exclude \"checkpoints/\"" in prepare

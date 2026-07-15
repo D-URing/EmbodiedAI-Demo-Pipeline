@@ -1,4 +1,23 @@
 #!/usr/bin/env bash
+# Prepare the runnable custom FastWAM workspace and, optionally, its Python/CUDA
+# environment.
+#
+# Intended usage:
+#   - Networked/login node:
+#       FASTWAM_SOURCE_MODE=sync bash scripts/fastwam/prepare_fastwam_overlay.sh
+#     This clones/updates the official FastWAM repo and overlays the project
+#     real-robot pipeline into upstreams/FastWAM-realrobot.
+#   - Shared conda env preparation, still on a networked/login node:
+#       FASTWAM_SOURCE_MODE=reuse FASTWAM_CREATE_CONDA=1 FASTWAM_INSTALL=1 \
+#       bash scripts/fastwam/prepare_fastwam_overlay.sh
+#     This reuses the already prepared source tree and installs packages into
+#     the shared conda environment. Do not run this on offline compute nodes.
+#   - Offline compute node:
+#       source .../miniconda3/etc/profile.d/conda.sh
+#       conda activate fastwam
+#       python experiments/custom/fastwam_realrobot_single8_random/run.py
+#
+# This script intentionally does not start training.
 set -euo pipefail
 
 CONFIG_PATH="${1:-configs/fastwam/realrobot_train_eval.sh}"
@@ -133,7 +152,38 @@ fi
 python -m pip install "${PIP_NETWORK_ARGS[@]}" "${PIP_INDEX_ARGS[@]}" --upgrade pip setuptools wheel
 python -m pip install "${PIP_NETWORK_ARGS[@]}" "${PIP_INDEX_ARGS[@]}" PyYAML
 python -m pip install "${PIP_NETWORK_ARGS[@]}" "${TORCH_INDEX_ARGS[@]}" "$FASTWAM_TORCH_SPEC" "$FASTWAM_TORCHVISION_SPEC"
-python -m pip install "${PIP_NETWORK_ARGS[@]}" "${PIP_INDEX_ARGS[@]}" -e "$FASTWAM_WORKDIR"
+
+FASTWAM_REQUIREMENTS_TMP="$(mktemp)"
+python - "$FASTWAM_WORKDIR/pyproject.toml" "$FASTWAM_REQUIREMENTS_TMP" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+pyproject = Path(sys.argv[1])
+output = Path(sys.argv[2])
+deps: list[str] = []
+inside = False
+for raw in pyproject.read_text(encoding="utf-8").splitlines():
+    line = raw.strip()
+    if line == "dependencies = [":
+        inside = True
+        continue
+    if inside and line == "]":
+        break
+    if inside:
+        match = re.match(r'"([^"]+)"[,]?$', line)
+        if match:
+            dep = match.group(1)
+            name = re.split(r"[<>=!~\\[]", dep, maxsplit=1)[0].lower()
+            if name not in {"torch", "torchvision"}:
+                deps.append(dep)
+
+output.write_text("\n".join(deps) + "\n", encoding="utf-8")
+print(f"FastWAM dependency requirements without torch/torchvision: {output}")
+PY
+python -m pip install "${PIP_NETWORK_ARGS[@]}" "${PIP_INDEX_ARGS[@]}" -r "$FASTWAM_REQUIREMENTS_TMP"
+rm -f "$FASTWAM_REQUIREMENTS_TMP"
+python -m pip install "${PIP_NETWORK_ARGS[@]}" "${PIP_INDEX_ARGS[@]}" --no-deps -e "$FASTWAM_WORKDIR"
 
 python - <<'PY'
 import importlib.metadata
