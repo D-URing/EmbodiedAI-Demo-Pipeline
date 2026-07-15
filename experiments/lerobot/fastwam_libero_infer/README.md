@@ -28,3 +28,16 @@ data/lerobot/libero-fastwam/v3/libero_10_no_noops_lerobot/
 ```bash
 make convert-lerobot-fastwam-libero-v3
 ```
+
+如果 policy 加载时提示需要联网访问 `Wan-AI/Wan2.2-TI2V-5B-Diffusers` 或 `google/umt5-xxl`：
+
+```bash
+make download-lerobot-fastwam-base-cache
+```
+
+SCUT `gpu11` 成功样例：
+
+```text
+runs/experiments/lerobot/fastwam_libero_infer/20260715-210113/inference_evidence.json
+SUMMARY policy_type=fastwam device=cuda latency_ms=7931.62
+```

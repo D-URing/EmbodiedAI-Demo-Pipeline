@@ -72,6 +72,7 @@ export PIP_CACHE_DIR="$PROJECT_ROOT/hf_cache/pip"
 | LeRobot diffusion PushT policy | `models/lerobot/diffusion/diffusion_pusht` | 可选开源预训练 policy |
 | LeRobot SmolVLA base | `models/lerobot/smolvla/smolvla_base` | SmolVLA fine-tune 起点 |
 | LeRobot FastWAM LIBERO policy | `models/lerobot/fastwam/fastwam_libero_uncond_2cam224` | LeRobot-compatible FastWAM 权重 |
+| LeRobot FastWAM Wan/T5 base cache | `hf_cache/hub/models--Wan-AI--Wan2.2-TI2V-5B-Diffusers`、`hf_cache/hub/models--google--umt5-xxl` | FastWAM policy 运行时加载的 frozen VAE/text encoder/tokenizer |
 | FastWAM release ckpt | `models/custom/fastwam/release/libero_uncond_2cam224.pt` | 约 12G |
 | FastWAM release stats | `models/custom/fastwam/release/libero_uncond_2cam224_dataset_stats.json` | stats / normalizer |
 | Custom FastWAM LIBERO 数据 | `data/custom/fastwam/libero-fastwam` | custom/FastWAM route，LeRobot v2.1，已解压 |
@@ -158,6 +159,33 @@ make convert-lerobot-fastwam-libero-v3
 runs/artifact_manifests/lerobot_fastwam_libero_v3_conversion/
 runs/artifact_manifests/lerobot_fastwam_libero_v3_conversion_manifest.json
 ```
+
+## LeRobot FastWAM base cache
+
+LeRobot FastWAM 的 `model.safetensors` 不包含 frozen Wan2.2 VAE、UMT5 text encoder 和 tokenizer。它们由上游 policy 按 repo id 从 Hugging Face cache 读取，因此要保留标准 HF cache layout，而不是简单放到 `models/`。
+
+下载：
+
+```bash
+make download-lerobot-fastwam-base-cache
+```
+
+默认写入：
+
+```text
+hf_cache/hub/models--Wan-AI--Wan2.2-TI2V-5B-Diffusers/
+hf_cache/hub/models--google--umt5-xxl/
+runs/artifact_manifests/lerobot_fastwam_base_cache_manifest.json
+```
+
+在 SCUT 这类镜像环境下，脚本默认设置：
+
+```text
+HF_ENDPOINT=https://hf-mirror.com
+HF_HUB_DISABLE_XET=1
+```
+
+原因是部分大文件走 Xet CAS 时可能出现 401 或超时，禁用 Xet 后会走普通 HTTP/LFS 下载。
 
 ## 清理原则
 

@@ -330,11 +330,27 @@ data/lerobot/libero-fastwam/v3/libero_10_no_noops_lerobot/
 make convert-lerobot-fastwam-libero-v3
 ```
 
+下载 FastWAM policy 运行所需 Wan/T5 base cache：
+
+```bash
+make download-lerobot-fastwam-base-cache
+```
+
 只转换默认推理子集：
 
 ```bash
 LEROBOT_FASTWAM_LIBERO_SUBSETS="libero_10_no_noops_lerobot" \
 make convert-lerobot-fastwam-libero-v3
+```
+
+SCUT `gpu11` 已验证 FastWAM / LIBERO 推理 smoke：
+
+```text
+policy_type=fastwam
+device=cuda
+dataset_root=data/lerobot/libero-fastwam/v3/libero_10_no_noops_lerobot
+action.shape=(1, 7)
+latency_ms≈7932
 ```
 
 如果 SmolVLA 显存或 dataloader 压力偏大：

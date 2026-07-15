@@ -157,6 +157,7 @@ make download-lerobot-pusht-dataset
 make download-lerobot-svla-so100-pickplace-dataset
 make download-lerobot-fastwam-libero-dataset
 make convert-lerobot-fastwam-libero-v3
+make download-lerobot-fastwam-base-cache
 make download-lerobot-diffusion-pusht-policy
 make download-lerobot-smolvla-base-policy
 make download-lerobot-fastwam-libero-policy
@@ -258,6 +259,7 @@ Make 只作为环境、下载和检查入口；训练/推理实验请使用 `exp
 | `make download-lerobot-svla-so100-pickplace-dataset` | 下载 SmolVLA SO100 pick-place 数据 |
 | `make download-lerobot-fastwam-libero-dataset` | 下载 FastWAM LIBERO 原始数据到 LeRobot 路线 |
 | `make convert-lerobot-fastwam-libero-v3` | 转换 LeRobot 路线 FastWAM LIBERO v2.1 → v3.0 |
+| `make download-lerobot-fastwam-base-cache` | 下载 LeRobot FastWAM 推理所需 Wan/T5 base cache |
 | `make download-lerobot-diffusion-pusht-policy` | 下载 LeRobot diffusion PushT 预训练 policy |
 | `make download-lerobot-smolvla-base-policy` | 下载 LeRobot SmolVLA base policy |
 | `make download-lerobot-fastwam-libero-policy` | 下载 LeRobot-compatible FastWAM LIBERO policy |

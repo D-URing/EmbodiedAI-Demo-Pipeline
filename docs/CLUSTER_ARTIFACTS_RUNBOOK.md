@@ -87,8 +87,20 @@ bash scripts/lerobot/install_lerobot_cluster.sh
 SCUT `gpu11` 已验证需要额外注意三点：
 
 - LeRobot ACT 会默认加载 torchvision ResNet18 backbone，计算节点不能联网时要预先把 `resnet18-f37072fd.pth` 放到 `$TORCH_HOME/hub/checkpoints/`；
-- 当前 `gpu11` host glibc 较老，训练默认使用 `dataset.video_backend=pyav`，避免 `torchcodec + conda-forge ffmpeg` 的 native ABI 问题；
+- 当前 `gpu11` host glibc 较老，LeRobot v3 视频读取建议固定 `ffmpeg=6.*`，避免 conda-forge `ffmpeg=8` 拉入需要更高 glibc 的 `libsystemd`；
 - `policy.repo_id` 必须非空，但第一阶段 smoke 不 push Hub，默认使用 `local/pusht_act_gpu_smoke` 并设置 `policy.push_to_hub=false`。
+
+如果要跑 LeRobot FastWAM，还需要 fastwam extra 和 FFmpeg 6：
+
+```bash
+"$CONDA" run -n lerobot python -m pip install \
+  -i https://pypi.tuna.tsinghua.edu.cn/simple \
+  transformers diffusers
+
+"$CONDA" install -n lerobot -y --override-channels \
+  -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge \
+  'ffmpeg=6.*'
+```
 
 ResNet18 权重下载命令：
 

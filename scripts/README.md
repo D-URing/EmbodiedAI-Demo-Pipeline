@@ -58,6 +58,12 @@ LeRobot v3 转换入口：
 make convert-lerobot-fastwam-libero-v3
 ```
 
+FastWAM policy 运行所需 Wan/T5 base cache：
+
+```bash
+make download-lerobot-fastwam-base-cache
+```
+
 ## ImageWAM / custom
 
 ```text

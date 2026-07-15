@@ -142,6 +142,7 @@ models:
     download_targets:
       - make download-lerobot-fastwam-libero-dataset
       - make convert-lerobot-fastwam-libero-v3
+      - make download-lerobot-fastwam-base-cache
       - make download-lerobot-fastwam-libero-policy
     artifact_location:
       raw_dataset: "$EMBODIED_DATA_ROOT/lerobot/libero-fastwam/v2.1/"

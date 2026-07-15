@@ -290,6 +290,21 @@ make convert-lerobot-fastwam-libero-v3
 runs/artifact_manifests/lerobot_fastwam_libero_v3_conversion/
 ```
 
+LeRobot FastWAM policy 还需要 frozen Wan/T5 base components，下载到 HF cache：
+
+```bash
+make download-lerobot-fastwam-base-cache
+```
+
+SCUT 已验证的 cache 位置：
+
+```text
+hf_cache/hub/models--Wan-AI--Wan2.2-TI2V-5B-Diffusers/
+hf_cache/hub/models--google--umt5-xxl/
+```
+
+不要把这两个目录移动到 `models/lerobot/fastwam/`；上游代码按 repo id 查 HF cache。
+
 其中 4 个子集分别是：
 
 ```text
