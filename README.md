@@ -19,7 +19,7 @@ Household/mock demo 仍保留，但它是应用展示层，不是当前训练能
 - LeRobot 多模型训练 profile 已补齐：ACT、Diffusion、SmolVLA；
 - LeRobot 开源 policy 下载入口已补齐：Diffusion PushT、SmolVLA base、FastWAM LIBERO；
 - FastWAM release 权重已下载到 `models/custom/fastwam/release/`；
-- FastWAM LIBERO 数据已下载并解压到 `data/custom/fastwam/libero-fastwam/`；
+- FastWAM LIBERO 数据已按路线拆分：`data/custom/fastwam/libero-fastwam/` 给 custom/FastWAM，`data/lerobot/libero-fastwam/` 给 LeRobot；
 - ImageWAM 已作为 `custom/imagewam` 后端接入，默认走 FLUX.2 4B + LIBERO；
 - FastWAM 私有 realrobot overlay 还需要远端 GitHub 私有仓库权限。
 
@@ -155,6 +155,7 @@ make lerobot-data-smoke
 ```bash
 make download-lerobot-pusht-dataset
 make download-lerobot-svla-so100-pickplace-dataset
+make download-lerobot-fastwam-libero-dataset
 make download-lerobot-diffusion-pusht-policy
 make download-lerobot-smolvla-base-policy
 make download-lerobot-fastwam-libero-policy
@@ -191,6 +192,8 @@ Custom WAM 当前包含 FastWAM 与 ImageWAM。FastWAM 已下载：
 models/custom/fastwam/release/libero_uncond_2cam224.pt
 models/custom/fastwam/release/libero_uncond_2cam224_dataset_stats.json
 data/custom/fastwam/libero-fastwam/
+data/lerobot/libero-fastwam/v2.1/
+data/lerobot/libero-fastwam/v3/
 ```
 
 LeRobot 预训练 policy 也应放在全局 `models/` 池中，例如：
@@ -252,11 +255,13 @@ Make 只作为环境、下载和检查入口；训练/推理实验请使用 `exp
 | `make experiments-check-scripts` | 检查 experiments 启动脚本 |
 | `make download-lerobot-artifacts` | 下载 LeRobot PushT |
 | `make download-lerobot-svla-so100-pickplace-dataset` | 下载 SmolVLA SO100 pick-place 数据 |
+| `make download-lerobot-fastwam-libero-dataset` | 下载 FastWAM LIBERO 原始数据到 LeRobot 路线 |
 | `make download-lerobot-diffusion-pusht-policy` | 下载 LeRobot diffusion PushT 预训练 policy |
 | `make download-lerobot-smolvla-base-policy` | 下载 LeRobot SmolVLA base policy |
 | `make download-lerobot-fastwam-libero-policy` | 下载 LeRobot-compatible FastWAM LIBERO policy |
 | `make download-data-rovid20k` | 下载 RoVid-X 实用子集 |
 | `make download-data-xperience10m-sample` | 下载 Xperience-10M sample |
+| `make download-custom-fastwam-libero-dataset` | 下载 FastWAM LIBERO 原始数据到 custom/FastWAM 路线 |
 | `make download-fastwam-artifacts` | 下载 FastWAM release 权重和 stats |
 | `make prepare-imagewam-upstream` | 准备 ImageWAM 官方源码 |
 | `make download-imagewam-artifacts` | 下载 ImageWAM release checkpoint |
@@ -266,7 +271,7 @@ Make 只作为环境、下载和检查入口；训练/推理实验请使用 `exp
 
 - LeRobot ACT/PushT 是当前已验证真实训练链路；
 - Diffusion/PushT 与 SmolVLA/SO100 已进入可运行 profile，待集群执行验证；
-- FastWAM release 权重和 LIBERO 数据已准备，但 private overlay 还没在 SCUT 完整跑通；
-- FastWAM LIBERO 数据是 LeRobot v2.1，当前 LeRobot v3 loader 直接读需要转换；
+- FastWAM release 权重和 custom/FastWAM LIBERO 数据已准备，但 private overlay 还没在 SCUT 完整跑通；
+- LeRobot-FastWAM LIBERO 已拆出独立目录；`v2.1` 是原始副本，当前 LeRobot v3 loader 直接读需要在 `v3` 目录生成转换副本；
 - household/mock demo 是展示层，不代表模型能力；
 - viewer、真实仿真器、真机闭环暂缓。

@@ -40,7 +40,7 @@ Custom WAM 不承诺所有后端接口完全一致，但要统一这些工程边
 定位：
 
 - 当前 custom 后端的第一条可落地路线；
-- 复用 FastWAM release 权重和 LIBERO 数据；
+- 使用 custom/FastWAM 路线自己的 FastWAM release 权重和 LIBERO 数据；
 - 结合 `D-URing/fastwam-realrobot-pipeline` 私有 overlay 做 realrobot 微调/评测。
 
 ### ImageWAM
@@ -58,13 +58,15 @@ Custom WAM 不承诺所有后端接口完全一致，但要统一这些工程边
 
 ```text
 data/
-├── fastwam/libero-fastwam/          # FastWAM / ImageWAM 共享 LIBERO 数据
-└── imagewam/robotwin2.0/            # ImageWAM 可选 RoboTwin 数据
+└── custom/
+    ├── fastwam/libero-fastwam/      # custom/FastWAM 原生 LIBERO 数据
+    └── imagewam/robotwin2.0/        # ImageWAM 可选 RoboTwin 数据
 
 models/
-├── fastwam_release/                 # FastWAM release ckpt/stats
-└── imagewam/
-    └── flux2_klein_4b_libero/       # ImageWAM release ckpt/stats/config
+└── custom/
+    ├── fastwam/release/             # FastWAM release ckpt/stats
+    └── imagewam/
+        └── flux2_klein_4b_libero/   # ImageWAM release ckpt/stats/config
 
 upstreams/
 ├── FastWAM-realrobot/
@@ -72,3 +74,12 @@ upstreams/
 ```
 
 注意：这些资产目录均被 `.gitignore` 忽略，只提交 README/配置/脚本，不提交大文件。
+
+LeRobot 路线如果也需要 LIBERO/FastWAM 数据，使用独立目录：
+
+```text
+data/lerobot/libero-fastwam/v2.1/
+data/lerobot/libero-fastwam/v3/
+```
+
+不要让 LeRobot 实验直接读写 `data/custom/fastwam/libero-fastwam/`。

@@ -45,7 +45,12 @@ scripts/fastwam/
 
 训练入口见 [`../experiments/custom/fastwam_realrobot_smoke/`](../experiments/custom/fastwam_realrobot_smoke/)。
 
-注意：FastWAM LIBERO 数据当前用 `/home/scut/hfd.sh yuanty/LIBERO-fastwam --dataset` 手动下载，尚未封装为 Make target。
+FastWAM LIBERO 数据已封装为 Make target，并按路线拆分：
+
+```bash
+make download-custom-fastwam-libero-dataset   # data/custom/fastwam/libero-fastwam
+make download-lerobot-fastwam-libero-dataset  # data/lerobot/libero-fastwam/v2.1
+```
 
 ## ImageWAM / custom
 

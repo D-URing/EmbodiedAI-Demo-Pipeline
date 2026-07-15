@@ -37,7 +37,7 @@ release_ckpt = models/custom/imagewam/flux2_klein_4b_libero
 原因：
 
 - 官方 README 推荐从 FLUX.2 ImageWAM 开始；
-- LIBERO 数据可复用我们已经准备的 FastWAM release 数据；
+- LIBERO 数据默认使用 custom 路线内的 `data/custom/fastwam/libero-fastwam`；
 - 4B 比 9B 更适合先做 A100 八卡 smoke/pilot；
 - RoboTwin 先作为第二阶段，因为评测环境和资产准备更重。
 

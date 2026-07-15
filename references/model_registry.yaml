@@ -140,15 +140,18 @@ models:
     smoke_targets:
       - bash scripts/lerobot/run_inference_smoke.sh configs/lerobot/infer/fastwam_libero.sh
     download_targets:
+      - make download-lerobot-fastwam-libero-dataset
       - make download-lerobot-fastwam-libero-policy
     artifact_location:
-      release_dataset: "$EMBODIED_DATA_ROOT/custom/fastwam/libero-fastwam/"
+      raw_dataset: "$EMBODIED_DATA_ROOT/lerobot/libero-fastwam/v2.1/"
+      converted_dataset: "$EMBODIED_DATA_ROOT/lerobot/libero-fastwam/v3/"
       policy_path: "$EMBODIED_MODEL_ROOT/lerobot/fastwam/fastwam_libero_uncond_2cam224"
     capability_claim: lerobot_compatible_fastwam_policy
     notes:
       - This is different from models/custom/fastwam/release, which belongs to the custom/FastWAM route.
+      - This route should not read or mutate data/custom/fastwam/libero-fastwam.
       - The downloaded policy contains model.safetensors and normalizer/postprocessor assets.
-      - FastWAM LIBERO data is LeRobot v2.1; convert a copy before using the current LeRobot v3 loader.
+      - FastWAM LIBERO raw data is LeRobot v2.1; convert under data/lerobot/libero-fastwam/v3 before using the current LeRobot v3 loader.
 
   lerobot_pi0fast_template:
     status: template_only
@@ -172,7 +175,7 @@ models:
       - embodied-demo report-fastwam
     download_targets:
       - make download-fastwam-artifacts
-      - HF_ENDPOINT=https://hf-mirror.com bash /home/scut/hfd.sh yuanty/LIBERO-fastwam --dataset --local-dir "$EMBODIED_DATA_ROOT/custom/fastwam/libero-fastwam" --tool aria2c -x 10 -j 4
+      - make download-custom-fastwam-libero-dataset
     artifact_location:
       release_weights: "$EMBODIED_MODEL_ROOT/custom/fastwam/release/"
       release_dataset: "$EMBODIED_DATA_ROOT/custom/fastwam/libero-fastwam/"
@@ -181,7 +184,7 @@ models:
     notes:
       - This is not a from-scratch self-designed model.
       - It is a customized finetuning/realrobot overlay path.
-      - FastWAM LIBERO release data is LeRobot v2.1; convert a copy before using the current LeRobot v3 loader.
+      - Keep this dataset separate from data/lerobot/libero-fastwam.
       - SCUT private overlay clone currently needs GitHub private repository credentials.
 
   custom_imagewam_flux2_4b_libero:

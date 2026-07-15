@@ -2,11 +2,15 @@
 
 export EMBODIED_REPO_ROOT="${EMBODIED_REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 
-# The raw FastWAM LIBERO release data under data/custom/fastwam/libero-fastwam is LeRobot v2.1.
-# Point LEROBOT_DATASET_ROOT at a converted v3 subset before using this inference profile
-# with current LeRobot loaders.
+# Keep LeRobot-route LIBERO data separate from the custom/FastWAM route.
+# data/lerobot/libero-fastwam/v2.1 may contain a copied raw release, while
+# data/lerobot/libero-fastwam/v3 is the expected converted layout for current
+# LeRobot loaders.
 export LEROBOT_DATASET_REPO_ID="${LEROBOT_DATASET_REPO_ID:-yuanty/LIBERO-fastwam}"
-export LEROBOT_DATASET_ROOT="${LEROBOT_DATASET_ROOT:-$EMBODIED_REPO_ROOT/data/custom/fastwam/libero-fastwam/libero_10_no_noops_lerobot_v3}"
+export LEROBOT_FASTWAM_LIBERO_ROOT="${LEROBOT_FASTWAM_LIBERO_ROOT:-$EMBODIED_REPO_ROOT/data/lerobot/libero-fastwam}"
+export LEROBOT_FASTWAM_LIBERO_VERSION="${LEROBOT_FASTWAM_LIBERO_VERSION:-v3}"
+export LEROBOT_FASTWAM_LIBERO_SUBSET="${LEROBOT_FASTWAM_LIBERO_SUBSET:-libero_10_no_noops_lerobot}"
+export LEROBOT_DATASET_ROOT="${LEROBOT_DATASET_ROOT:-$LEROBOT_FASTWAM_LIBERO_ROOT/$LEROBOT_FASTWAM_LIBERO_VERSION/$LEROBOT_FASTWAM_LIBERO_SUBSET}"
 export LEROBOT_SAMPLE_INDEX="${LEROBOT_SAMPLE_INDEX:-0}"
 export LEROBOT_ALLOW_DOWNLOAD="${LEROBOT_ALLOW_DOWNLOAD:-0}"
 

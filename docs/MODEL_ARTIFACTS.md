@@ -215,7 +215,9 @@ FastWAM 有两类资产：
 |---|---|---|
 | LeRobot-native FastWAM checkpoint | `$EMBODIED_MODEL_ROOT/lerobot/fastwam/<name>/` | 后续 LeRobot-native data-to-inference |
 | FastWAM release 权重 | `$EMBODIED_MODEL_ROOT/custom/fastwam/release/` | custom overlay 微调初始化 |
-| FastWAM LIBERO 数据 | `$EMBODIED_DATA_ROOT/custom/fastwam/libero-fastwam/` | FastWAM LIBERO 训练/复现实验 |
+| LeRobot FastWAM LIBERO raw copy | `$EMBODIED_DATA_ROOT/lerobot/libero-fastwam/v2.1/` | LeRobot 路线的转换前副本 |
+| LeRobot FastWAM LIBERO v3 target | `$EMBODIED_DATA_ROOT/lerobot/libero-fastwam/v3/` | LeRobot 当前 loader 的转换目标 |
+| Custom FastWAM LIBERO 数据 | `$EMBODIED_DATA_ROOT/custom/fastwam/libero-fastwam/` | custom/FastWAM 训练/复现实验 |
 | FastWAM dataset stats | `$EMBODIED_MODEL_ROOT/custom/fastwam/release/` 或数据目录 meta | normalizer / stats |
 | custom overlay checkpoint | `$EMBODIED_MODEL_ROOT/custom/fastwam_realrobot/<run>/` | 私有 realrobot recipe 输出 |
 
@@ -263,6 +265,19 @@ SCUT 已下载并解压到：
 data/custom/fastwam/libero-fastwam/
 ```
 
+为了避免两条 pipeline 互相污染，LeRobot 路线另存一份：
+
+```text
+data/lerobot/libero-fastwam/v2.1/
+data/lerobot/libero-fastwam/v3/
+```
+
+其中 `v2.1/` 是原始 release 副本，`v3/` 是后续转换目标。LeRobot 当前 `fastwam_libero` 推理配置默认读取：
+
+```text
+data/lerobot/libero-fastwam/v3/libero_10_no_noops_lerobot/
+```
+
 其中 4 个子集分别是：
 
 ```text
@@ -272,7 +287,7 @@ libero_object_no_noops_lerobot/
 libero_spatial_no_noops_lerobot/
 ```
 
-该 release 是 LeRobot v2.1 格式；当前 LeRobot v3 主线如需直接读取，应先做格式转换。完整命令见 [`CLUSTER_ARTIFACTS_RUNBOOK.md`](CLUSTER_ARTIFACTS_RUNBOOK.md)。
+该 release 是 LeRobot v2.1 格式；当前 LeRobot v3 主线如需直接读取，应在 `data/lerobot/libero-fastwam/v3/` 生成转换副本。完整命令见 [`CLUSTER_ARTIFACTS_RUNBOOK.md`](CLUSTER_ARTIFACTS_RUNBOOK.md)。
 
 更完整的集群下载、项目内目录和 smoke 验证步骤见 [`CLUSTER_ARTIFACTS_RUNBOOK.md`](CLUSTER_ARTIFACTS_RUNBOOK.md)。
 

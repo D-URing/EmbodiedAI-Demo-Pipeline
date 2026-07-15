@@ -2,7 +2,7 @@ PYTHON ?= python3.11
 VENV ?= .venv
 CONSTRAINTS ?= requirements/constraints-py311.txt
 
-.PHONY: help setup doctor test validate download-lerobot-artifacts download-lerobot-pusht-dataset download-lerobot-svla-so100-pickplace-dataset download-lerobot-diffusion-pusht-policy download-lerobot-smolvla-base-policy download-lerobot-fastwam-libero-policy download-data-rovid20k download-data-rovidx download-data-mdm-depth download-data-xperience10m-sample download-data-abc130k download-data-agibotworld-alpha download-data-interndata-a1 download-fastwam-artifacts prepare-imagewam-upstream download-imagewam-artifacts download-imagewam-flux2-base lerobot-check-scripts fastwam-check-scripts imagewam-check-scripts experiments-check-scripts lerobot-data-smoke schemas reference-fetch clean
+.PHONY: help setup doctor test validate download-lerobot-artifacts download-lerobot-pusht-dataset download-lerobot-svla-so100-pickplace-dataset download-lerobot-fastwam-libero-dataset download-lerobot-diffusion-pusht-policy download-lerobot-smolvla-base-policy download-lerobot-fastwam-libero-policy download-data-rovid20k download-data-rovidx download-data-mdm-depth download-data-xperience10m-sample download-data-abc130k download-data-agibotworld-alpha download-data-interndata-a1 download-custom-fastwam-libero-dataset download-fastwam-artifacts prepare-imagewam-upstream download-imagewam-artifacts download-imagewam-flux2-base lerobot-check-scripts fastwam-check-scripts imagewam-check-scripts experiments-check-scripts lerobot-data-smoke schemas reference-fetch clean
 
 help:
 	@echo "EmbodiedAI Demo Pipeline"
@@ -20,6 +20,8 @@ help:
 	@echo "  make download-lerobot-artifacts    Download LeRobot PushT dataset"
 	@echo "  make download-lerobot-svla-so100-pickplace-dataset"
 	@echo "                                      Download SmolVLA SO100 pick-place dataset"
+	@echo "  make download-lerobot-fastwam-libero-dataset"
+	@echo "                                      Download FastWAM LIBERO raw dataset into the LeRobot route"
 	@echo "  make download-lerobot-diffusion-pusht-policy"
 	@echo "                                      Download LeRobot diffusion PushT policy"
 	@echo "  make download-lerobot-smolvla-base-policy"
@@ -34,6 +36,8 @@ help:
 	@echo "  make download-data-abc130k         Download ABC-130k after HF access approval"
 	@echo
 	@echo "Custom downloads / upstreams:"
+	@echo "  make download-custom-fastwam-libero-dataset"
+	@echo "                                      Download FastWAM LIBERO raw dataset into the custom route"
 	@echo "  make download-fastwam-artifacts    Download FastWAM release ckpt/stats"
 	@echo "  make prepare-imagewam-upstream     Clone/update official ImageWAM repo"
 	@echo "  make download-imagewam-artifacts   Download ImageWAM FLUX.2 4B LIBERO release"
@@ -80,6 +84,12 @@ download-lerobot-svla-so100-pickplace-dataset:
 	ARTIFACT_MANIFEST_NAME=lerobot_svla_so100_pickplace_dataset_manifest.json \
 	LEROBOT_DATASET_REPO_ID=lerobot/svla_so100_pickplace \
 	LEROBOT_DATASET_LOCAL_DIR="$${EMBODIED_DATA_ROOT:-$$(pwd)/data}/lerobot/svla_so100_pickplace" \
+	bash scripts/lerobot/download_artifacts.sh
+
+download-lerobot-fastwam-libero-dataset:
+	ARTIFACT_FAMILY=lerobot ARTIFACT_MANIFEST_NAME=lerobot_fastwam_libero_dataset_manifest.json \
+	LEROBOT_DATASET_REPO_ID=yuanty/LIBERO-fastwam \
+	LEROBOT_DATASET_LOCAL_DIR="$${EMBODIED_DATA_ROOT:-$$(pwd)/data}/lerobot/libero-fastwam/v2.1" \
 	bash scripts/lerobot/download_artifacts.sh
 
 download-lerobot-diffusion-pusht-policy:
@@ -146,6 +156,12 @@ download-data-interndata-a1:
 	ARTIFACT_FAMILY=open_data ARTIFACT_MANIFEST_NAME=open_data_interndata_a1_manifest.json \
 	LEROBOT_DATASET_REPO_ID=InternRobotics/InternData-A1 \
 	LEROBOT_DATASET_LOCAL_DIR="$${EMBODIED_DATA_ROOT:-$$(pwd)/data}/simulation/interndata-a1" \
+	bash scripts/lerobot/download_artifacts.sh
+
+download-custom-fastwam-libero-dataset:
+	ARTIFACT_FAMILY=custom_fastwam ARTIFACT_MANIFEST_NAME=custom_fastwam_libero_dataset_manifest.json \
+	LEROBOT_DATASET_REPO_ID=yuanty/LIBERO-fastwam \
+	LEROBOT_DATASET_LOCAL_DIR="$${EMBODIED_DATA_ROOT:-$$(pwd)/data}/custom/fastwam/libero-fastwam" \
 	bash scripts/lerobot/download_artifacts.sh
 
 download-fastwam-artifacts:
