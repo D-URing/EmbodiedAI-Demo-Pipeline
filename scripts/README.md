@@ -40,8 +40,7 @@ scripts/fastwam/
 ├── download_release_artifacts.sh
 ├── prepare_fastwam_overlay.sh
 ├── run_realrobot_train_eval.sh
-├── parse_train_log.py
-└── slurm_realrobot_pilot.sbatch
+└── parse_train_log.py
 ```
 
 训练入口见 [`../experiments/custom/fastwam_realrobot_smoke/`](../experiments/custom/fastwam_realrobot_smoke/)。
@@ -54,8 +53,7 @@ scripts/fastwam/
 scripts/imagewam/
 ├── prepare_imagewam_upstream.sh
 ├── download_artifacts.sh
-├── run_train_eval.sh
-└── slurm_libero_pilot.sbatch
+└── run_train_eval.sh
 ```
 
 下载 / upstream target：

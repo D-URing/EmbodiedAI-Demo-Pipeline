@@ -115,7 +115,7 @@ scripts/lerobot/run_dataset_smoke.sh
 现有：
 
 ```bash
-make lerobot-train-smoke
+bash experiments/lerobot/pusht_act_smoke/launch.sh
 ```
 
 已具备：
@@ -133,7 +133,7 @@ make lerobot-train-smoke
 已新增：
 
 ```bash
-make lerobot-infer-smoke
+bash experiments/lerobot/diffusion_pusht_infer/launch.sh
 ```
 
 目标：
@@ -158,7 +158,7 @@ scripts/lerobot/run_inference_smoke.sh
 已新增本地报告生成入口：
 
 ```bash
-make demo-chain-lerobot-fastwam
+python scripts/lerobot/generate_data_to_inference_report.py
 ```
 
 目标：
@@ -172,7 +172,7 @@ make demo-chain-lerobot-fastwam
 ```bash
 LEROBOT_DATASET_PROFILE=runs/lerobot_native/<run>/dataset_profile.json \
 LEROBOT_INFERENCE_EVIDENCE=runs/lerobot_native/<run>/inference_evidence.json \
-make demo-chain-lerobot-fastwam
+python scripts/lerobot/generate_data_to_inference_report.py
 ```
 
 ## 6. 自建模型管线是否还需要？
@@ -200,9 +200,9 @@ Shared evidence/report contract above both paths
 | 已有工作 | 新定位 |
 |---|---|
 | `make lerobot-data-smoke` | LeRobot-first 主线的 dataset inspection |
-| `make lerobot-train-smoke` | LeRobot-first 主线的 training smoke |
-| `make lerobot-infer-smoke` | LeRobot-first 主线的 offline inference smoke |
-| `make demo-chain-lerobot-fastwam` | dataset/inference/training evidence 的报告入口 |
+| `bash experiments/lerobot/pusht_act_smoke/launch.sh` | LeRobot-first 主线的 training smoke |
+| `bash experiments/lerobot/diffusion_pusht_infer/launch.sh` | LeRobot-first 主线的 offline inference smoke |
+| `python scripts/lerobot/generate_data_to_inference_report.py` | dataset/inference/training evidence 的报告入口 |
 | FastWAM realrobot overlay | custom FastWAM / future self-built model extension |
 | `embodied-demo report-fastwam` | training evidence importer，可复用到 LeRobot-native FastWAM |
 | 四个 household mock demo | application/evaluation layer，用于后续任务展示和报告，不是主线第一验收 |

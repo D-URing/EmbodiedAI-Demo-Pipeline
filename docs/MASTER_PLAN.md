@@ -1321,4 +1321,4 @@ GPU/simulator 测试放入 nightly 或手动 release pipeline。
 - 接受 ADR-0003：项目第一主线调整为 LeRobot-first data-to-inference pipeline。
 - FastWAM 改为双路径定位：LeRobot-native policy path 优先，私有 overlay 作为 custom backend / 自建模型扩展。
 - 新增 [`LEROBOT_FIRST_PIPELINE.md`](LEROBOT_FIRST_PIPELINE.md) 和 `demo_chains/lerobot_fastwam_data_to_inference_v0.yaml`。
-- 下一步优先实现 `lerobot-data-smoke`、`lerobot-infer-smoke` 和 LeRobot/FastWAM evidence report。
+- 下一步优先实现 LeRobot dataset inspection、LeRobot inference experiment 和 LeRobot/FastWAM evidence report。

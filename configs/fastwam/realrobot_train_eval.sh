@@ -48,9 +48,10 @@ export FASTWAM_WANDB_ENABLE="${FASTWAM_WANDB_ENABLE:-false}"
 export FASTWAM_MASTER_ADDR="${FASTWAM_MASTER_ADDR:-${MASTER_ADDR:-127.0.0.1}}"
 export FASTWAM_MASTER_PORT="${FASTWAM_MASTER_PORT:-${MASTER_PORT:-29500}}"
 
-# Run artifact mirror owned by this demo pipeline. FastWAM still writes its native
-# checkpoints under FASTWAM_WORKDIR/runs/<task>/<run_id>/.
-export FASTWAM_RUN_ROOT="${FASTWAM_RUN_ROOT:-$EMBODIED_REPO_ROOT/runs/fastwam}"
+# Manual run artifact mirror owned by this demo pipeline. Experiment launchers
+# override this to runs/experiments/custom/<experiment>/.
+# FastWAM still writes its native checkpoints under FASTWAM_WORKDIR/runs/<task>/<run_id>/.
+export FASTWAM_RUN_ROOT="${FASTWAM_RUN_ROOT:-$EMBODIED_REPO_ROOT/runs/manual/fastwam}"
 export FASTWAM_RUN_NAME="${FASTWAM_RUN_NAME:-realrobot_${FASTWAM_RECIPE}_${FASTWAM_MODE}}"
 export FASTWAM_RUN_ID="${FASTWAM_RUN_ID:-}"
 

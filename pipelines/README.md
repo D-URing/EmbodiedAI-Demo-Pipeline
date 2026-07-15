@@ -17,4 +17,4 @@
 - `data/` 和 `models/` 是根目录全局资产池，各 pipeline 自行选择需要的 dataset/model；
 - `hf_cache/`、`runs/`、`upstreams/` 是本地/集群 ignored 目录，不提交 Git。
 
-历史入口 [`custom_fastwam/`](custom_fastwam/) 和 [`custom_wam/`](custom_wam/) 保留用于兼容旧文档；新后端统一放入 `custom/<backend>/`。
+新后端统一放入 `custom/<backend>/`。不要再新增兼容型 pipeline 目录。

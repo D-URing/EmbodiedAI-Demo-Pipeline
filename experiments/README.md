@@ -17,8 +17,11 @@
 experiments/
 ├── lerobot/
 │   ├── pusht_act_smoke/
+│   ├── pusht_diffusion_train/
 │   ├── smolvla_so100_8gpu_long/
-│   └── diffusion_pusht_infer/
+│   ├── diffusion_pusht_infer/
+│   ├── smolvla_so100_infer/
+│   └── fastwam_libero_infer/
 └── custom/
     ├── fastwam_realrobot_smoke/
     └── imagewam_flux2_4b_libero_pilot/
@@ -41,7 +44,9 @@ make download-imagewam-flux2-base
 
 ```bash
 bash experiments/lerobot/pusht_act_smoke/launch.sh
+bash experiments/lerobot/pusht_diffusion_train/launch.sh
 bash experiments/lerobot/smolvla_so100_8gpu_long/launch.sh
+bash experiments/lerobot/diffusion_pusht_infer/launch.sh
 bash experiments/custom/fastwam_realrobot_smoke/launch.sh
 bash experiments/custom/imagewam_flux2_4b_libero_pilot/launch.sh
 ```

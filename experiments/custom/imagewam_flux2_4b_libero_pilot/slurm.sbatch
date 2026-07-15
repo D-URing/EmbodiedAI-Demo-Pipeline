@@ -25,9 +25,4 @@ if command -v conda >/dev/null 2>&1; then
   conda activate "${IMAGEWAM_CONDA_ENV:-imagewam}"
 fi
 
-export IMAGEWAM_MODE="${IMAGEWAM_MODE:-pilot}"
-export IMAGEWAM_VARIANT="${IMAGEWAM_VARIANT:-flux2_4b}"
-export IMAGEWAM_TASK_TYPE="${IMAGEWAM_TASK_TYPE:-libero}"
-export IMAGEWAM_PRECOMPUTE_CACHE="${IMAGEWAM_PRECOMPUTE_CACHE:-true}"
-
-bash scripts/imagewam/run_train_eval.sh configs/imagewam/libero_train_eval.sh
+bash experiments/custom/imagewam_flux2_4b_libero_pilot/launch.sh

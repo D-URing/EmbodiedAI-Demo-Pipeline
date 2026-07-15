@@ -78,7 +78,7 @@ def test_training_evidence_contract() -> None:
     evidence = TrainingEvidence(
         backend="fastwam-realrobot",
         run_id="20260713-200000",
-        source_run_dir="runs/fastwam/demo/20260713-200000",
+        source_run_dir="runs/experiments/custom/fastwam_realrobot_smoke/20260713-200000",
         parsed_train_count=4,
         initial_loss=1.4862,
         final_loss=0.701,

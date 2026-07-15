@@ -162,7 +162,7 @@ sources:
       - claiming_libero_or_robotwin_success_rate_without_sim_eval
 
   fastwam_realrobot_pipeline:
-    role: internal_custom_fastwam_realrobot_overlay
+    role: internal_fastwam_realrobot_overlay
     repository: https://github.com/D-URing/fastwam-realrobot-pipeline.git
     private: true
     default_branch: main

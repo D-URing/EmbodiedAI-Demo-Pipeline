@@ -62,7 +62,7 @@ models:
     smoke_targets:
       - make lerobot-data-smoke
       - bash scripts/lerobot/run_inference_smoke.sh configs/lerobot/infer/fastwam_libero.sh
-      - make demo-chain-lerobot-fastwam
+      - python scripts/lerobot/generate_data_to_inference_report.py
     download_targets:
       - DOWNLOAD_LEROBOT_DATASET=0 DOWNLOAD_LEROBOT_POLICY=1 LEROBOT_POLICY_REPO_ID=<fastwam-lerobot-repo> make download-lerobot-artifacts
     artifact_location:
@@ -160,7 +160,7 @@ models:
     notes:
       - Do not put this in first acceptance; keep as the next heavy VLA candidate.
 
-  custom_fastwam_realrobot_overlay:
+  fastwam_realrobot_custom_backend:
     status: implemented_scaffold
     path_type: custom_backend
     upstream: yuantianyuan01/FastWAM
@@ -169,7 +169,7 @@ models:
     smoke_targets:
       - bash experiments/custom/fastwam_realrobot_smoke/launch.sh
       - FASTWAM_MODE=pilot FASTWAM_RECIPE=joint_base bash experiments/custom/fastwam_realrobot_smoke/launch.sh
-      - make demo-chain-fastwam
+      - embodied-demo report-fastwam
     download_targets:
       - make download-fastwam-artifacts
       - HF_ENDPOINT=https://hf-mirror.com bash /home/scut/hfd.sh yuanty/LIBERO-fastwam --dataset --local-dir "$EMBODIED_DATA_ROOT/fastwam/libero-fastwam" --tool aria2c -x 10 -j 4

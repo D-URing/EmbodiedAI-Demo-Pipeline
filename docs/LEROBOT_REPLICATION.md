@@ -9,7 +9,7 @@
 
 ```bash
 bash scripts/lerobot/install_lerobot_cluster.sh
-make lerobot-train-smoke
+bash experiments/lerobot/pusht_act_smoke/launch.sh
 ```
 
 它会调用官方 `lerobot-train`，默认训练：
@@ -26,8 +26,8 @@ policy.device   = cuda
 
 ```bash
 make lerobot-data-smoke
-make lerobot-infer-smoke
-make demo-chain-lerobot-fastwam
+bash experiments/lerobot/diffusion_pusht_infer/launch.sh
+python scripts/lerobot/generate_data_to_inference_report.py
 ```
 
 FastWAM 在新主线中优先走 LeRobot-native policy path；私有 `fastwam-realrobot-pipeline` 继续作为 custom overlay 保留。
@@ -79,7 +79,7 @@ bash scripts/lerobot/install_lerobot_cluster.sh
 ## 训练 smoke
 
 ```bash
-make lerobot-train-smoke
+bash experiments/lerobot/pusht_act_smoke/launch.sh
 ```
 
 SCUT `gpu11` 默认使用：
@@ -123,14 +123,14 @@ runs/lerobot/pusht_act_gpu_smoke/<run_id>/
 未知集群的分区、镜像和模块系统差异很大，所以当前只给可改模板：
 
 ```bash
-sbatch scripts/lerobot/slurm_pusht_act_gpu_smoke.sbatch
+sbatch experiments/lerobot/pusht_act_smoke/launch.sh
 ```
 
 如需覆盖训练步数：
 
 ```bash
 LEROBOT_STEPS=2000 LEROBOT_BATCH_SIZE=16 \
-sbatch scripts/lerobot/slurm_pusht_act_gpu_smoke.sbatch
+sbatch experiments/lerobot/pusht_act_smoke/launch.sh
 ```
 
 ## 边界

@@ -76,5 +76,5 @@ def test_fastwam_config_uses_repo_local_artifact_roots() -> None:
 
     assert 'FASTWAM_CACHE_ROOT="${FASTWAM_CACHE_ROOT:-$EMBODIED_REPO_ROOT/upstreams}"' in config
     assert 'FASTWAM_MODEL_BASE="${FASTWAM_MODEL_BASE:-$EMBODIED_REPO_ROOT/models}"' in config
-    assert 'FASTWAM_RUN_ROOT="${FASTWAM_RUN_ROOT:-$EMBODIED_REPO_ROOT/runs/fastwam}"' in config
+    assert 'FASTWAM_RUN_ROOT="${FASTWAM_RUN_ROOT:-$EMBODIED_REPO_ROOT/runs/manual/fastwam}"' in config
     assert "$EMBODIED_REPO_ROOT/checkpoints/fastwam/ActionDiT" in config

@@ -1,8 +1,6 @@
 # Custom WAM / FastWAM
 
-这是 FastWAM 在 `custom` 结构下的规范入口。
-
-历史兼容入口仍保留在 [`../../custom_fastwam/`](../../custom_fastwam/)，但后续文档和新增后端都以 `custom/<backend>` 为准。
+这是 FastWAM 在 `custom` 结构下的规范入口。后续新自研/自定义后端都按 `pipelines/custom/<backend>` 接入。
 
 ## 当前定位
 
@@ -22,9 +20,9 @@ configs/fastwam/realrobot_train_eval.sh
 scripts/fastwam/download_release_artifacts.sh
 scripts/fastwam/prepare_fastwam_overlay.sh
 scripts/fastwam/run_realrobot_train_eval.sh
-scripts/fastwam/slurm_realrobot_pilot.sbatch
+experiments/custom/fastwam_realrobot_smoke/slurm.sbatch
 experiments/custom/fastwam_realrobot_smoke/
-pipelines/custom_fastwam/README.md
+pipelines/custom/fastwam/README.md
 docs/FASTWAM_REALROBOT_INTEGRATION.md
 ```
 

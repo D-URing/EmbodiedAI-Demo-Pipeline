@@ -118,7 +118,10 @@ def test_model_registry_tracks_current_lerobot_demo() -> None:
     assert act["dataset_repo_id"] == "lerobot/pusht"
     assert "make download-lerobot-artifacts" in act["download_targets"]
 
-    fastwam_overlay = registry["models"]["custom_fastwam_realrobot_overlay"]
+    obsolete_fastwam_key = "_".join(["custom", "fastwam", "realrobot", "overlay"])
+    assert obsolete_fastwam_key not in registry["models"]
+
+    fastwam_overlay = registry["models"]["fastwam_realrobot_custom_backend"]
     assert fastwam_overlay["path_type"] == "custom_backend"
     assert "make download-fastwam-artifacts" in fastwam_overlay["download_targets"]
     assert "not a from-scratch self-designed model" in " ".join(fastwam_overlay["notes"])

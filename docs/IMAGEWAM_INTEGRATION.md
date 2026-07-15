@@ -1,6 +1,6 @@
 # ImageWAM Integration Plan
 
-ImageWAM 是 custom WAM 线路里的第二个后端，和 FastWAM 并列，不作为 `custom_fastwam` 的子功能。
+ImageWAM 是 custom WAM 线路里的第二个后端，和 FastWAM 并列，入口固定在 `pipelines/custom/imagewam/`。
 
 ## 项目定位
 
@@ -23,8 +23,7 @@ configs/imagewam/libero_train_eval.sh
 scripts/imagewam/
 ├── prepare_imagewam_upstream.sh
 ├── download_artifacts.sh
-├── run_train_eval.sh
-└── slurm_libero_pilot.sbatch
+└── run_train_eval.sh
 experiments/custom/imagewam_flux2_4b_libero_pilot/
 models/imagewam/
 upstreams/ImageWAM/
@@ -64,7 +63,7 @@ bash experiments/custom/imagewam_flux2_4b_libero_pilot/launch.sh
 SLURM：
 
 ```bash
-sbatch scripts/imagewam/slurm_libero_pilot.sbatch  # legacy wrapper
+sbatch experiments/custom/imagewam_flux2_4b_libero_pilot/slurm.sbatch  # legacy wrapper
 ```
 
 ## 资产约定

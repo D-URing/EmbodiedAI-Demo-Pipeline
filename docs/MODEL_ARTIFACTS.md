@@ -21,9 +21,9 @@ policy class    = lerobot.policies.act.modeling_act.ACTPolicy
 | 环节 | 当前状态 |
 |---|---|
 | dataset smoke | 已有入口：`make lerobot-data-smoke` |
-| training smoke | 已有入口：`make lerobot-train-smoke` |
-| offline inference smoke | 已有入口：`make lerobot-infer-smoke` |
-| report | 已有入口：`make demo-chain-lerobot-fastwam` |
+| training smoke | 已有入口：`bash experiments/lerobot/pusht_act_smoke/launch.sh` |
+| offline inference smoke | 已有入口：`bash experiments/lerobot/diffusion_pusht_infer/launch.sh` |
+| report | 已有入口：`python scripts/lerobot/generate_data_to_inference_report.py` |
 | 大文件下载 | 默认禁用，`LEROBOT_ALLOW_DOWNLOAD=0` |
 | 真实闭环 | 未声明 |
 
@@ -159,7 +159,7 @@ DOWNLOAD_LEROBOT_POLICY=1 \
 make download-lerobot-artifacts
 ```
 
-当前仓库不默认绑定 ACT/PushT 的预训练 policy repo；如果没有明确 checkpoint，优先通过 `make lerobot-train-smoke` 训练一个本地 checkpoint，再进入 inference smoke。
+当前仓库不默认绑定 ACT/PushT 的预训练 policy repo；如果没有明确 checkpoint，优先通过 `bash experiments/lerobot/pusht_act_smoke/launch.sh` 训练一个本地 checkpoint，再进入 inference smoke。
 
 ### Dataset smoke
 
@@ -180,7 +180,7 @@ LEROBOT_ALLOW_DOWNLOAD=1 make lerobot-data-smoke
 ### Train smoke
 
 ```bash
-make lerobot-train-smoke
+bash experiments/lerobot/pusht_act_smoke/launch.sh
 ```
 
 默认是：
@@ -198,7 +198,7 @@ policy.device=cuda
 ```bash
 export LEROBOT_POLICY_PATH="$EMBODIED_MODEL_ROOT/lerobot/act/pusht/<checkpoint-or-pretrained-dir>"
 export LEROBOT_DATASET_ROOT="$EMBODIED_DATA_ROOT/lerobot/pusht"
-make lerobot-infer-smoke
+bash experiments/lerobot/diffusion_pusht_infer/launch.sh
 ```
 
 注意：`LEROBOT_POLICY_PATH` 必须是本地路径。脚本不会默认下载 checkpoint。

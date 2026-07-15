@@ -77,7 +77,7 @@ make download-lerobot-fastwam-libero-policy
 ```bash
 export LEROBOT_STEPS=1000
 export LEROBOT_BATCH_SIZE=8
-make lerobot-train-act
+bash experiments/lerobot/pusht_act_smoke/launch.sh
 ```
 
 训练 Diffusion：
@@ -85,7 +85,7 @@ make lerobot-train-act
 ```bash
 export LEROBOT_STEPS=1000
 export LEROBOT_BATCH_SIZE=8
-make lerobot-train-diffusion
+bash experiments/lerobot/pusht_diffusion_train/launch.sh
 ```
 
 Fine-tune SmolVLA：
@@ -93,7 +93,7 @@ Fine-tune SmolVLA：
 ```bash
 export LEROBOT_STEPS=2000
 export LEROBOT_BATCH_SIZE=8
-make lerobot-train-smolvla
+bash experiments/lerobot/smolvla_so100_8gpu_long/launch.sh
 ```
 
 如果显存压力偏大，优先降 batch size：
@@ -101,7 +101,7 @@ make lerobot-train-smolvla
 ```bash
 export LEROBOT_BATCH_SIZE=2
 export LEROBOT_NUM_WORKERS=2
-make lerobot-train-smolvla
+bash experiments/lerobot/smolvla_so100_8gpu_long/launch.sh
 ```
 
 ## 单机八卡长期实验
@@ -111,7 +111,7 @@ make lerobot-train-smolvla
 ```text
 configs/lerobot/train/svla_so100_smolvla_8gpu_long.sh
 scripts/lerobot/run_train_accelerate.sh
-scripts/lerobot/slurm_smolvla_8gpu_long.sbatch
+experiments/lerobot/smolvla_so100_8gpu_long/slurm.sbatch
 ```
 
 交互式启动：
@@ -122,13 +122,13 @@ export LEROBOT_BATCH_SIZE=8
 export LEROBOT_NUM_PROCESSES=8
 export LEROBOT_SAVE_FREQ=1000
 
-make lerobot-train-8gpu-smolvla
+bash experiments/lerobot/smolvla_so100_8gpu_long/launch.sh
 ```
 
 Slurm 启动：
 
 ```bash
-sbatch scripts/lerobot/slurm_smolvla_8gpu_long.sbatch
+sbatch experiments/lerobot/smolvla_so100_8gpu_long/slurm.sbatch
 ```
 
 长期实验输出：
@@ -150,7 +150,7 @@ export LEROBOT_RESUME=1
 export LEROBOT_RESUME_CONFIG_PATH="$PROJECT/runs/lerobot/<run>/<id>/lerobot_output/checkpoints/<step>/train_config.json"
 export LEROBOT_OUTPUT_DIR="$PROJECT/runs/lerobot/<run>/<id>/lerobot_output"
 
-make lerobot-train-8gpu-smolvla
+bash experiments/lerobot/smolvla_so100_8gpu_long/launch.sh
 ```
 
 恢复时尽量保持 `LEROBOT_NUM_PROCESSES` 和 `LEROBOT_BATCH_SIZE` 不变，否则 LeRobot 会提示样本顺序不完全一致。
@@ -165,22 +165,22 @@ export LEROBOT_DATASET_ROOT="$PROJECT/data/lerobot/pusht"
 export LEROBOT_POLICY_TYPE=diffusion
 export LEROBOT_POLICY_CLASS=lerobot.policies.diffusion.modeling_diffusion.DiffusionPolicy
 export LEROBOT_POLICY_PATH="$PROJECT/models/lerobot/diffusion/diffusion_pusht"
-make lerobot-infer-smoke
+bash experiments/lerobot/diffusion_pusht_infer/launch.sh
 ```
 
 也可以使用固化 profile：
 
 ```bash
-make lerobot-infer-diffusion
-make lerobot-infer-smolvla
-make lerobot-infer-fastwam
+bash experiments/lerobot/diffusion_pusht_infer/launch.sh
+bash experiments/lerobot/smolvla_so100_infer/launch.sh
+bash experiments/lerobot/fastwam_libero_infer/launch.sh
 ```
 
 FastWAM 推理注意：当前 `data/fastwam/libero-fastwam` 是 LeRobot v2.1，当前 LeRobot loader 需要 v3。先转换一个 subset，再覆盖：
 
 ```bash
 export LEROBOT_DATASET_ROOT="$PROJECT/data/fastwam/libero-fastwam/<converted_v3_subset>"
-make lerobot-infer-fastwam
+bash experiments/lerobot/fastwam_libero_infer/launch.sh
 ```
 
 训练产物推理时，把 `LEROBOT_POLICY_PATH` 指向对应 run 的 `lerobot_output/checkpoints/...` 或最终整理后的 `models/lerobot/<policy>/<name>`。

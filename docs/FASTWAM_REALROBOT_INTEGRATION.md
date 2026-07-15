@@ -16,7 +16,7 @@ demo pipeline config
   -> FastWAM overlay workspace
   -> CUDA/DeepSpeed/Accelerate training
   -> native FastWAM checkpoints
-  -> pipeline runs/fastwam/* 统一归档
+  -> runs/experiments/custom/fastwam_realrobot_smoke/* 统一归档
   -> loss_summary.json / loss_report.md 回答 loss 是否下降
 ```
 
@@ -142,7 +142,7 @@ bash scripts/fastwam/run_realrobot_train_eval.sh
 Slurm 集群可从模板开始：
 
 ```bash
-sbatch scripts/fastwam/slurm_realrobot_pilot.sbatch
+sbatch experiments/custom/fastwam_realrobot_smoke/slurm.sbatch
 ```
 
 如果不是 Slurm，直接在调度器命令里执行 `scripts/fastwam/run_realrobot_train_eval.sh` 即可；不要把集群私有参数写进仓库。
@@ -166,7 +166,7 @@ sbatch scripts/fastwam/slurm_realrobot_pilot.sbatch
 ```bash
 FASTWAM_TASK_NAME=real_robot_joint_2cam224_v6_codebook \
 FASTWAM_MODE=pilot \
-bash scripts/fastwam/run_realrobot_train_eval.sh
+bash experiments/custom/fastwam_realrobot_smoke/launch.sh
 ```
 
 ## 7. 产物结构
@@ -174,7 +174,7 @@ bash scripts/fastwam/run_realrobot_train_eval.sh
 本仓库镜像产物：
 
 ```text
-runs/fastwam/<run_name>/<run_id>/
+runs/experiments/custom/fastwam_realrobot_smoke/<run_id>/
 ├── backend_manifest.json
 ├── command.txt
 ├── fastwam_native_output_dir.txt
@@ -210,13 +210,13 @@ $FASTWAM_WORKDIR/runs/<task_name>/<run_id>/
 FastWAM 训练完成后，用本仓库的统一 importer 把训练 run 变成交付 evidence：
 
 ```bash
-embodied-demo report-fastwam --run-dir runs/fastwam/<run_name>/<run_id>
+embodied-demo report-fastwam --run-dir runs/experiments/custom/fastwam_realrobot_smoke/<run_id>
 ```
 
 或者：
 
 ```bash
-FASTWAM_RUN_DIR=runs/fastwam/<run_name>/<run_id> make demo-chain-fastwam
+FASTWAM_RUN_DIR=runs/experiments/custom/fastwam_realrobot_smoke/<run_id> embodied-demo report-fastwam
 ```
 
 默认输出：
@@ -237,7 +237,7 @@ runs/demo_chains/fastwam_realrobot_v0/<run_id>/
 
 ```bash
 embodied-demo report-fastwam \
-  --run-dir runs/fastwam/<run_name>/<run_id> \
+  --run-dir runs/experiments/custom/fastwam_realrobot_smoke/<run_id> \
   --mock-run-dir runs/tabletop_sorting_mock/tabletop_sorting_mock-seed0-episode000 \
   --mock-run-dir runs/towel_folding_mock/towel_folding_mock-seed0-episode000
 ```

@@ -32,8 +32,8 @@ tiers:
         download_target: make download-lerobot-svla-so100-pickplace-dataset
         status: planned_download
 
-  immediate_custom_fastwam:
-    description: Release data for the custom/FastWAM route.
+  immediate_fastwam_backend:
+    description: Release data for the FastWAM custom backend route.
     datasets:
       - id: yuanty/LIBERO-fastwam
         local_dir: data/fastwam/libero-fastwam

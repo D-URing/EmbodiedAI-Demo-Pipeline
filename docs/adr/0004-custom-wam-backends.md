@@ -6,7 +6,7 @@
 
 ## 背景
 
-项目原先只有 `pipelines/custom_fastwam/`，适合解释 FastWAM overlay，但随着 ImageWAM 进入范围，继续把所有 custom 模型塞进 FastWAM 目录会让结构失真。
+项目原先只有一个 FastWAM-only custom pipeline，适合解释 FastWAM overlay，但随着 ImageWAM 进入范围，继续把所有 custom 模型塞进 FastWAM 目录会让结构失真。
 
 ## 决策
 
@@ -18,7 +18,7 @@ pipelines/custom/
 └── imagewam/
 ```
 
-保留 `pipelines/custom_fastwam/` 和 `pipelines/custom_wam/` 作为兼容入口，避免已有文档和命令断掉。
+旧兼容目录不再保留。唯一 canonical 入口是 `pipelines/custom/<backend>/`。
 
 ## 影响
 

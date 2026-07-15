@@ -67,6 +67,6 @@ working.
 - Add `docs/LEROBOT_FIRST_PIPELINE.md` as the new implementation target.
 - Add a LeRobot-first demo-chain spec for dataset inspection, training/loading,
   inference, and reporting.
-- Implement `lerobot-data-smoke` and `lerobot-infer-smoke` before adding more
+- Implement LeRobot dataset inspection and inference experiment before adding more
   household mock tasks.
 - Reframe FastWAM docs around two paths: LeRobot-native and custom overlay.

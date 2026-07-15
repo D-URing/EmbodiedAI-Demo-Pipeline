@@ -288,7 +288,7 @@ FASTWAM_MODE=pilot FASTWAM_RECIPE=joint_base \
 bash scripts/fastwam/run_realrobot_train_eval.sh
 ```
 
-结果会写到 `runs/fastwam/.../loss_summary.json`。FastWAM 原生 checkpoint 仍保留在 `$FASTWAM_WORKDIR/runs/<task>/<run_id>/`，本仓库只记录路径和摘要。
+结果会写到 `runs/experiments/custom/fastwam_realrobot_smoke/.../loss_summary.json`。FastWAM 原生 checkpoint 仍保留在 `$FASTWAM_WORKDIR/runs/<task>/<run_id>/`，本仓库只记录路径和摘要。
 
 ## 6. 配置开关
 

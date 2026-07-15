@@ -42,7 +42,6 @@ Household/mock demo 仍保留，但它是应用展示层，不是当前训练能
 ├── pipelines/
 │   ├── lerobot/          # LeRobot 主线：dataset -> train/load -> inference -> report
 │   ├── custom/           # 自拟/custom WAM 后端族：FastWAM / ImageWAM / future backends
-│   └── custom_fastwam/   # 兼容入口：历史 FastWAM 说明
 ├── experiments/          # 训练/推理启动入口：config.sh + launch.sh + 可选 slurm.sbatch
 ├── configs/
 │   ├── lerobot/          # LeRobot 配置
@@ -90,8 +89,8 @@ make validate
 运行 mock demo：
 
 ```bash
-make demo
-make demo-extended
+embodied-demo run --config configs/runs/tabletop_sorting_mock.yaml
+embodied-demo run --config configs/runs/towel_folding_mock.yaml
 ```
 
 产物写到：

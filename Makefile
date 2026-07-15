@@ -1,11 +1,8 @@
 PYTHON ?= python3.11
 VENV ?= .venv
 CONSTRAINTS ?= requirements/constraints-py311.txt
-LEROBOT_TRAIN_CONFIG ?= configs/lerobot/pusht_act_gpu_smoke.sh
-LEROBOT_ACCELERATE_CONFIG ?= configs/lerobot/train/svla_so100_smolvla_8gpu_long.sh
-LEROBOT_INFER_CONFIG ?= configs/lerobot/native_pusht_act_pipeline.sh
 
-.PHONY: help setup doctor test validate dry-run demo demo-extended download-lerobot-artifacts download-lerobot-pusht-dataset download-lerobot-svla-so100-pickplace-dataset download-lerobot-diffusion-pusht-policy download-lerobot-smolvla-base-policy download-lerobot-fastwam-libero-policy download-data-rovid20k download-data-rovidx download-data-mdm-depth download-data-xperience10m-sample download-data-abc130k download-data-agibotworld-alpha download-data-interndata-a1 download-fastwam-artifacts prepare-imagewam-upstream download-imagewam-artifacts download-imagewam-flux2-base lerobot-check-scripts fastwam-check-scripts imagewam-check-scripts experiments-check-scripts lerobot-data-smoke lerobot-train-smoke lerobot-train-act lerobot-train-diffusion lerobot-train-smolvla lerobot-train-8gpu-smolvla lerobot-infer-smoke lerobot-infer-diffusion lerobot-infer-smolvla lerobot-infer-fastwam demo-chain-lerobot-fastwam fastwam-train-smoke demo-chain-fastwam imagewam-train-smoke schemas reference-fetch clean
+.PHONY: help setup doctor test validate download-lerobot-artifacts download-lerobot-pusht-dataset download-lerobot-svla-so100-pickplace-dataset download-lerobot-diffusion-pusht-policy download-lerobot-smolvla-base-policy download-lerobot-fastwam-libero-policy download-data-rovid20k download-data-rovidx download-data-mdm-depth download-data-xperience10m-sample download-data-abc130k download-data-agibotworld-alpha download-data-interndata-a1 download-fastwam-artifacts prepare-imagewam-upstream download-imagewam-artifacts download-imagewam-flux2-base lerobot-check-scripts fastwam-check-scripts imagewam-check-scripts experiments-check-scripts lerobot-data-smoke schemas reference-fetch clean
 
 help:
 	@echo "EmbodiedAI Demo Pipeline"
@@ -69,17 +66,6 @@ validate:
 	$(VENV)/bin/embodied-demo validate --config configs/runs/towel_folding_mock.yaml
 	$(VENV)/bin/embodied-demo validate --config configs/runs/kitchen_counter_sorting_mock.yaml
 	$(VENV)/bin/embodied-demo validate --config configs/runs/drawer_pick_place_mock.yaml
-
-dry-run:
-	$(VENV)/bin/embodied-demo dry-run --config configs/runs/tabletop_sorting_mock.yaml --output runs/tabletop_sorting/resolved.yaml
-
-demo:
-	$(VENV)/bin/embodied-demo run --config configs/runs/tabletop_sorting_mock.yaml
-	$(VENV)/bin/embodied-demo run --config configs/runs/towel_folding_mock.yaml
-
-demo-extended: demo
-	$(VENV)/bin/embodied-demo run --config configs/runs/kitchen_counter_sorting_mock.yaml
-	$(VENV)/bin/embodied-demo run --config configs/runs/drawer_pick_place_mock.yaml
 
 download-lerobot-artifacts:
 	bash scripts/lerobot/download_artifacts.sh
@@ -184,8 +170,6 @@ lerobot-check-scripts:
 	bash -n scripts/lerobot/run_dataset_smoke.sh
 	bash -n scripts/lerobot/run_inference_smoke.sh
 	bash -n scripts/lerobot/run_train_accelerate.sh
-	bash -n scripts/lerobot/slurm_pusht_act_gpu_smoke.sbatch
-	bash -n scripts/lerobot/slurm_smolvla_8gpu_long.sbatch
 	bash -n configs/lerobot/train/pusht_act.sh
 	bash -n configs/lerobot/train/pusht_diffusion.sh
 	bash -n configs/lerobot/train/svla_so100_smolvla.sh
@@ -200,65 +184,21 @@ lerobot-check-scripts:
 lerobot-data-smoke:
 	bash scripts/lerobot/run_dataset_smoke.sh
 
-lerobot-train-smoke:
-	bash scripts/lerobot/run_pusht_act_gpu_smoke.sh $(LEROBOT_TRAIN_CONFIG)
-
-lerobot-train-act:
-	bash scripts/lerobot/run_pusht_act_gpu_smoke.sh configs/lerobot/train/pusht_act.sh
-
-lerobot-train-diffusion:
-	bash scripts/lerobot/run_pusht_act_gpu_smoke.sh configs/lerobot/train/pusht_diffusion.sh
-
-lerobot-train-smolvla:
-	bash scripts/lerobot/run_pusht_act_gpu_smoke.sh configs/lerobot/train/svla_so100_smolvla.sh
-
-lerobot-train-8gpu-smolvla:
-	bash scripts/lerobot/run_train_accelerate.sh $(LEROBOT_ACCELERATE_CONFIG)
-
-lerobot-infer-smoke:
-	bash scripts/lerobot/run_inference_smoke.sh $(LEROBOT_INFER_CONFIG)
-
-lerobot-infer-diffusion:
-	bash scripts/lerobot/run_inference_smoke.sh configs/lerobot/infer/pusht_diffusion.sh
-
-lerobot-infer-smolvla:
-	bash scripts/lerobot/run_inference_smoke.sh configs/lerobot/infer/svla_so100_smolvla.sh
-
-lerobot-infer-fastwam:
-	bash scripts/lerobot/run_inference_smoke.sh configs/lerobot/infer/fastwam_libero.sh
-
-demo-chain-lerobot-fastwam:
-	test -n "$(LEROBOT_DATASET_PROFILE)" || (echo "LEROBOT_DATASET_PROFILE is required" >&2; exit 2)
-	test -n "$(LEROBOT_INFERENCE_EVIDENCE)" || (echo "LEROBOT_INFERENCE_EVIDENCE is required" >&2; exit 2)
-	$(VENV)/bin/python scripts/lerobot/generate_data_to_inference_report.py --dataset-profile "$(LEROBOT_DATASET_PROFILE)" --inference-evidence "$(LEROBOT_INFERENCE_EVIDENCE)" $(if $(LEROBOT_TRAINING_SUMMARY),--training-summary "$(LEROBOT_TRAINING_SUMMARY)",) --output-dir "$(if $(OUTPUT_DIR),$(OUTPUT_DIR),build/lerobot-chain-report)"
-
 fastwam-check-scripts:
 	bash -n scripts/fastwam/prepare_fastwam_overlay.sh
 	bash -n scripts/fastwam/download_release_artifacts.sh
 	bash -n scripts/fastwam/run_realrobot_train_eval.sh
-	bash -n scripts/fastwam/slurm_realrobot_pilot.sbatch
 	$(VENV)/bin/python scripts/fastwam/parse_train_log.py --log tests/fixtures/fastwam_train_stdout.log --output-dir build/fastwam-parser-test
-
-fastwam-train-smoke:
-	FASTWAM_MODE=smoke bash scripts/fastwam/run_realrobot_train_eval.sh
-
-demo-chain-fastwam:
-	test -n "$(FASTWAM_RUN_DIR)" || (echo "FASTWAM_RUN_DIR is required, e.g. FASTWAM_RUN_DIR=runs/fastwam/<run>/<id> make demo-chain-fastwam" >&2; exit 2)
-	$(VENV)/bin/embodied-demo report-fastwam --run-dir "$(FASTWAM_RUN_DIR)" $(if $(OUTPUT_DIR),--output-dir "$(OUTPUT_DIR)",) $(if $(MOCK_RUN_DIR),--mock-run-dir "$(MOCK_RUN_DIR)",)
 
 imagewam-check-scripts:
 	bash -n configs/imagewam/libero_train_eval.sh
 	bash -n scripts/imagewam/prepare_imagewam_upstream.sh
 	bash -n scripts/imagewam/download_artifacts.sh
 	bash -n scripts/imagewam/run_train_eval.sh
-	bash -n scripts/imagewam/slurm_libero_pilot.sbatch
 
 experiments-check-scripts:
 	find experiments -name '*.sh' -print0 | xargs -0 -n 1 bash -n
 	find experiments -name '*.sbatch' -print0 | xargs -0 -n 1 bash -n
-
-imagewam-train-smoke:
-	IMAGEWAM_MODE=metadata-smoke IMAGEWAM_REQUIRE_CUDA=0 bash scripts/imagewam/run_train_eval.sh
 
 schemas:
 	$(VENV)/bin/embodied-demo export-schema --output-dir build/schemas

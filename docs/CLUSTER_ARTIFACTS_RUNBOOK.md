@@ -13,7 +13,7 @@
 | 优先级 | 资产 | 来源 | 用途 | 默认是否下载 |
 |---|---|---|---|---|
 | P0 | `lerobot/pusht` dataset | Hugging Face dataset | LeRobot ACT/PushT data/train/inference smoke | 是 |
-| P0 | ACT/PushT 训练输出 checkpoint | 集群本地训练产生 | `make lerobot-infer-smoke` 输入 | 训练后本地产生 |
+| P0 | ACT/PushT 训练输出 checkpoint | 集群本地训练产生 | `bash experiments/lerobot/diffusion_pusht_infer/launch.sh` 输入 | 训练后本地产生 |
 | P1 | LeRobot policy checkpoint | Hugging Face model repo 或内部 checkpoint | 跳过训练、直接推理 | 否，需要显式 repo id |
 | P1 | FastWAM release 权重与 stats | `yuanty/fastwam` | custom FastWAM overlay 初始化 | 否，按需执行 |
 | P2 | 大规模 LeRobot/Open-X/DROID/BridgeData 等数据 | 各上游 | 后续扩展 | 暂不在第一条 smoke 自动下载 |
@@ -175,7 +175,7 @@ make download-lerobot-artifacts
 ```bash
 export LEROBOT_DATASET_ROOT="$EMBODIED_DATA_ROOT/lerobot/pusht"
 export LEROBOT_POLICY_PATH="$LEROBOT_POLICY_LOCAL_DIR"
-make lerobot-infer-smoke
+bash experiments/lerobot/diffusion_pusht_infer/launch.sh
 ```
 
 如果没有合适的公开 checkpoint，推荐直接跑训练 smoke 生成本地 checkpoint。
@@ -189,7 +189,7 @@ source /mnt/gpu11_200T/dingxibo/miniconda3/etc/profile.d/conda.sh
 conda activate lerobot
 export LEROBOT_DATASET_ROOT="$EMBODIED_DATA_ROOT/lerobot/pusht"
 export TORCH_HOME="$PROJECT_ROOT/hf_cache/torch"
-make lerobot-train-smoke
+bash experiments/lerobot/pusht_act_smoke/launch.sh
 ```
 
 当前 SCUT `gpu11` 已通过 2-step GPU env check：
@@ -210,7 +210,7 @@ loss_decreased=true, drop=14.06%
 
 ```bash
 export LEROBOT_POLICY_PATH="<runs/lerobot/.../lerobot_output/.../pretrained_model-or-checkpoint-dir>"
-make lerobot-infer-smoke
+bash experiments/lerobot/diffusion_pusht_infer/launch.sh
 ```
 
 不同 LeRobot 版本的 checkpoint 目录名可能略有差异，因此这里不把路径写死。判断标准是该目录能被 LeRobot policy load/pretrained loader 读取。
@@ -402,13 +402,13 @@ export LEROBOT_DATASET_PROFILE="<runs/.../dataset_profile.json>"
 export LEROBOT_INFERENCE_EVIDENCE="<runs/.../inference_evidence.json>"
 export LEROBOT_TRAINING_SUMMARY="<runs/.../loss_summary.json>"  # 可选
 
-make demo-chain-lerobot-fastwam
+python scripts/lerobot/generate_data_to_inference_report.py
 ```
 
 FastWAM custom overlay 链路：
 
 ```bash
-FASTWAM_RUN_DIR="runs/fastwam/<run_name>/<run_id>" make demo-chain-fastwam
+FASTWAM_RUN_DIR="runs/experiments/custom/fastwam_realrobot_smoke/<run_id>" embodied-demo report-fastwam
 ```
 
 ## 10. 常见开关
@@ -444,10 +444,10 @@ make download-lerobot-artifacts
 
 export LEROBOT_DATASET_ROOT="$EMBODIED_DATA_ROOT/lerobot/pusht"
 make lerobot-data-smoke
-make lerobot-train-smoke
+bash experiments/lerobot/pusht_act_smoke/launch.sh
 
 export LEROBOT_POLICY_PATH="<训练输出 checkpoint/pretrained policy dir>"
-make lerobot-infer-smoke
+bash experiments/lerobot/diffusion_pusht_infer/launch.sh
 ```
 
 如果这四步跑通，第一阶段最关键的链路已经成立：公开数据能下载和读取，官方 LeRobot 训练入口能跑，loss 有 summary，checkpoint 能进入 offline inference。

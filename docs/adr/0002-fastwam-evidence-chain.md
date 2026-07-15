@@ -79,7 +79,7 @@ than becoming the only place where every future demo task is enumerated.
   Add one additional cleaning or laundry task next.
 - Factor common mock primitives for object-in-region, category routing,
   articulated state, and stage predicates.
-- Keep `make demo-extended` as the first combined demo-pack entry and add a
+- Keep `embodied-demo run --config configs/runs/tabletop_sorting_mock.yaml` as the first combined demo-pack entry and add a
   unified summary report after the next R1 task lands.
 - Run FastWAM `pilot` on the NVIDIA cluster to generate real loss descent
   evidence for the current PR handoff.

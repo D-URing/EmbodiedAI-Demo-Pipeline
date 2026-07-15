@@ -9,7 +9,6 @@
 │   ├── custom/           # 第二主线：自拟/custom WAM 后端族
 │   │   ├── fastwam/
 │   │   └── imagewam/
-│   └── custom_fastwam/   # 历史兼容入口
 ├── experiments/          # 训练/推理启动入口
 │   ├── lerobot/
 │   └── custom/

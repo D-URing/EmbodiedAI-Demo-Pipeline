@@ -226,5 +226,5 @@ if [[ "$policy_downloaded" == "true" ]]; then
   echo
   echo "Next inference smoke:"
   echo "  export LEROBOT_POLICY_PATH=\"$LEROBOT_POLICY_LOCAL_DIR\""
-  echo "  make lerobot-infer-smoke"
+  echo "  bash experiments/lerobot/<matching_inference_experiment>/launch.sh"
 fi
