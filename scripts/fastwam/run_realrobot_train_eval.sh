@@ -103,6 +103,9 @@ case "${FASTWAM_INIT}" in
 esac
 
 if [[ "${FASTWAM_REQUIRE_CUDA}" == "1" ]]; then
+  if [[ -z "${CUDA_HOME:-}" && -n "${CONDA_PREFIX:-}" && -x "${CONDA_PREFIX}/bin/nvcc" ]]; then
+    export CUDA_HOME="$CONDA_PREFIX"
+  fi
   python - <<'PY'
 import torch
 if not torch.cuda.is_available():
@@ -145,9 +148,9 @@ export RUN_ID
 
 MODEL_ARGS=(
   "task=${TASK_NAME}"
-  model.model_id=Wan2.2-TI2V-5B
-  model.tokenizer_model_id=Wan2.2-TI2V-5B
-  model.redirect_common_files=false
+  "model.model_id=${FASTWAM_MODEL_ID}"
+  "model.tokenizer_model_id=${FASTWAM_TOKENIZER_MODEL_ID}"
+  "model.redirect_common_files=${FASTWAM_REDIRECT_COMMON_FILES}"
   model.load_text_encoder=false
   "mixed_precision=${FASTWAM_MIXED_PRECISION}"
   "wandb.enabled=${FASTWAM_WANDB_ENABLE}"
@@ -260,6 +263,9 @@ manifest = {
     "node_rank": int("${FASTWAM_NODE_RANK}"),
     "mixed_precision": "${FASTWAM_MIXED_PRECISION}",
     "init": "${FASTWAM_INIT}",
+    "model_id": "${FASTWAM_MODEL_ID}",
+    "redirect_common_files": "${FASTWAM_REDIRECT_COMMON_FILES}",
+    "cuda_home": "${CUDA_HOME:-}",
     "release_checkpoint": "${FASTWAM_RELEASE_CKPT}",
     "pin_stats": "${FASTWAM_PIN_STATS}",
 }

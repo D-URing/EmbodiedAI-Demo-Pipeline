@@ -50,6 +50,9 @@ export FASTWAM_WANDB_ENABLE="${FASTWAM_WANDB_ENABLE:-false}"
 export FASTWAM_MASTER_ADDR="${FASTWAM_MASTER_ADDR:-${MASTER_ADDR:-127.0.0.1}}"
 export FASTWAM_MASTER_PORT="${FASTWAM_MASTER_PORT:-${MASTER_PORT:-29500}}"
 export FASTWAM_INIT="${FASTWAM_INIT:-release}"
+export FASTWAM_MODEL_ID="${FASTWAM_MODEL_ID:-Wan-AI/Wan2.2-TI2V-5B}"
+export FASTWAM_TOKENIZER_MODEL_ID="${FASTWAM_TOKENIZER_MODEL_ID:-Wan-AI/Wan2.1-T2V-1.3B}"
+export FASTWAM_REDIRECT_COMMON_FILES="${FASTWAM_REDIRECT_COMMON_FILES:-false}"
 
 # Manual run artifact mirror owned by this demo pipeline. Experiment launchers
 # override this to runs/experiments/custom/<experiment>/.

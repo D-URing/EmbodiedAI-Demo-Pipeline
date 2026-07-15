@@ -36,6 +36,8 @@ FASTWAM_TORCH_SPEC="${FASTWAM_TORCH_SPEC:-torch==2.7.1+cu128}"
 FASTWAM_TORCHVISION_SPEC="${FASTWAM_TORCHVISION_SPEC:-torchvision==0.22.1+cu128}"
 FASTWAM_TORCH_EXTRA_INDEX_URL="${FASTWAM_TORCH_EXTRA_INDEX_URL-https://download.pytorch.org/whl/cu128}"
 FASTWAM_PIP_INDEX_URL="${FASTWAM_PIP_INDEX_URL:-}"
+FASTWAM_INSTALL_NVCC="${FASTWAM_INSTALL_NVCC:-1}"
+FASTWAM_CUDA_NVCC_SPEC="${FASTWAM_CUDA_NVCC_SPEC:-cuda-nvcc=12.6.77}"
 FASTWAM_SOURCE_MODE="${FASTWAM_SOURCE_MODE:-sync}"
 FASTWAM_PIP_TIMEOUT="${FASTWAM_PIP_TIMEOUT:-120}"
 FASTWAM_PIP_RETRIES="${FASTWAM_PIP_RETRIES:-20}"
@@ -136,6 +138,15 @@ if [[ "$FASTWAM_CREATE_CONDA" == "1" ]]; then
   # shellcheck disable=SC1091
   source "$("$CONDA_EXE" info --base)/etc/profile.d/conda.sh"
   conda activate "$FASTWAM_CONDA_ENV"
+fi
+
+if [[ "$FASTWAM_INSTALL_NVCC" == "1" ]]; then
+  command -v "$CONDA_EXE" >/dev/null || {
+    echo "ERROR: FASTWAM_INSTALL_NVCC=1 but CONDA_EXE is not available: $CONDA_EXE" >&2
+    exit 2
+  }
+  # shellcheck disable=SC2086
+  "$CONDA_EXE" install -y -n "$FASTWAM_CONDA_ENV" $CONDA_CHANNEL_ARGS "$FASTWAM_CUDA_NVCC_SPEC"
 fi
 
 python - <<'PY'

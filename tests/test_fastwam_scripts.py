@@ -37,6 +37,8 @@ def test_fastwam_runner_refuses_cpu_fallback_and_wraps_train_zero1() -> None:
     assert "FASTWAM_INIT" in runner
     assert "model.skip_dit_load_from_pretrain=true" in runner
     assert "FASTWAM_NNODES" in runner
+    assert "FASTWAM_MODEL_ID" in runner
+    assert 'CUDA_HOME="$CONDA_PREFIX"' in runner
 
 
 def test_fastwam_yaml_runner_renders_single8_config(tmp_path: Path) -> None:
@@ -83,6 +85,7 @@ def test_fastwam_prepare_uses_overlay_without_vendoring() -> None:
     assert "FASTWAM_PIP_RESUME_RETRIES" in prepare
     assert "FASTWAM_TORCH_SPEC" in prepare
     assert "FASTWAM_PIP_INDEX_URL" in prepare
+    assert "FASTWAM_INSTALL_NVCC" in prepare
     assert "--no-deps -e" in prepare
     assert 'name not in {"torch", "torchvision"}' in prepare
     assert "libero_mujoco3.3.2" in prepare
