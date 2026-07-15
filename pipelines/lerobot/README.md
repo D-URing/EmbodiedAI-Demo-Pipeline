@@ -14,6 +14,14 @@ policy:  ACT
 device:  CUDA only
 ```
 
+资产来自根目录全局池：
+
+```text
+data/lerobot/pusht
+models/lerobot/<policy>/<name>
+hf_cache/torch/hub/checkpoints/resnet18-f37072fd.pth
+```
+
 这不是 CPU toy trainer，也不是家庭任务最终模型。它是团队后续接新模型、新数据、新仿真的基准管线。
 
 ## 当前 SCUT 状态
@@ -33,6 +41,7 @@ dataset frames: 25650
 
 ```text
 data/lerobot/pusht
+models/lerobot/diffusion/diffusion_pusht        # 可选开源预训练 policy
 hf_cache/torch/hub/checkpoints/resnet18-f37072fd.pth
 runs/lerobot/<run_name>/<run_id>/loss_summary.json
 ```
@@ -63,6 +72,19 @@ export TORCH_HOME="$PROJECT/hf_cache/torch"
 export HF_ENDPOINT=https://hf-mirror.com
 ```
 
+## 资产层级
+
+LeRobot 主线的资产分四层：
+
+| 层 | 路径 | 作用 |
+|---|---|---|
+| Dataset | `data/lerobot/pusht` | ACT/PushT 训练和 dataset smoke |
+| Backbone cache | `hf_cache/torch/hub/checkpoints/resnet18-f37072fd.pth` | ACT 默认 ResNet18 视觉 backbone |
+| Open policy | `models/lerobot/diffusion/diffusion_pusht` | 可直接下载的 LeRobot diffusion PushT 预训练 policy |
+| Local checkpoint | `runs/lerobot/<run>/lerobot_output` 或整理到 `models/lerobot/act/pusht/<name>` | 我们自己训练得到的 ACT checkpoint |
+
+注意：ACT/PushT 当前主线优先用于训练 smoke。开源预训练 policy 先用 `lerobot/diffusion_pusht` 作为“可下载、可管理”的 policy 样例，后续再补 ACT 或 FastWAM 的 LeRobot-native checkpoint。
+
 ## 下载
 
 PushT 数据：
@@ -75,6 +97,18 @@ export HFD_THREADS=10
 export HFD_JOBS=4
 
 make download-lerobot-artifacts
+```
+
+LeRobot diffusion PushT 预训练 policy：
+
+```bash
+make download-lerobot-diffusion-pusht-policy
+```
+
+默认落盘：
+
+```text
+models/lerobot/diffusion/diffusion_pusht
 ```
 
 ResNet18 backbone，如果不存在：
@@ -99,6 +133,22 @@ make lerobot-data-smoke
 ```text
 SUMMARY repo_id=lerobot/pusht length=25650
 ```
+
+## 使用下载的 policy
+
+下载完成后可以指定：
+
+```bash
+export LEROBOT_POLICY_PATH="$PROJECT/models/lerobot/diffusion/diffusion_pusht"
+```
+
+然后按当前 inference smoke 入口测试：
+
+```bash
+make lerobot-infer-smoke
+```
+
+如果 policy 类型和 inference 脚本版本不匹配，优先记录错误并修 adapter，不要把 policy 复制到别的位置。
 
 ## 跑 GPU training smoke
 
@@ -161,4 +211,3 @@ demo_chains/lerobot_fastwam_data_to_inference_v0.yaml
 docs/LEROBOT_FIRST_PIPELINE.md
 docs/LEROBOT_REPLICATION.md
 ```
-

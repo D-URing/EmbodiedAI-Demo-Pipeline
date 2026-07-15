@@ -13,5 +13,5 @@
 - `scripts/` 放实际执行脚本；
 - `configs/` 放参数；
 - `docs/` 放背景、结构、存储和长说明；
-- `data/`、`models/`、`hf_cache/`、`runs/`、`upstreams/` 都是本地/集群 ignored 目录，不提交 Git。
-
+- `data/` 和 `models/` 是根目录全局资产池，各 pipeline 自行选择需要的 dataset/model；
+- `hf_cache/`、`runs/`、`upstreams/` 是本地/集群 ignored 目录，不提交 Git。

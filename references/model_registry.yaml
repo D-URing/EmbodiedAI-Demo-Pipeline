@@ -72,6 +72,24 @@ models:
       - Preferred official FastWAM path inside LeRobot.
       - Must be implemented before claiming FastWAM-native LeRobot inference.
 
+  lerobot_diffusion_pusht:
+    status: downloadable_policy
+    path_type: lerobot_native
+    policy_type: diffusion
+    dataset_repo_id: lerobot/pusht
+    policy_repo_id: lerobot/diffusion_pusht
+    smoke_targets:
+      - LEROBOT_POLICY_PATH="$EMBODIED_MODEL_ROOT/lerobot/diffusion/diffusion_pusht" make lerobot-infer-smoke
+    download_targets:
+      - make download-lerobot-diffusion-pusht-policy
+    artifact_location:
+      dataset_root: "$EMBODIED_DATA_ROOT/lerobot/pusht"
+      policy_path: "$EMBODIED_MODEL_ROOT/lerobot/diffusion/diffusion_pusht"
+    capability_claim: downloadable_open_policy_for_inference_smoke
+    notes:
+      - This complements ACT/PushT training smoke with a downloadable open LeRobot policy.
+      - Keep it in the root models pool; pipelines should reference it, not duplicate it.
+
   custom_fastwam_realrobot_overlay:
     status: implemented_scaffold
     path_type: custom_backend

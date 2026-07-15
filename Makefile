@@ -2,7 +2,7 @@ PYTHON ?= python3.11
 VENV ?= .venv
 CONSTRAINTS ?= requirements/constraints-py311.txt
 
-.PHONY: help setup doctor test validate dry-run demo demo-extended download-lerobot-artifacts download-fastwam-artifacts lerobot-check-scripts lerobot-data-smoke lerobot-train-smoke lerobot-infer-smoke demo-chain-lerobot-fastwam fastwam-check-scripts fastwam-train-smoke demo-chain-fastwam schemas reference-fetch clean
+.PHONY: help setup doctor test validate dry-run demo demo-extended download-lerobot-artifacts download-lerobot-diffusion-pusht-policy download-fastwam-artifacts lerobot-check-scripts lerobot-data-smoke lerobot-train-smoke lerobot-infer-smoke demo-chain-lerobot-fastwam fastwam-check-scripts fastwam-train-smoke demo-chain-fastwam schemas reference-fetch clean
 
 help:
 	@echo "EmbodiedAI Demo Pipeline"
@@ -15,6 +15,8 @@ help:
 	@echo
 	@echo "LeRobot pipeline:"
 	@echo "  make download-lerobot-artifacts    Download LeRobot PushT dataset"
+	@echo "  make download-lerobot-diffusion-pusht-policy"
+	@echo "                                      Download LeRobot diffusion PushT policy"
 	@echo "  make lerobot-data-smoke            Inspect LeRobot dataset"
 	@echo "  make lerobot-train-smoke           Run ACT/PushT GPU training smoke"
 	@echo "  make lerobot-infer-smoke           Run offline policy inference smoke"
@@ -59,6 +61,13 @@ demo-extended: demo
 	$(VENV)/bin/embodied-demo run --config configs/runs/drawer_pick_place_mock.yaml
 
 download-lerobot-artifacts:
+	bash scripts/lerobot/download_artifacts.sh
+
+download-lerobot-diffusion-pusht-policy:
+	DOWNLOAD_LEROBOT_DATASET=0 DOWNLOAD_LEROBOT_POLICY=1 \
+	LEROBOT_POLICY_TYPE=diffusion \
+	LEROBOT_POLICY_REPO_ID=lerobot/diffusion_pusht \
+	LEROBOT_POLICY_LOCAL_DIR="$${EMBODIED_MODEL_ROOT:-$$(pwd)/models}/lerobot/diffusion/diffusion_pusht" \
 	bash scripts/lerobot/download_artifacts.sh
 
 download-fastwam-artifacts:
