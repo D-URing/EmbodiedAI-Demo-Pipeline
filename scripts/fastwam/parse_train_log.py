@@ -8,13 +8,14 @@ from typing import Any
 
 
 NUMBER = r"[-+]?(?:\d+\.\d+|\d+)(?:[eE][-+]?\d+)?"
-TRAIN_STEP_PATTERN = re.compile(
-    rf"\[train\].*?epoch=(?P<epoch>\d+).*?step=(?P<step>\d+)/(?P<max_steps>\d+)"
-)
+TRAIN_STEP_PATTERN = re.compile(rf"epoch=(?P<epoch>\d+).*?step=(?P<step>\d+)/(?P<max_steps>\d+)")
 EVAL_STEP_PATTERN = re.compile(rf"\[eval\].*?step=(?P<step>\d+)")
 KEY_VALUE_PATTERN = re.compile(rf"(?P<key>[A-Za-z_][A-Za-z0-9_]*)=(?P<value>{NUMBER})")
 CKPT_PATTERN = re.compile(
     r"\[(?P<kind>ckpt|done)\].*?step=(?P<step>\d+)(?:.*?weights=(?P<weights>\S+))?(?:.*?state=(?P<state>\S+))?"
+)
+MAX_STEPS_PATTERN = re.compile(
+    r"max_steps reached step=(?P<step>\d+)(?:.*?weights=(?P<weights>\S+))?(?:.*?state=(?P<state>\S+))?"
 )
 
 
@@ -35,23 +36,9 @@ def parse_log(log_path: Path) -> dict[str, list[dict[str, Any]]]:
     train: list[dict[str, Any]] = []
     eval_records: list[dict[str, Any]] = []
     checkpoints: list[dict[str, Any]] = []
+    last_train: dict[str, Any] | None = None
 
     for line_number, line in enumerate(log_path.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
-        if "[train]" in line and "loss=" in line:
-            step_match = TRAIN_STEP_PATTERN.search(line)
-            metrics = _parse_metrics(line)
-            if step_match and "loss" in metrics:
-                train.append(
-                    {
-                        "line": line_number,
-                        "epoch": int(step_match.group("epoch")),
-                        "step": int(step_match.group("step")),
-                        "max_steps": int(step_match.group("max_steps")),
-                        "metrics": metrics,
-                    }
-                )
-            continue
-
         if "[eval]" in line:
             step_match = EVAL_STEP_PATTERN.search(line)
             metrics = _parse_metrics(line)
@@ -63,10 +50,37 @@ def parse_log(log_path: Path) -> dict[str, list[dict[str, Any]]]:
                         "metrics": metrics,
                     }
                 )
+            last_train = None
             continue
+
+        if "loss=" in line and "epoch=" in line and "step=" in line:
+            step_match = TRAIN_STEP_PATTERN.search(line)
+            metrics = _parse_metrics(line)
+            if step_match and "loss" in metrics:
+                last_train = {
+                    "line": line_number,
+                    "epoch": int(step_match.group("epoch")),
+                    "step": int(step_match.group("step")),
+                    "max_steps": int(step_match.group("max_steps")),
+                    "metrics": metrics,
+                }
+                train.append(last_train)
+            continue
+
+        if last_train is not None:
+            metrics = _parse_metrics(line)
+            continuation_metrics = {
+                key: value
+                for key, value in metrics.items()
+                if key.startswith("loss_") or key in {"lr", "speed"}
+            }
+            if continuation_metrics:
+                last_train["metrics"].update(continuation_metrics)
+                continue
 
         ckpt_match = CKPT_PATTERN.search(line)
         if ckpt_match:
+            last_train = None
             checkpoints.append(
                 {
                     "line": line_number,
@@ -74,6 +88,20 @@ def parse_log(log_path: Path) -> dict[str, list[dict[str, Any]]]:
                     "step": int(ckpt_match.group("step")),
                     "weights": ckpt_match.group("weights"),
                     "state": ckpt_match.group("state"),
+                }
+            )
+            continue
+
+        max_steps_match = MAX_STEPS_PATTERN.search(line)
+        if max_steps_match:
+            last_train = None
+            checkpoints.append(
+                {
+                    "line": line_number,
+                    "kind": "done",
+                    "step": int(max_steps_match.group("step")),
+                    "weights": max_steps_match.group("weights"),
+                    "state": max_steps_match.group("state"),
                 }
             )
 

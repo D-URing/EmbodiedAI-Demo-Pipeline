@@ -23,7 +23,20 @@ def test_fastwam_log_parser_detects_loss_drop_and_checkpoint(tmp_path: Path) -> 
     assert summary["final_step"] == 200
     assert summary["training_completed"] is True
     assert summary["latest_checkpoint"]["weights"].endswith("step_000200.pt")
-    assert summary["metric_summary"]["loss_action"]["final"] == 0.551
+
+
+def test_fastwam_log_parser_accepts_native_rich_log_format(tmp_path: Path) -> None:
+    summary_path = write_summary(ROOT / "tests/fixtures/fastwam_real_stdout.log", tmp_path)
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+
+    assert summary["parsed_train_count"] == 4
+    assert summary["initial_loss"] == 2.556
+    assert summary["final_loss"] == 2.4642
+    assert summary["loss_decreased"] is True
+    assert summary["final_step"] == 20
+    assert summary["max_steps"] == 20
+    assert summary["training_completed"] is True
+    assert summary["metric_summary"]["loss_action"]["final"] == 0.7615
 
 
 def test_fastwam_runner_refuses_cpu_fallback_and_wraps_train_zero1() -> None:
