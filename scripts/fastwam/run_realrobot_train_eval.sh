@@ -1,4 +1,16 @@
 #!/usr/bin/env bash
+# Low-level FastWAM training wrapper.
+#
+# This script expects a resolved shell config, usually generated from an
+# experiment YAML by scripts/fastwam/run_config.py. It then:
+#   1. validates CUDA, source tree, task config, and checkpoint requirements;
+#   2. translates project-level env vars to the upstream FastWAM train_zero1.sh;
+#   3. mirrors stdout, command, manifest, and parsed loss summary into runs/.
+#
+# User-facing training should normally start from:
+#   python experiments/custom/fastwam_realrobot_single8_random/run.py
+#
+# Directly calling this script is only for debugging backend integration.
 set -euo pipefail
 
 CONFIG_PATH="${1:-configs/fastwam/realrobot_train_eval.sh}"
@@ -208,27 +220,8 @@ case "${FASTWAM_MODE}" in
       "num_workers=${FASTWAM_FULL_NUM_WORKERS}"
     )
     ;;
-  offline-smoke)
-    require_file "$FASTWAM_RELEASE_DATASET_STATS" "FastWAM release dataset stats"
-    OFFLINE_CMD=(
-      python scripts/offline_fastwam_smoke.py
-      "task=${TASK_NAME}"
-      "offline_smoke.checkpoint_path=${FASTWAM_RELEASE_CKPT}"
-      "offline_smoke.dataset_stats_path=${FASTWAM_RELEASE_DATASET_STATS}"
-      "offline_smoke.output_json=${PWD}/${RUN_DIR}/offline_fastwam_smoke_result.json"
-    )
-    printf "%q " "${OFFLINE_CMD[@]}" > "$RUN_DIR/command.txt"
-    {
-      echo "FASTWAM_OFFLINE_SMOKE task=${TASK_NAME}"
-      cd "$FASTWAM_WORKDIR"
-      "${OFFLINE_CMD[@]}"
-    } 2>&1 | tee "$RUN_DIR/offline_stdout.log"
-    echo "$FASTWAM_NATIVE_OUTPUT_DIR" > "$RUN_DIR/fastwam_native_output_dir.txt"
-    echo "FASTWAM_OFFLINE_COMPLETE $RUN_DIR"
-    exit 0
-    ;;
   *)
-    echo "ERROR: FASTWAM_MODE must be smoke|pilot|full|offline-smoke, got ${FASTWAM_MODE}" >&2
+    echo "ERROR: FASTWAM_MODE must be smoke|pilot|full, got ${FASTWAM_MODE}" >&2
     exit 2
     ;;
 esac

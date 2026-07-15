@@ -31,7 +31,7 @@ export FASTWAM_ACTION_DIT_BACKBONE="${FASTWAM_ACTION_DIT_BACKBONE:-$EMBODIED_REP
 export FASTWAM_PIN_STATS="${FASTWAM_PIN_STATS:-}"
 
 # What to run.
-#   FASTWAM_MODE: smoke | pilot | full | offline-smoke
+#   FASTWAM_MODE: smoke | pilot | full
 #   FASTWAM_RECIPE:
 #     joint_base | pose_base | v6_clean | v6_decision | v6_codebook |
 #     v6_scratch | v6_discrim | v6_dagger | v6_robust

@@ -267,29 +267,26 @@ CONDA_EXE=/mnt/gpu11_200T/dingxibo/miniconda3/bin/conda \
 bash scripts/fastwam/prepare_fastwam_overlay.sh
 ```
 
-它会把官方 FastWAM 与私有 `D-URing/fastwam-realrobot-pipeline` overlay 到 `$FASTWAM_WORKDIR`，默认位于项目内 `upstreams/FastWAM-realrobot`，再按 CUDA 12.8 默认安装 PyTorch 与 editable FastWAM。若集群 CUDA wheel、模型目录或私有仓库 checkout 位置不同，通过以下变量覆盖：
+它会把官方 FastWAM 与私有 `D-URing/fastwam-realrobot-pipeline` overlay 到 `$FASTWAM_WORKDIR`，默认位于项目内 `upstreams/FastWAM-realrobot`。计算节点不能联网时，源码同步和依赖安装必须在管理节点完成；计算节点只激活共享环境并启动训练。
+
+若集群 CUDA wheel、模型目录或私有仓库 checkout 位置不同，通过以下变量覆盖：
 
 ```bash
 export FASTWAM_WORKDIR="$PROJECT_ROOT/upstreams/FastWAM-realrobot"
 export FASTWAM_MODEL_BASE="$PROJECT_ROOT/models"
-export FASTWAM_TORCH_INDEX_URL="https://download.pytorch.org/whl/cu128"
+export FASTWAM_PIP_INDEX_URL="https://pypi.tuna.tsinghua.edu.cn/simple"
+export FASTWAM_TORCH_SPEC="torch==2.7.1"
+export FASTWAM_TORCHVISION_SPEC="torchvision==0.22.1"
 ```
 
 训练入口明确禁止 CPU fallback：
 
 ```bash
-FASTWAM_MODE=smoke FASTWAM_RECIPE=joint_base \
-bash scripts/fastwam/run_realrobot_train_eval.sh
+python experiments/custom/fastwam_realrobot_single8_random/run.py --dry-run
+python experiments/custom/fastwam_realrobot_single8_random/run.py
 ```
 
-要观察 loss 是否下降，跑 pilot：
-
-```bash
-FASTWAM_MODE=pilot FASTWAM_RECIPE=joint_base \
-bash scripts/fastwam/run_realrobot_train_eval.sh
-```
-
-结果会写到 `runs/experiments/custom/fastwam_realrobot_smoke/.../loss_summary.json`。FastWAM 原生 checkpoint 仍保留在 `$FASTWAM_WORKDIR/runs/<task>/<run_id>/`，本仓库只记录路径和摘要。
+结果会写到 `runs/experiments/custom/fastwam_realrobot_single8_random/.../loss_summary.json`。FastWAM 原生 checkpoint 仍保留在 `$FASTWAM_WORKDIR/runs/<task>/<run_id>/`，本仓库只记录路径和摘要。
 
 ## 6. 配置开关
 

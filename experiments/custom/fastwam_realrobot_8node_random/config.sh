@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
+#
+# Multi-node FastWAM random-initialization defaults.
+#
+# This file is sourced by launch.sh/slurm.sbatch and intentionally defaults to
+# 8 nodes x 8 GPUs. Do not use it for single-node debugging; use
+# experiments/custom/fastwam_realrobot_single8_random/config.yaml instead.
 
 EXPERIMENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$EXPERIMENT_DIR/../../.." && pwd)}"

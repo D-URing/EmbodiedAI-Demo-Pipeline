@@ -68,7 +68,8 @@ def test_fastwam_yaml_runner_renders_single8_config(tmp_path: Path) -> None:
     assert "export FASTWAM_NNODES=1" in rendered
     assert "export FASTWAM_GPUS_PER_NODE=8" in rendered
     assert "export FASTWAM_INIT=random" in rendered
-    assert "export FASTWAM_RECIPE=v6_scratch" in rendered
+    assert "export FASTWAM_RECIPE=joint_base" in rendered
+    assert "export FASTWAM_TASK_NAME=libero_joint_2cam224_1e-4" in rendered
     assert "export FASTWAM_PILOT_MAX_STEPS=20" in rendered
 
 
@@ -84,6 +85,7 @@ def test_fastwam_prepare_uses_overlay_without_vendoring() -> None:
     assert "FASTWAM_PIP_INDEX_URL" in prepare
     assert "--no-deps -e" in prepare
     assert 'name not in {"torch", "torchvision"}' in prepare
+    assert "libero_mujoco3.3.2" in prepare
     assert "rsync -a" in prepare
     assert "--exclude \"runs/\"" in prepare
     assert "--exclude \"checkpoints/\"" in prepare

@@ -201,7 +201,7 @@ def _render_handoff(chain_id: str, evidence: TrainingEvidence, output_dir: Path)
             "给团队的最小复现顺序：",
             "",
             "```bash",
-            "FASTWAM_MODE=pilot FASTWAM_RECIPE=joint_base bash scripts/fastwam/run_realrobot_train_eval.sh",
+            "python experiments/custom/fastwam_realrobot_single8_random/run.py",
             f"embodied-demo report-fastwam --run-dir {evidence.source_run_dir} --output-dir {output_dir}",
             "```",
             "",

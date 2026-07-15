@@ -316,20 +316,6 @@ runs/experiments/lerobot/<experiment>/<run_id>/inference_evidence.json
 
 ### Custom FastWAM realrobot
 
-入口：
-
-```bash
-bash experiments/custom/fastwam_realrobot_smoke/launch.sh
-```
-
-常用模式：
-
-```bash
-FASTWAM_MODE=offline-smoke bash experiments/custom/fastwam_realrobot_smoke/launch.sh
-FASTWAM_MODE=smoke FASTWAM_RECIPE=joint_base bash experiments/custom/fastwam_realrobot_smoke/launch.sh
-FASTWAM_MODE=pilot FASTWAM_RECIPE=joint_base bash experiments/custom/fastwam_realrobot_smoke/launch.sh
-```
-
 初始化方式：
 
 ```text
@@ -373,9 +359,9 @@ bash experiments/custom/fastwam_realrobot_8node_random/launch.sh
 
 说明：
 
-- `offline-smoke` 只验证 release checkpoint/stats 路径，不等价于训练；
-- `smoke/pilot/full` 依赖 overlay 后的 `upstreams/FastWAM-realrobot/`；
-- FastWAM native 输出仍会写到 `upstreams/FastWAM-realrobot/runs/...`，本项目会在 `runs/experiments/custom/fastwam_realrobot_smoke/` 留 manifest、stdout 和解析结果。
+- `smoke/pilot/full` 是底层 FastWAM runner 支持的真实训练规模开关；
+- 当前公开入口使用 `config.yaml + run.py`，不要直接手写一串 `FASTWAM_*` 环境变量；
+- FastWAM native 输出仍会写到 `upstreams/FastWAM-realrobot/runs/...`，本项目会在 `runs/experiments/custom/fastwam_realrobot_single8_random/` 留 manifest、stdout 和解析结果。
 
 ### ImageWAM FLUX.2 4B LIBERO
 

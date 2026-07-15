@@ -36,7 +36,7 @@
 ├── pipelines/
 │   ├── lerobot/          # LeRobot 主线：dataset -> train/load -> inference -> report
 │   └── custom/           # Custom WAM 后端族：FastWAM / ImageWAM / future backends
-├── experiments/          # 训练/推理启动入口：config.sh + launch.sh + 可选 slurm.sbatch
+├── experiments/          # 训练/推理启动入口：优先 config.yaml + run.py，必要时保留 launch.sh/slurm
 ├── configs/
 │   ├── lerobot/          # LeRobot 配置
 │   ├── fastwam/          # FastWAM/custom 配置
@@ -221,7 +221,7 @@ upstreams/FastWAM-realrobot/runs/<task>/<run_id>/
 
 ## Make targets
 
-Make 只作为环境、下载、转换和检查入口；训练/推理实验使用 `experiments/*/*/launch.sh`。
+Make 只作为环境、下载、转换和检查入口；训练/推理实验优先使用 `experiments/<route>/<experiment>/run.py`。
 
 | Target | 作用 |
 |---|---|

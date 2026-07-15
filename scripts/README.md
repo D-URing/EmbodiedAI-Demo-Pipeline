@@ -43,7 +43,7 @@ scripts/fastwam/
 └── parse_train_log.py
 ```
 
-训练入口见 [`../experiments/custom/fastwam_realrobot_smoke/`](../experiments/custom/fastwam_realrobot_smoke/)。
+真实训练入口见 [`../experiments/custom/fastwam_realrobot_single8_random/`](../experiments/custom/fastwam_realrobot_single8_random/)。
 
 FastWAM LIBERO 数据已封装为 Make target，并按路线拆分：
 

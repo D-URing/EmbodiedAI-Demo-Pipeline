@@ -40,6 +40,7 @@ FASTWAM_SOURCE_MODE="${FASTWAM_SOURCE_MODE:-sync}"
 FASTWAM_PIP_TIMEOUT="${FASTWAM_PIP_TIMEOUT:-120}"
 FASTWAM_PIP_RETRIES="${FASTWAM_PIP_RETRIES:-20}"
 FASTWAM_PIP_RESUME_RETRIES="${FASTWAM_PIP_RESUME_RETRIES:-50}"
+FASTWAM_CUSTOM_LIBERO_DATA="${FASTWAM_CUSTOM_LIBERO_DATA:-$EMBODIED_REPO_ROOT/data/custom/fastwam/libero-fastwam}"
 CONDA_EXE="${CONDA_EXE:-conda}"
 CONDA_CHANNEL_ARGS="${CONDA_CHANNEL_ARGS:---override-channels -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge}"
 
@@ -101,6 +102,15 @@ case "$FASTWAM_SOURCE_MODE" in
     exit 2
     ;;
 esac
+
+if [[ -d "$FASTWAM_CUSTOM_LIBERO_DATA" ]]; then
+  mkdir -p "$FASTWAM_WORKDIR/data"
+  ln -sfn "$FASTWAM_CUSTOM_LIBERO_DATA" "$FASTWAM_WORKDIR/data/libero_mujoco3.3.2"
+  echo "FastWAM LIBERO data linked: $FASTWAM_WORKDIR/data/libero_mujoco3.3.2 -> $FASTWAM_CUSTOM_LIBERO_DATA"
+else
+  echo "WARNING: FastWAM custom LIBERO data not found: $FASTWAM_CUSTOM_LIBERO_DATA" >&2
+  echo "Run make download-custom-fastwam-libero-dataset on a networked node before training." >&2
+fi
 
 if [[ "$FASTWAM_INSTALL" != "1" ]]; then
   if [[ "$FASTWAM_SOURCE_MODE" == "sync" ]]; then

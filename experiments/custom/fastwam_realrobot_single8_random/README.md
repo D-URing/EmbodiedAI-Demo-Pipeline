@@ -53,7 +53,8 @@ nnodes=1
 gpus_per_node=8
 init=random
 mode=pilot
-recipe=v6_scratch
+recipe=joint_base
+task_name=libero_joint_2cam224_1e-4
 max_steps=20
 batch_size=1
 ```

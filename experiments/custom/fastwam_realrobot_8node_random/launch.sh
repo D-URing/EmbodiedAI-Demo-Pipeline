@@ -1,4 +1,12 @@
 #!/usr/bin/env bash
+# Multi-node FastWAM launcher.
+#
+# This is kept for the later 8-node route. For the current real single-node
+# 8-GPU validation, prefer:
+#   python experiments/custom/fastwam_realrobot_single8_random/run.py
+#
+# When used without Slurm, every node must set FASTWAM_NNODES, FASTWAM_NODE_RANK,
+# FASTWAM_MASTER_ADDR, FASTWAM_MASTER_PORT, and the same FASTWAM_RUN_ID.
 set -euo pipefail
 
 EXPERIMENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

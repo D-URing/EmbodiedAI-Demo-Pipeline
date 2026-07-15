@@ -79,7 +79,6 @@ custom model / custom backend
 ```text
 configs/fastwam/
 scripts/fastwam/
-experiments/custom/fastwam_realrobot_smoke/
 experiments/custom/fastwam_realrobot_single8_random/
 experiments/custom/fastwam_realrobot_8node_random/
 data/custom/fastwam/

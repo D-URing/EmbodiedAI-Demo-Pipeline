@@ -20,7 +20,6 @@ experiments/
 │   ├── smolvla_so100_infer/           # SmolVLA / SO100 inference
 │   └── fastwam_libero_infer/          # FastWAM / LIBERO inference
 └── custom/
-    ├── fastwam_realrobot_smoke/       # custom FastWAM realrobot smoke/pilot/full
     ├── fastwam_realrobot_single8_random/
     │                                  # custom FastWAM single-node 8-GPU random-init training
     ├── fastwam_realrobot_8node_random/# custom FastWAM 8-node random-init training
@@ -109,25 +108,17 @@ action.shape=[1, 7]
 
 ## Custom WAM
 
-FastWAM：
-
-```bash
-FASTWAM_MODE=offline-smoke bash experiments/custom/fastwam_realrobot_smoke/launch.sh
-FASTWAM_MODE=smoke FASTWAM_RECIPE=joint_base bash experiments/custom/fastwam_realrobot_smoke/launch.sh
-FASTWAM_MODE=pilot FASTWAM_RECIPE=joint_base bash experiments/custom/fastwam_realrobot_smoke/launch.sh
-```
-
-FastWAM 8 机随机初始化：
-
-```bash
-sbatch experiments/custom/fastwam_realrobot_8node_random/slurm.sbatch
-```
-
-FastWAM 单机 8 卡随机初始化，优先用于手动验证和短试验：
+FastWAM 单机 8 卡随机初始化，当前优先真实训练入口：
 
 ```bash
 python experiments/custom/fastwam_realrobot_single8_random/run.py --dry-run
 python experiments/custom/fastwam_realrobot_single8_random/run.py
+```
+
+FastWAM 8 机随机初始化，后续长期多机入口：
+
+```bash
+sbatch experiments/custom/fastwam_realrobot_8node_random/slurm.sbatch
 ```
 
 ImageWAM metadata smoke：

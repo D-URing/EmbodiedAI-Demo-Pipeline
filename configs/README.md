@@ -38,7 +38,7 @@ configs/lerobot/infer/
 关键开关：
 
 ```text
-FASTWAM_MODE=smoke|pilot|full|offline-smoke
+FASTWAM_MODE=smoke|pilot|full
 FASTWAM_RECIPE=joint_base|pose_base|v6_clean|v6_scratch|...
 FASTWAM_INIT=release|base|random
 FASTWAM_NNODES=<nodes>

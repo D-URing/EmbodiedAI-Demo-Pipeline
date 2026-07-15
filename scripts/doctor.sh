@@ -35,10 +35,6 @@ print(f"platform={platform.system()}-{platform.machine()}")
 
 "${VENV}/bin/python" -m pip check
 "${VENV}/bin/embodied-demo" --version
-"${VENV}/bin/embodied-demo" validate \
-  --config "${ROOT_DIR}/configs/runs/tabletop_sorting_mock.yaml"
-"${VENV}/bin/embodied-demo" validate \
-  --config "${ROOT_DIR}/configs/runs/towel_folding_mock.yaml"
 
 if command -v gh >/dev/null 2>&1; then
   printf 'gh=%s\n' "$(gh --version | head -1)"
@@ -55,7 +51,7 @@ fi
 if command -v nvidia-smi >/dev/null 2>&1; then
   printf 'nvidia_smi=available\n'
 else
-  printf 'INFO: NVIDIA runtime not detected; this is expected for core/mock development.\n'
+  printf 'INFO: NVIDIA runtime not detected; core checks can pass, but training requires a GPU node.\n'
 fi
 
 printf 'environment_status=OK\n'

@@ -28,7 +28,8 @@ distributed:
 
 fastwam:
   mode: pilot
-  recipe: v6_scratch
+  recipe: joint_base
+  task_name: libero_joint_2cam224_1e-4
   init: random
   require_cuda: true
   mixed_precision: bf16
