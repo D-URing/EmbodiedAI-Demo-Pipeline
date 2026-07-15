@@ -19,7 +19,7 @@
 |---|---|
 | Python | 3.11；当前验收版本 3.11.15 |
 | CPU 架构 | macOS arm64 已验收；Linux x86_64 作为集群目标 |
-| 包管理 | 标准 `venv` + pip；不要求 Conda/Hydra |
+| 包管理 | 本地 core 默认 `venv` + pip；NVIDIA/SCUT 集群推荐 Miniconda |
 | 依赖声明 | `pyproject.toml` |
 | 已验证约束 | `requirements/constraints-py311.txt` |
 | 默认运行 | local、CPU、headless、inproc、mock |
@@ -134,7 +134,66 @@ VENV="$SCRATCH/venvs/embodied-core" make doctor
 VENV="$SCRATCH/venvs/embodied-core" make test
 ```
 
-如果集群不提供 module，可在团队确认后使用统一容器或 micromamba 安装 Python 3.11；不要让每位成员选择不同的 CUDA/Python 组合。
+如果集群不提供 module，推荐统一安装 Miniconda 到共享盘或个人目录；不要让每位成员选择不同的 CUDA/Python 组合。
+
+#### SCUT/A100 共享盘 Miniconda 推荐做法
+
+当前 SCUT 管理节点和 `gpu11` 已验证可使用共享盘 Miniconda。假设项目位于：
+
+```bash
+export BASE=/mnt/gpu11_200T/dingxibo
+export PROJECT=$BASE/EmbodiedAI-Demo-Pipeline
+export CONDA=$BASE/miniconda3/bin/conda
+```
+
+如尚未安装 Miniconda：
+
+```bash
+mkdir -p "$BASE/downloads"
+wget -O "$BASE/downloads/Miniconda3-latest-Linux-x86_64.sh" \
+  https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash "$BASE/downloads/Miniconda3-latest-Linux-x86_64.sh" -b -p "$BASE/miniconda3"
+"$CONDA" --version
+```
+
+创建 core 环境时使用清华 conda-forge 镜像，并避开 defaults channel 的交互式 ToS 问题：
+
+```bash
+"$CONDA" create -y -n embodied-core --override-channels \
+  -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge \
+  python=3.11 pip setuptools wheel
+
+cd "$PROJECT"
+"$CONDA" run -n embodied-core python -m pip install \
+  -i https://pypi.tuna.tsinghua.edu.cn/simple \
+  --upgrade pip setuptools wheel
+"$CONDA" run -n embodied-core python -m pip install \
+  -i https://pypi.tuna.tsinghua.edu.cn/simple \
+  -c requirements/constraints-py311.txt -e ".[dev]"
+"$CONDA" run -n embodied-core python -m pytest
+```
+
+当前已验证结果：
+
+```text
+34 passed
+```
+
+需要交互式 shell 时：
+
+```bash
+source "$BASE/miniconda3/etc/profile.d/conda.sh"
+conda activate embodied-core
+```
+
+如果之前误建了项目内 `.venv`，先不要在共享盘上反复 `pip install --upgrade pip`。安全处理方式是把它移出主路径：
+
+```bash
+cd "$PROJECT"
+mv .venv ".venv.bad.$(date +%Y%m%d-%H%M%S)" 2>/dev/null || true
+```
+
+若 NFS 返回“目录非空”导致 `rm -rf` 无法删除，但 `.venv` 主入口已经不存在，可以暂时保留 `.venv.bad.*.trash`；它不会影响 conda 环境。后续由有共享盘维护权限的一侧清理即可。
 
 ### 4.3 下载、缓存和产物位置
 
@@ -195,6 +254,7 @@ FastWAM 属于独立 CUDA policy 环境，不进入 core `.venv`。推荐在 NVI
 
 ```bash
 FASTWAM_CREATE_CONDA=1 FASTWAM_INSTALL=1 \
+CONDA_EXE=/mnt/gpu11_200T/dingxibo/miniconda3/bin/conda \
 bash scripts/fastwam/prepare_fastwam_overlay.sh
 ```
 

@@ -57,9 +57,29 @@ $PROJECT_ROOT/
 
 ## 3. 准备 Python / LeRobot 环境
 
-在 GPU 节点或带 CUDA 的容器里：
+SCUT/A100 集群推荐使用共享盘 Miniconda。先准备 core 环境，确保仓库基础命令和测试可运行：
 
 ```bash
+export BASE=/mnt/gpu11_200T/dingxibo
+export PROJECT=$BASE/EmbodiedAI-Demo-Pipeline
+export CONDA=$BASE/miniconda3/bin/conda
+
+cd "$PROJECT"
+"$CONDA" create -y -n embodied-core --override-channels \
+  -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge \
+  python=3.11 pip setuptools wheel
+"$CONDA" run -n embodied-core python -m pip install \
+  -i https://pypi.tuna.tsinghua.edu.cn/simple \
+  -c requirements/constraints-py311.txt -e ".[dev]"
+"$CONDA" run -n embodied-core python -m pytest
+```
+
+如果 `$BASE/miniconda3` 尚不存在，先按 [`ENVIRONMENT.md`](ENVIRONMENT.md) 的 SCUT/A100 Miniconda 小节安装。
+
+LeRobot/FastWAM 是独立 CUDA policy 环境，不装进 `embodied-core`。在 GPU 节点或带 CUDA 的容器里：
+
+```bash
+CONDA_EXE="$CONDA" LEROBOT_CREATE_CONDA=1 LEROBOT_CONDA_ENV=lerobot \
 bash scripts/lerobot/install_lerobot_cluster.sh
 ```
 
@@ -150,6 +170,8 @@ make lerobot-infer-smoke
 在 CUDA 节点上：
 
 ```bash
+source /mnt/gpu11_200T/dingxibo/miniconda3/etc/profile.d/conda.sh
+conda activate lerobot
 export LEROBOT_DATASET_ROOT="$EMBODIED_DATA_ROOT/lerobot/pusht"
 make lerobot-train-smoke
 ```

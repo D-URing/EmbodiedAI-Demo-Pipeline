@@ -63,9 +63,18 @@ bash scripts/lerobot/install_lerobot_cluster.sh
 如果要让脚本创建 conda 环境：
 
 ```bash
+CONDA_EXE=/mnt/gpu11_200T/dingxibo/miniconda3/bin/conda \
 LEROBOT_CREATE_CONDA=1 LEROBOT_CONDA_ENV=lerobot \
 bash scripts/lerobot/install_lerobot_cluster.sh
 ```
+
+`CONDA_CHANNEL_ARGS` 默认使用清华 conda-forge 镜像：
+
+```text
+--override-channels -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+```
+
+如集群有自己的 conda 镜像，可显式覆盖该变量。
 
 ## 训练 smoke
 
