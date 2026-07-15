@@ -2,12 +2,12 @@
 
 这是一个面向具身智能 demo 的工程基座。当前目标不是从零训练大模型，也不是马上接真机，而是把开源生态里的 **数据读取 → 模型训练/加载 → 推理 → 日志/评测证据 → demo 报告** 跑通，给团队后续开发留下稳定接口。
 
-项目现在按两条主线理解：
+项目现在按两条主线理解，其中第二条线已经从单一 FastWAM 调整为可扩展的 Custom WAM 后端族：
 
 | 主线 | 当前目标 | 入口 |
 |---|---|---|
 | LeRobot 主线 | 复刻 LeRobot data-to-train-to-inference，并真实训练多个 policy | [`pipelines/lerobot/`](pipelines/lerobot/) |
-| Custom/FastWAM 主线 | 保留自拟模型/custom backend 路径，以 FastWAM 为第一个例子 | [`pipelines/custom_fastwam/`](pipelines/custom_fastwam/) |
+| Custom WAM 主线 | 保留自拟模型/custom backend 路径，FastWAM 和 ImageWAM 并列接入 | [`pipelines/custom_wam/`](pipelines/custom_wam/) |
 
 Household/mock demo 仍保留，但它是应用展示层，不是当前训练能力验收主线。
 
@@ -20,6 +20,7 @@ Household/mock demo 仍保留，但它是应用展示层，不是当前训练能
 - LeRobot 开源 policy 下载入口已补齐：Diffusion PushT、SmolVLA base、FastWAM LIBERO；
 - FastWAM release 权重已下载到 `models/fastwam_release/`；
 - FastWAM LIBERO 数据已下载并解压到 `data/fastwam/libero-fastwam/`；
+- ImageWAM 已作为 `custom_wam/imagewam` 后端接入，默认走 FLUX.2 4B + LIBERO；
 - FastWAM 私有 realrobot overlay 还需要远端 GitHub 私有仓库权限。
 
 如果你刚接手项目，按这个顺序读：
@@ -30,7 +31,8 @@ Household/mock demo 仍保留，但它是应用展示层，不是当前训练能
 4. [`pipelines/lerobot/README.md`](pipelines/lerobot/README.md)；
 5. [`docs/LEROBOT_MULTI_MODEL_PLAN.md`](docs/LEROBOT_MULTI_MODEL_PLAN.md)；
 6. [`docs/OPEN_DATA_AND_EVAL_PLAN.md`](docs/OPEN_DATA_AND_EVAL_PLAN.md)；
-7. [`pipelines/custom_fastwam/README.md`](pipelines/custom_fastwam/README.md)。
+7. [`pipelines/custom_wam/README.md`](pipelines/custom_wam/README.md)；
+8. [`docs/IMAGEWAM_INTEGRATION.md`](docs/IMAGEWAM_INTEGRATION.md)。
 
 ## 仓库结构
 
@@ -38,15 +40,18 @@ Household/mock demo 仍保留，但它是应用展示层，不是当前训练能
 .
 ├── pipelines/
 │   ├── lerobot/          # LeRobot 主线：dataset -> train/load -> inference -> report
-│   └── custom_fastwam/   # 自拟/custom 主线：FastWAM release / overlay / realrobot
+│   ├── custom_wam/       # 自拟/custom WAM 后端族：FastWAM / ImageWAM / future backends
+│   └── custom_fastwam/   # 兼容入口：历史 FastWAM 说明
 ├── configs/
 │   ├── lerobot/          # LeRobot 配置
 │   ├── fastwam/          # FastWAM/custom 配置
+│   ├── imagewam/         # ImageWAM/custom 配置
 │   ├── runs/             # household/mock demo 配置
 │   └── profiles/         # smoke/dev/release profile
 ├── scripts/
 │   ├── lerobot/          # LeRobot 下载、训练、推理、报告脚本
 │   ├── fastwam/          # FastWAM 下载、overlay、训练报告脚本
+│   ├── imagewam/         # ImageWAM 下载、上游源码、训练/评测 wrapper
 │   └── reference/        # 外部参考项目
 ├── src/embodied_demo/    # 本项目 core：schema、CLI、mock runner、report
 ├── tasks/                # household/mock task 定义
@@ -186,9 +191,9 @@ make lerobot-infer-fastwam
 
 快速 2-step 验环境见 [`pipelines/lerobot/README.md`](pipelines/lerobot/README.md)。
 
-## FastWAM / custom 主线
+## Custom WAM 主线
 
-已下载：
+Custom WAM 当前包含 FastWAM 与 ImageWAM。FastWAM 已下载：
 
 ```text
 models/fastwam_release/libero_uncond_2cam224.pt
@@ -214,7 +219,27 @@ make download-lerobot-diffusion-pusht-policy
 make download-fastwam-artifacts
 ```
 
-FastWAM LIBERO 数据下载、v2.1/v3 格式说明和 private overlay 权限问题见 [`pipelines/custom_fastwam/README.md`](pipelines/custom_fastwam/README.md)。
+FastWAM LIBERO 数据下载、v2.1/v3 格式说明和 private overlay 权限问题见 [`pipelines/custom_wam/fastwam/README.md`](pipelines/custom_wam/fastwam/README.md)。
+
+ImageWAM 第一阶段默认 FLUX.2 4B + LIBERO：
+
+```bash
+make prepare-imagewam-upstream
+make download-imagewam-artifacts
+make download-imagewam-flux2-base
+make imagewam-train-smoke
+```
+
+路径：
+
+```text
+upstreams/ImageWAM/
+models/imagewam/flux2_klein_4b_libero/
+models/imagewam/flux2/
+runs/imagewam/
+```
+
+说明见 [`pipelines/custom_wam/imagewam/README.md`](pipelines/custom_wam/imagewam/README.md)。
 
 ## 常用 Make targets
 

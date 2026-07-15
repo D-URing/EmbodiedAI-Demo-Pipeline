@@ -5,7 +5,8 @@
 ```text
 scripts/
 ├── lerobot/     # LeRobot 主线脚本
-├── fastwam/     # Custom/FastWAM 主线脚本
+├── fastwam/     # Custom WAM / FastWAM 后端脚本
+├── imagewam/    # Custom WAM / ImageWAM 后端脚本
 └── reference/   # 外部参考项目 fetch/pin
 ```
 
@@ -55,3 +56,20 @@ make demo-chain-fastwam
 
 注意：FastWAM LIBERO 数据当前用 `/home/scut/hfd.sh yuanty/LIBERO-fastwam --dataset` 手动下载，尚未封装为 Make target。
 
+## ImageWAM / custom
+
+```text
+scripts/imagewam/
+├── prepare_imagewam_upstream.sh
+├── download_artifacts.sh
+├── run_train_eval.sh
+└── slurm_libero_pilot.sbatch
+```
+
+主要 Make target：
+
+```bash
+make prepare-imagewam-upstream
+make download-imagewam-artifacts
+make imagewam-train-smoke
+```

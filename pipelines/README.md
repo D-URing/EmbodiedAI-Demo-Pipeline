@@ -5,7 +5,7 @@
 | Pipeline | 目标 | 当前验收 |
 |---|---|---|
 | [`lerobot/`](lerobot/) | 复刻 LeRobot 的数据读取 → 训练 → 推理链路 | ACT/PushT 已在 SCUT `gpu11` 跑通 GPU 训练 smoke |
-| [`custom_fastwam/`](custom_fastwam/) | 保留自拟/自建模型接口，以 FastWAM realrobot overlay 为第一个例子 | release 权重和 LIBERO 数据已准备；私有 overlay 需要远端 GitHub 权限 |
+| [`custom_wam/`](custom_wam/) | 保留自拟/自建模型接口，FastWAM 和 ImageWAM 并列 | FastWAM release/LIBERO 已准备；ImageWAM FLUX.2 4B/LIBERO 接入为可下载后端 |
 
 约定：
 
@@ -15,3 +15,5 @@
 - `docs/` 放背景、结构、存储和长说明；
 - `data/` 和 `models/` 是根目录全局资产池，各 pipeline 自行选择需要的 dataset/model；
 - `hf_cache/`、`runs/`、`upstreams/` 是本地/集群 ignored 目录，不提交 Git。
+
+历史入口 [`custom_fastwam/`](custom_fastwam/) 保留用于兼容旧文档；新后端统一放入 `custom_wam/<backend>/`。

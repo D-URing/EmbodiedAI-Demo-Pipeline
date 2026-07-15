@@ -5,7 +5,8 @@
 ```text
 configs/
 ├── lerobot/     # LeRobot 主线，含 train profiles
-├── fastwam/     # Custom/FastWAM 主线
+├── fastwam/     # Custom WAM / FastWAM 后端
+├── imagewam/    # Custom WAM / ImageWAM 后端
 ├── runs/        # Household/mock demo
 └── profiles/    # smoke/dev/release 通用 profile
 ```
@@ -52,7 +53,18 @@ configs/lerobot/infer/
 - realrobot overlay；
 - smoke / pilot / full 训练配置。
 
-默认入口见 [`../pipelines/custom_fastwam/README.md`](../pipelines/custom_fastwam/README.md)。
+默认入口见 [`../pipelines/custom_wam/fastwam/README.md`](../pipelines/custom_wam/fastwam/README.md)。
+
+## `configs/imagewam/`
+
+用于 Custom WAM / ImageWAM：
+
+- official ImageWAM upstream checkout；
+- FLUX.2 4B/9B LIBERO checkpoint 路径；
+- LIBERO smoke/pilot/full 运行参数；
+- A100 单机八卡 pilot profile。
+
+默认入口见 [`../pipelines/custom_wam/imagewam/README.md`](../pipelines/custom_wam/imagewam/README.md)。
 
 ## `configs/runs/`
 

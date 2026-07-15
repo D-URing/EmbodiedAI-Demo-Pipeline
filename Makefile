@@ -5,7 +5,7 @@ LEROBOT_TRAIN_CONFIG ?= configs/lerobot/pusht_act_gpu_smoke.sh
 LEROBOT_ACCELERATE_CONFIG ?= configs/lerobot/train/svla_so100_smolvla_8gpu_long.sh
 LEROBOT_INFER_CONFIG ?= configs/lerobot/native_pusht_act_pipeline.sh
 
-.PHONY: help setup doctor test validate dry-run demo demo-extended download-lerobot-artifacts download-lerobot-pusht-dataset download-lerobot-svla-so100-pickplace-dataset download-lerobot-diffusion-pusht-policy download-lerobot-smolvla-base-policy download-lerobot-fastwam-libero-policy download-data-rovid20k download-data-rovidx download-data-mdm-depth download-data-xperience10m-sample download-data-abc130k download-data-agibotworld-alpha download-data-interndata-a1 download-fastwam-artifacts lerobot-check-scripts lerobot-data-smoke lerobot-train-smoke lerobot-train-act lerobot-train-diffusion lerobot-train-smolvla lerobot-train-8gpu-smolvla lerobot-infer-smoke lerobot-infer-diffusion lerobot-infer-smolvla lerobot-infer-fastwam demo-chain-lerobot-fastwam fastwam-check-scripts fastwam-train-smoke demo-chain-fastwam schemas reference-fetch clean
+.PHONY: help setup doctor test validate dry-run demo demo-extended download-lerobot-artifacts download-lerobot-pusht-dataset download-lerobot-svla-so100-pickplace-dataset download-lerobot-diffusion-pusht-policy download-lerobot-smolvla-base-policy download-lerobot-fastwam-libero-policy download-data-rovid20k download-data-rovidx download-data-mdm-depth download-data-xperience10m-sample download-data-abc130k download-data-agibotworld-alpha download-data-interndata-a1 download-fastwam-artifacts prepare-imagewam-upstream download-imagewam-artifacts download-imagewam-flux2-base lerobot-check-scripts lerobot-data-smoke lerobot-train-smoke lerobot-train-act lerobot-train-diffusion lerobot-train-smolvla lerobot-train-8gpu-smolvla lerobot-infer-smoke lerobot-infer-diffusion lerobot-infer-smolvla lerobot-infer-fastwam demo-chain-lerobot-fastwam fastwam-check-scripts fastwam-train-smoke demo-chain-fastwam imagewam-check-scripts imagewam-train-smoke schemas reference-fetch clean
 
 help:
 	@echo "EmbodiedAI Demo Pipeline"
@@ -43,15 +43,19 @@ help:
 	@echo "                                      Download Xperience-10M sample episode"
 	@echo "  make download-data-abc130k         Download ABC-130k after HF access approval"
 	@echo
-	@echo "Custom / FastWAM pipeline:"
+	@echo "Custom WAM pipeline:"
 	@echo "  make download-fastwam-artifacts    Download FastWAM release ckpt/stats"
 	@echo "  make fastwam-train-smoke           Run FastWAM custom smoke after overlay setup"
 	@echo "  make demo-chain-fastwam            Convert FastWAM run into demo report"
+	@echo "  make prepare-imagewam-upstream     Clone/update official ImageWAM repo"
+	@echo "  make download-imagewam-artifacts   Download ImageWAM FLUX.2 4B LIBERO release"
+	@echo "  make download-imagewam-flux2-base  Download FLUX.2 4B base/AE via official script"
+	@echo "  make imagewam-train-smoke          Run ImageWAM metadata smoke"
 	@echo
 	@echo "Start here:"
 	@echo "  docs/README.md"
 	@echo "  pipelines/lerobot/README.md"
-	@echo "  pipelines/custom_fastwam/README.md"
+	@echo "  pipelines/custom_wam/README.md"
 
 setup:
 	$(PYTHON) -m venv $(VENV)
@@ -166,6 +170,18 @@ download-data-interndata-a1:
 download-fastwam-artifacts:
 	bash scripts/fastwam/download_release_artifacts.sh
 
+prepare-imagewam-upstream:
+	bash scripts/imagewam/prepare_imagewam_upstream.sh
+
+download-imagewam-artifacts:
+	bash scripts/imagewam/download_artifacts.sh
+
+download-imagewam-flux2-base: prepare-imagewam-upstream
+	cd upstreams/ImageWAM && \
+	MODEL_ROOT="$${IMAGEWAM_MODEL_ROOT:-$${EMBODIED_MODEL_ROOT:-$$(pwd)/../../models}/imagewam}" \
+	DOWNLOAD_9B="$${IMAGEWAM_DOWNLOAD_9B:-false}" \
+	bash scripts/flux2/prepare_flux2_files.sh
+
 lerobot-check-scripts:
 	bash -n scripts/lerobot/install_lerobot_cluster.sh
 	bash -n scripts/lerobot/download_artifacts.sh
@@ -234,6 +250,16 @@ fastwam-train-smoke:
 demo-chain-fastwam:
 	test -n "$(FASTWAM_RUN_DIR)" || (echo "FASTWAM_RUN_DIR is required, e.g. FASTWAM_RUN_DIR=runs/fastwam/<run>/<id> make demo-chain-fastwam" >&2; exit 2)
 	$(VENV)/bin/embodied-demo report-fastwam --run-dir "$(FASTWAM_RUN_DIR)" $(if $(OUTPUT_DIR),--output-dir "$(OUTPUT_DIR)",) $(if $(MOCK_RUN_DIR),--mock-run-dir "$(MOCK_RUN_DIR)",)
+
+imagewam-check-scripts:
+	bash -n configs/imagewam/libero_train_eval.sh
+	bash -n scripts/imagewam/prepare_imagewam_upstream.sh
+	bash -n scripts/imagewam/download_artifacts.sh
+	bash -n scripts/imagewam/run_train_eval.sh
+	bash -n scripts/imagewam/slurm_libero_pilot.sbatch
+
+imagewam-train-smoke:
+	IMAGEWAM_MODE=metadata-smoke IMAGEWAM_REQUIRE_CUDA=0 bash scripts/imagewam/run_train_eval.sh
 
 schemas:
 	$(VENV)/bin/embodied-demo export-schema --output-dir build/schemas

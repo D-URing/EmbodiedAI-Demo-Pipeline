@@ -12,13 +12,13 @@
 
 最重要的约定：
 
-> `data/` 和 `models/` 是仓库级资产池，不属于某个 pipeline。LeRobot、FastWAM、自拟模型都从这里选择自己需要的数据和权重。
+> `data/` 和 `models/` 是仓库级资产池，不属于某个 pipeline。LeRobot、FastWAM、ImageWAM 和后续自拟模型都从这里选择自己需要的数据和权重。
 
 ## 代码目录 vs 本地目录
 
 | 目录 | 提交 Git | 用途 |
 |---|---:|---|
-| `pipelines/` | 是 | 两条工程主线入口 |
+| `pipelines/` | 是 | LeRobot 与 Custom WAM 工程主线入口 |
 | `configs/` | 是 | 配置和运行参数 |
 | `scripts/` | 是 | 下载、训练、解析、报告脚本 |
 | `src/` | 是 | 本项目 core Python 包 |
@@ -63,6 +63,9 @@ export PIP_CACHE_DIR="$PROJECT_ROOT/hf_cache/pip"
 | FastWAM release ckpt | `models/fastwam_release/libero_uncond_2cam224.pt` | 约 12G |
 | FastWAM release stats | `models/fastwam_release/libero_uncond_2cam224_dataset_stats.json` | stats / normalizer |
 | FastWAM LIBERO 数据 | `data/fastwam/libero-fastwam` | LeRobot v2.1，已解压 |
+| ImageWAM FLUX.2 4B LIBERO | `models/imagewam/flux2_klein_4b_libero` | ImageWAM release checkpoint，待集群下载 |
+| ImageWAM FLUX.2 base / AE | `models/imagewam/flux2` | 官方训练入口必需，部分 HF repo 可能 gated |
+| ImageWAM upstream | `upstreams/ImageWAM` | 官方源码 checkout，ignored |
 
 ## Manifest
 
@@ -77,7 +80,9 @@ runs/artifact_manifests/
 ├── lerobot_smolvla_base_policy_manifest.json
 ├── lerobot_fastwam_libero_policy_manifest.json
 ├── fastwam_release_artifacts_manifest.json
-└── fastwam_libero_dataset_manifest.json
+├── fastwam_libero_dataset_manifest.json
+├── imagewam_upstream_manifest.json
+└── imagewam_artifacts_manifest.json
 ```
 
 Manifest 不是大文件，可以用于记录“当前共享盘上有什么”。如果 manifest 内容包含绝对路径，它只代表当前集群环境，不代表跨机器可复现路径。

@@ -137,6 +137,30 @@ sources:
       - installing_cuda_dependencies_in_core_environment
       - claiming_household_demo_task_success_from_base_fastwam_alone
 
+  imagewam:
+    role: image_editing_world_action_model_custom_backend
+    repository: https://github.com/yuyangalin/ImageWAM
+    project_page: https://zhangwenyao1.github.io/ImageWAM/
+    huggingface_collection: https://huggingface.co/collections/yuyangalin/imagewam
+    default_branch: main
+    pinned_commit: 70bc47147a49652fc3ca62617cab0e0b6b31bc92
+    pinned_commit_date_utc: "2026-07-09T15:40:13Z"
+    license: MIT
+    referenced_paths:
+      - README.md
+      - scripts/flux2/run_train_flux2_klein_imagewam.sh
+      - scripts/flux2/run_eval_flux2_libero.sh
+    in_scope:
+      - custom_wam_backend_extension_path
+      - image_editing_backbone_for_action_prediction
+      - flux2_4b_libero_release_checkpoint
+      - libero_train_eval_wrapper
+      - future_robotwin_extension
+    out_of_scope:
+      - vendoring_imagewam_code
+      - forcing_imagewam_into_lerobot_policy_api_in_m1
+      - claiming_libero_or_robotwin_success_rate_without_sim_eval
+
   fastwam_realrobot_pipeline:
     role: internal_custom_fastwam_realrobot_overlay
     repository: https://github.com/D-URing/fastwam-realrobot-pipeline.git

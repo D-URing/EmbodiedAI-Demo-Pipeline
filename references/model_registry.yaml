@@ -183,3 +183,34 @@ models:
       - It is a customized finetuning/realrobot overlay path.
       - FastWAM LIBERO release data is LeRobot v2.1; convert a copy before using the current LeRobot v3 loader.
       - SCUT private overlay clone currently needs GitHub private repository credentials.
+
+  custom_imagewam_flux2_4b_libero:
+    status: configured_pending_cluster_download
+    path_type: custom_backend
+    upstream: yuyangalin/ImageWAM
+    policy_family: imagewam
+    policy_variant: flux2_4b
+    task_type: libero
+    policy_repo_id: yuyangalin/ImageWAM-FLUX.2-4B-LIBERO
+    default_config: configs/imagewam/libero_train_eval.sh
+    smoke_targets:
+      - make prepare-imagewam-upstream
+      - make download-imagewam-artifacts
+      - make download-imagewam-flux2-base
+      - make imagewam-train-smoke
+    download_targets:
+      - make download-imagewam-artifacts
+      - make download-imagewam-flux2-base
+      - IMAGEWAM_POLICY_REPO_ID=yuyangalin/ImageWAM-FLUX.2-9B-LIBERO IMAGEWAM_POLICY_LOCAL_DIR="$EMBODIED_MODEL_ROOT/imagewam/flux2_klein_9b_libero" make download-imagewam-artifacts
+    artifact_location:
+      release_dataset: "$EMBODIED_DATA_ROOT/fastwam/libero-fastwam/"
+      release_weights: "$EMBODIED_MODEL_ROOT/imagewam/flux2_klein_4b_libero/"
+      flux2_base_weights: "$EMBODIED_MODEL_ROOT/imagewam/flux2/"
+      upstream_source: "$PROJECT_ROOT/upstreams/ImageWAM/"
+      custom_outputs: "$EMBODIED_RUN_ROOT/imagewam/"
+    capability_claim: custom_wam_image_editing_backend_candidate
+    notes:
+      - ImageWAM is parallel to FastWAM under pipelines/custom_wam.
+      - Default first target is FLUX.2 4B + LIBERO because it is lighter than 9B and aligns with available LIBERO assets.
+      - The first wrapper records metadata and delegates real training to the official ImageWAM scripts after the upstream environment is installed.
+      - Do not claim LIBERO/RoboTwin success rates until the simulator/eval wrapper is installed and run.

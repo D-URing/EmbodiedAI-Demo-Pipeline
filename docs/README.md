@@ -12,7 +12,7 @@
 | [`../pipelines/lerobot/README.md`](../pipelines/lerobot/README.md) | LeRobot 主线怎么跑 |
 | [`LEROBOT_MULTI_MODEL_PLAN.md`](LEROBOT_MULTI_MODEL_PLAN.md) | LeRobot 多模型训练计划和集群命令 |
 | [`OPEN_DATA_AND_EVAL_PLAN.md`](OPEN_DATA_AND_EVAL_PLAN.md) | 开源数据下载分层与评测路线 |
-| [`../pipelines/custom_fastwam/README.md`](../pipelines/custom_fastwam/README.md) | FastWAM/custom 主线怎么跑 |
+| [`../pipelines/custom_wam/README.md`](../pipelines/custom_wam/README.md) | Custom WAM 主线怎么跑 |
 
 ## 第二层：需要细节时读
 
@@ -24,6 +24,7 @@
 | [`LEROBOT_FIRST_PIPELINE.md`](LEROBOT_FIRST_PIPELINE.md) | LeRobot-first 设计说明 |
 | [`LEROBOT_REPLICATION.md`](LEROBOT_REPLICATION.md) | LeRobot GPU 复刻细节 |
 | [`FASTWAM_REALROBOT_INTEGRATION.md`](FASTWAM_REALROBOT_INTEGRATION.md) | FastWAM realrobot overlay 细节 |
+| [`IMAGEWAM_INTEGRATION.md`](IMAGEWAM_INTEGRATION.md) | ImageWAM 后端接入规划和命令 |
 
 ## 第三层：规划和历史
 
@@ -43,4 +44,5 @@
 - 已在 SCUT `gpu11` 跑通真实 GPU training smoke，并观察到 2-step loss 下降；
 - 立即下载的数据/权重包括 PushT、SVLA SO100 pick-place、Diffusion PushT policy、SmolVLA base；
 - FastWAM release 权重和 LIBERO 数据已经下载，但 FastWAM private overlay 还受 GitHub 私有仓库权限阻塞；
+- ImageWAM 已加入 Custom WAM 结构，默认目标是 FLUX.2 4B + LIBERO；
 - `data/`、`models/`、`hf_cache/`、`runs/`、`upstreams/` 都是 ignored 本地/集群目录，不进 Git。
