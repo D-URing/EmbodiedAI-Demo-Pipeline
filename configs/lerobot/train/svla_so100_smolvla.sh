@@ -1,0 +1,34 @@
+# shellcheck shell=bash
+
+# LeRobot profile 3: SmolVLA fine-tuning.
+# Goal: A100-friendly VLA path with a real pretrained model and a small public LeRobot dataset.
+# Official LeRobot docs recommend SmolVLA fine-tuning from lerobot/smolvla_base.
+
+export EMBODIED_REPO_ROOT="${EMBODIED_REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
+
+export LEROBOT_DATASET_REPO_ID="${LEROBOT_DATASET_REPO_ID:-lerobot/svla_so100_pickplace}"
+export LEROBOT_DATASET_ROOT="${LEROBOT_DATASET_ROOT:-$EMBODIED_REPO_ROOT/data/lerobot/svla_so100_pickplace}"
+export LEROBOT_DATASET_VIDEO_BACKEND="${LEROBOT_DATASET_VIDEO_BACKEND:-pyav}"
+
+export LEROBOT_POLICY_TYPE="${LEROBOT_POLICY_TYPE:-smolvla}"
+export LEROBOT_POLICY_REPO_ID="${LEROBOT_POLICY_REPO_ID:-local/svla_so100_smolvla}"
+export LEROBOT_POLICY_PUSH_TO_HUB="${LEROBOT_POLICY_PUSH_TO_HUB:-false}"
+export LEROBOT_POLICY_DEVICE="${LEROBOT_POLICY_DEVICE:-cuda}"
+export LEROBOT_POLICY_PRETRAINED_PATH="${LEROBOT_POLICY_PRETRAINED_PATH:-$EMBODIED_REPO_ROOT/models/lerobot/smolvla/smolvla_base}"
+export LEROBOT_POLICY_DTYPE="${LEROBOT_POLICY_DTYPE:-bfloat16}"
+export LEROBOT_POLICY_GRADIENT_CHECKPOINTING="${LEROBOT_POLICY_GRADIENT_CHECKPOINTING:-true}"
+
+export LEROBOT_STEPS="${LEROBOT_STEPS:-2000}"
+export LEROBOT_BATCH_SIZE="${LEROBOT_BATCH_SIZE:-8}"
+export LEROBOT_NUM_WORKERS="${LEROBOT_NUM_WORKERS:-4}"
+export LEROBOT_LOG_FREQ="${LEROBOT_LOG_FREQ:-20}"
+export LEROBOT_SAVE_FREQ="${LEROBOT_SAVE_FREQ:-1000}"
+export LEROBOT_SEED="${LEROBOT_SEED:-1002}"
+
+export LEROBOT_ENV_EVAL_FREQ="${LEROBOT_ENV_EVAL_FREQ:-0}"
+export LEROBOT_EVAL_STEPS="${LEROBOT_EVAL_STEPS:-0}"
+export LEROBOT_WANDB_ENABLE="${LEROBOT_WANDB_ENABLE:-false}"
+
+export LEROBOT_RUN_NAME="${LEROBOT_RUN_NAME:-svla_so100_smolvla_train}"
+export LEROBOT_RUN_ROOT="${LEROBOT_RUN_ROOT:-$EMBODIED_REPO_ROOT/runs/lerobot}"
+export TORCH_HOME="${TORCH_HOME:-$EMBODIED_REPO_ROOT/hf_cache/torch}"

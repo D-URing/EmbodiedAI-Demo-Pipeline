@@ -21,6 +21,8 @@ LEROBOT_POLICY_LOCAL_DIR="${LEROBOT_POLICY_LOCAL_DIR:-$EMBODIED_MODEL_ROOT/lerob
 
 DOWNLOAD_LEROBOT_DATASET="${DOWNLOAD_LEROBOT_DATASET:-1}"
 DOWNLOAD_LEROBOT_POLICY="${DOWNLOAD_LEROBOT_POLICY:-0}"
+ARTIFACT_FAMILY="${ARTIFACT_FAMILY:-lerobot}"
+ARTIFACT_MANIFEST_NAME="${ARTIFACT_MANIFEST_NAME:-lerobot_artifacts_manifest.json}"
 HF_HUB_ENABLE_HF_TRANSFER="${HF_HUB_ENABLE_HF_TRANSFER:-1}"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 HF_CLI_BIN="${HF_CLI_BIN:-}"
@@ -64,7 +66,8 @@ mkdir -p "$LEROBOT_DATASET_LOCAL_DIR" "$EMBODIED_MODEL_ROOT" "$EMBODIED_RUN_ROOT
 
 dataset_downloaded=false
 policy_downloaded=false
-MANIFEST_PATH="$EMBODIED_RUN_ROOT/artifact_manifests/lerobot_artifacts_manifest.json"
+DEFAULT_MANIFEST_PATH="$EMBODIED_RUN_ROOT/artifact_manifests/lerobot_artifacts_manifest.json"
+MANIFEST_PATH="$EMBODIED_RUN_ROOT/artifact_manifests/$ARTIFACT_MANIFEST_NAME"
 
 print_download_failure_help() {
   local artifact_name="$1"
@@ -93,7 +96,7 @@ Possible fixes:
 EOF
 }
 
-echo "[artifact] family=lerobot"
+echo "[artifact] family=$ARTIFACT_FAMILY"
 echo "[artifact] dataset_repo=$LEROBOT_DATASET_REPO_ID"
 echo "[artifact] dataset_local_dir=$LEROBOT_DATASET_LOCAL_DIR"
 echo "[artifact] policy_repo=${LEROBOT_POLICY_REPO_ID:-<none>}"
@@ -172,6 +175,7 @@ else
   echo "[skip] DOWNLOAD_LEROBOT_POLICY=$DOWNLOAD_LEROBOT_POLICY"
 fi
 
+ARTIFACT_FAMILY="$ARTIFACT_FAMILY" \
 LEROBOT_DATASET_REPO_ID="$LEROBOT_DATASET_REPO_ID" \
 LEROBOT_DATASET_LOCAL_DIR="$LEROBOT_DATASET_LOCAL_DIR" \
 LEROBOT_POLICY_REPO_ID="$LEROBOT_POLICY_REPO_ID" \
@@ -188,7 +192,7 @@ import sys
 from datetime import datetime, timezone
 
 manifest = {
-    "artifact_family": "lerobot",
+    "artifact_family": os.environ["ARTIFACT_FAMILY"],
     "created_at": datetime.now(timezone.utc).isoformat(),
     "dataset": {
         "repo_id": os.environ["LEROBOT_DATASET_REPO_ID"],

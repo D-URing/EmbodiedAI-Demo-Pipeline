@@ -16,6 +16,26 @@ DEFAULT_POLICY_CLASSES = {
         "lerobot.policies.act.modeling_act.ACTPolicy",
         "lerobot.common.policies.act.modeling_act.ACTPolicy",
     ],
+    "diffusion": [
+        "lerobot.policies.diffusion.modeling_diffusion.DiffusionPolicy",
+        "lerobot.common.policies.diffusion.modeling_diffusion.DiffusionPolicy",
+    ],
+    "smolvla": [
+        "lerobot.policies.smolvla.modeling_smolvla.SmolVLAPolicy",
+        "lerobot.common.policies.smolvla.modeling_smolvla.SmolVLAPolicy",
+    ],
+    "pi0": [
+        "lerobot.policies.pi0.modeling_pi0.PI0Policy",
+        "lerobot.common.policies.pi0.modeling_pi0.PI0Policy",
+    ],
+    "pi0_fast": [
+        "lerobot.policies.pi0fast.modeling_pi0fast.PI0FASTPolicy",
+        "lerobot.common.policies.pi0fast.modeling_pi0fast.PI0FASTPolicy",
+    ],
+    "pi0fast": [
+        "lerobot.policies.pi0fast.modeling_pi0fast.PI0FASTPolicy",
+        "lerobot.common.policies.pi0fast.modeling_pi0fast.PI0FASTPolicy",
+    ],
     "fastwam": [
         "lerobot.policies.fastwam.modeling_fastwam.FastWAMPolicy",
         "lerobot.common.policies.fastwam.modeling_fastwam.FastWAMPolicy",

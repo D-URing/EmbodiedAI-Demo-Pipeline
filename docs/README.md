@@ -10,6 +10,8 @@
 | [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) | 仓库结构，LeRobot / Custom 两条线怎么分 |
 | [`STORAGE_AND_ARTIFACTS.md`](STORAGE_AND_ARTIFACTS.md) | 数据、权重、cache、runs 分别放哪里 |
 | [`../pipelines/lerobot/README.md`](../pipelines/lerobot/README.md) | LeRobot 主线怎么跑 |
+| [`LEROBOT_MULTI_MODEL_PLAN.md`](LEROBOT_MULTI_MODEL_PLAN.md) | LeRobot 多模型训练计划和集群命令 |
+| [`OPEN_DATA_AND_EVAL_PLAN.md`](OPEN_DATA_AND_EVAL_PLAN.md) | 开源数据下载分层与评测路线 |
 | [`../pipelines/custom_fastwam/README.md`](../pipelines/custom_fastwam/README.md) | FastWAM/custom 主线怎么跑 |
 
 ## 第二层：需要细节时读
@@ -37,8 +39,8 @@
 
 ## 当前最重要的事实
 
-- 第一阶段可交差主线是 LeRobot ACT/PushT；
+- 第一阶段主线已升级为 LeRobot 多模型训练：ACT、Diffusion、SmolVLA；
 - 已在 SCUT `gpu11` 跑通真实 GPU training smoke，并观察到 2-step loss 下降；
+- 立即下载的数据/权重包括 PushT、SVLA SO100 pick-place、Diffusion PushT policy、SmolVLA base；
 - FastWAM release 权重和 LIBERO 数据已经下载，但 FastWAM private overlay 还受 GitHub 私有仓库权限阻塞；
 - `data/`、`models/`、`hf_cache/`、`runs/`、`upstreams/` 都是 ignored 本地/集群目录，不进 Git。
-

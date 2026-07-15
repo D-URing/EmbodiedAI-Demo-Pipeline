@@ -1,6 +1,6 @@
 # Project Structure
 
-项目现在按“两个 pipeline + 一个 core + 一组本地资产目录”理解。
+项目现在按“两个 pipeline + 一个 core + 全局资产池”理解。
 
 ```text
 .
@@ -21,10 +21,18 @@
 ├── demo_chains/          # evidence/report 链路定义
 ├── docs/                 # 文档
 ├── references/           # 上游 pin、模型 registry
-└── ignored local dirs    # data/models/runs/hf_cache/upstreams 等
+└── asset/local dirs      # data/models/runs/hf_cache/upstreams 等
 ```
 
 ## 两条 pipeline
+
+两条 pipeline 都不拥有数据或权重。它们只从根目录资产池选择输入：
+
+```text
+data/      # dataset pool
+models/    # model/checkpoint pool
+hf_cache/  # HF/Torch cache
+```
 
 ### 1. LeRobot pipeline
 
@@ -53,7 +61,7 @@ configs/lerobot/
 scripts/lerobot/
 runs/lerobot/
 data/lerobot/
-models/lerobot/        # 后续 checkpoint/pretrained policy
+models/lerobot/        # pretrained policy / stable local checkpoint
 ```
 
 ### 2. Custom/FastWAM pipeline
@@ -127,4 +135,3 @@ docs/STORAGE_AND_ARTIFACTS.md
 ```
 
 长文档保留历史、规划和细节，不作为第一入口。
-

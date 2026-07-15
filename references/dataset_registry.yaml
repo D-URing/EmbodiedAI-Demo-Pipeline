@@ -1,0 +1,171 @@
+schema_version: "1.0"
+updated: "2026-07-15"
+purpose: >
+  Track open datasets that may feed the LeRobot and custom/FastWAM pipelines.
+  This registry is an engineering routing table, not a literature survey.
+
+storage:
+  root: "$PROJECT_ROOT/data"
+  rule: >
+    Data lives in the root-level data/ pool. Pipelines choose datasets by config
+    or environment variables; do not copy datasets into pipeline directories.
+
+tiers:
+  immediate_training:
+    description: Small or already validated assets for first loss/inference checks.
+    datasets:
+      - id: lerobot/pusht
+        local_dir: data/lerobot/pusht
+        format: LeRobot
+        use_for:
+          - ACT training smoke
+          - Diffusion training smoke
+          - offline policy inference
+        download_target: make download-lerobot-pusht-dataset
+        status: verified_on_scut
+      - id: lerobot/svla_so100_pickplace
+        local_dir: data/lerobot/svla_so100_pickplace
+        format: LeRobot
+        use_for:
+          - SmolVLA fine-tuning
+          - language-conditioned policy smoke
+        download_target: make download-lerobot-svla-so100-pickplace-dataset
+        status: planned_download
+
+  immediate_custom_fastwam:
+    description: Release data for the custom/FastWAM route.
+    datasets:
+      - id: yuanty/LIBERO-fastwam
+        local_dir: data/fastwam/libero-fastwam
+        format: LeRobot v2.1
+        use_for:
+          - FastWAM release/custom overlay training
+          - future LeRobot v3 conversion test
+        status: downloaded_on_scut
+        notes:
+          - Keep original v2.1 data immutable.
+          - Convert a copy before using current LeRobot v3 loaders.
+
+  practical_open_data_samples:
+    description: Useful open data that can be downloaded early without committing to huge full corpora.
+    datasets:
+      - id: Perflow-Shuai/RoVid-20K-10s
+        source_family: internet_robot_video
+        local_dir: data/internet/rovid-20k-10s
+        format: Hugging Face dataset
+        use_for:
+          - video/world-model pretraining experiments
+          - task-conditioned future-frame prediction prototype
+        download_target: make download-data-rovid20k
+        status: recommended_sample_first
+      - id: ropedia-ai/xperience-10m-sample
+        source_family: human_egocentric
+        local_dir: data/human/xperience-10m-sample
+        format: Hugging Face dataset
+        use_for:
+          - egocentric human prior inspection
+          - future human-to-robot transfer analysis
+        download_target: make download-data-xperience10m-sample
+        status: recommended_sample_first
+
+  large_or_gated_open_data:
+    description: High-value datasets that need storage, license, or account planning before full download.
+    datasets:
+      - id: DAGroup-PKU/RoVid-X
+        source_family: internet_robot_video
+        local_dir: data/internet/rovid-x
+        format: Hugging Face dataset
+        use_for:
+          - world model / video pretraining
+          - robotics video generation prior
+        download_target: make download-data-rovidx
+        status: huge_over_1tb
+      - id: robbyant/mdm_depth
+        source_family: perception_depth
+        local_dir: data/perception/mdm_depth
+        format: Hugging Face dataset
+        use_for:
+          - RGB-D perception pretraining
+          - depth completion / spatial representation
+        download_target: make download-data-mdm-depth
+        status: huge_multi_tb
+      - id: XDOF/ABC-130k
+        source_family: real_robot_bimanual
+        local_dir: data/vla/abc-130k
+        format: MCAP + annotations
+        use_for:
+          - bimanual teleoperation data study
+          - future VLA finetuning after adapter
+        download_target: make download-data-abc130k
+        status: gated_hf_terms_and_huge
+      - id: agibot-world/AgiBotWorld-Alpha
+        source_family: real_robot_humanoid
+        local_dir: data/vla/agibotworld-alpha
+        format: Hugging Face dataset
+        use_for:
+          - humanoid/generalist data study
+          - future multi-embodiment adapters
+        download_target: make download-data-agibotworld-alpha
+        status: large
+      - id: InternRobotics/InternData-A1
+        source_family: synthetic_real_manipulation
+        local_dir: data/simulation/interndata-a1
+        format: Hugging Face dataset
+        use_for:
+          - simulation pretraining data
+          - articulated/deformable/fluid task coverage
+        download_target: make download-data-interndata-a1
+        status: gated_license_and_large
+
+  external_access_workflows:
+    description: Datasets that need their own official downloader or access workflow.
+    datasets:
+      - id: Ego4D
+        local_dir: data/human/ego4d
+        access: official_cli
+        use_for:
+          - egocentric video/action prior
+          - household activity understanding
+      - id: EPIC-KITCHENS
+        local_dir: data/human/epic-kitchens
+        access: official_download_scripts
+        use_for:
+          - kitchen action/object prior
+          - task vocabulary and recipe structure
+      - id: EgoVerse
+        local_dir: data/human/egoverse
+        access: official_repo_s3_r2_sync
+        use_for:
+          - human-to-robot transfer research
+          - egomimic training reference
+      - id: Open-X-Embodiment
+        local_dir: data/vla/open-x-embodiment
+        access: official_dataset_builder
+        use_for:
+          - multi-embodiment pretraining reference
+          - RT-X / OpenVLA lineage comparison
+      - id: DROID
+        local_dir: data/vla/droid
+        access: official_dataset
+        use_for:
+          - real robot manipulation finetuning reference
+      - id: BridgeData
+        local_dir: data/vla/bridgedata
+        access: official_dataset
+        use_for:
+          - real robot manipulation finetuning reference
+      - id: RoboCOIN
+        local_dir: data/vla/robocoin
+        access: official_toolkit
+        use_for:
+          - bimanual multi-embodiment manipulation
+          - LeRobot-compatible metadata design reference
+
+benchmarks:
+  current_policy: offline_inference_only
+  future_sim_eval_priority:
+    - RoboDojo capability dimensions
+    - LIBERO via LeRobot eval
+    - RoboCasa365 kitchen tasks
+    - RoboTwin 2.0 bimanual tasks
+    - SIMPLER sim-real correlation methodology

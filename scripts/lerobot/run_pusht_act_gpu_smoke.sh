@@ -64,8 +64,31 @@ CMD=(
   --wandb.enable="$LEROBOT_WANDB_ENABLE"
 )
 
+append_if_set() {
+  local key="$1"
+  local value="$2"
+  if [[ -n "$value" ]]; then
+    CMD+=(--"$key"="$value")
+  fi
+}
+
+append_if_set policy.pretrained_path "${LEROBOT_POLICY_PRETRAINED_PATH:-}"
+append_if_set policy.dtype "${LEROBOT_POLICY_DTYPE:-}"
+append_if_set policy.compile_model "${LEROBOT_POLICY_COMPILE_MODEL:-}"
+append_if_set policy.gradient_checkpointing "${LEROBOT_POLICY_GRADIENT_CHECKPOINTING:-}"
+append_if_set policy.freeze_vision_encoder "${LEROBOT_POLICY_FREEZE_VISION_ENCODER:-}"
+append_if_set policy.train_expert_only "${LEROBOT_POLICY_TRAIN_EXPERT_ONLY:-}"
+append_if_set policy.num_inference_steps "${LEROBOT_POLICY_NUM_INFERENCE_STEPS:-}"
+append_if_set optimizer.lr "${LEROBOT_OPTIM_LR:-}"
+
 if [[ -n "${LEROBOT_DATASET_ROOT:-}" ]]; then
   CMD+=(--dataset.root="$LEROBOT_DATASET_ROOT")
+fi
+
+if [[ -n "${LEROBOT_TRAIN_EXTRA_ARGS:-}" ]]; then
+  # shellcheck disable=SC2206
+  EXTRA_ARGS=( ${LEROBOT_TRAIN_EXTRA_ARGS} )
+  CMD+=("${EXTRA_ARGS[@]}")
 fi
 
 cat > "$RUN_DIR/command.txt" <<EOF

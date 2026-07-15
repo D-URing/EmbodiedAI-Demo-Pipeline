@@ -14,8 +14,10 @@ htmlcov/
 build/
 dist/
 /runs/
-/data/
-/models/
+/data/*
+!/data/README.md
+/models/*
+!/models/README.md
 /checkpoints/
 /artifacts/
 /upstreams/

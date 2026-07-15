@@ -15,6 +15,14 @@ release ckpt: yuanty/fastwam
 release data: yuanty/LIBERO-fastwam
 ```
 
+资产来自根目录全局池：
+
+```text
+data/fastwam/libero-fastwam
+models/fastwam_release
+models/custom/
+```
+
 注意：这条线目前更接近“基于 FastWAM release 的微调/扩展路径”，不是从零自研模型。
 
 ## 当前 SCUT 状态
@@ -148,4 +156,3 @@ scripts/fastwam/
 demo_chains/fastwam_realrobot_v0.yaml
 docs/FASTWAM_REALROBOT_INTEGRATION.md
 ```
-
