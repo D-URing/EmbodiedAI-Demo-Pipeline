@@ -3,7 +3,7 @@ VENV ?= .venv
 CONSTRAINTS ?= requirements/constraints-py311.txt
 LEROBOT_TRAIN_CONFIG ?= configs/lerobot/pusht_act_gpu_smoke.sh
 
-.PHONY: help setup doctor test validate dry-run demo demo-extended download-lerobot-artifacts download-lerobot-pusht-dataset download-lerobot-svla-so100-pickplace-dataset download-lerobot-diffusion-pusht-policy download-lerobot-smolvla-base-policy download-data-rovid20k download-data-rovidx download-data-mdm-depth download-data-xperience10m-sample download-data-abc130k download-data-agibotworld-alpha download-data-interndata-a1 download-fastwam-artifacts lerobot-check-scripts lerobot-data-smoke lerobot-train-smoke lerobot-train-act lerobot-train-diffusion lerobot-train-smolvla lerobot-infer-smoke demo-chain-lerobot-fastwam fastwam-check-scripts fastwam-train-smoke demo-chain-fastwam schemas reference-fetch clean
+.PHONY: help setup doctor test validate dry-run demo demo-extended download-lerobot-artifacts download-lerobot-pusht-dataset download-lerobot-svla-so100-pickplace-dataset download-lerobot-diffusion-pusht-policy download-lerobot-smolvla-base-policy download-lerobot-fastwam-libero-policy download-data-rovid20k download-data-rovidx download-data-mdm-depth download-data-xperience10m-sample download-data-abc130k download-data-agibotworld-alpha download-data-interndata-a1 download-fastwam-artifacts lerobot-check-scripts lerobot-data-smoke lerobot-train-smoke lerobot-train-act lerobot-train-diffusion lerobot-train-smolvla lerobot-infer-smoke demo-chain-lerobot-fastwam fastwam-check-scripts fastwam-train-smoke demo-chain-fastwam schemas reference-fetch clean
 
 help:
 	@echo "EmbodiedAI Demo Pipeline"
@@ -22,6 +22,8 @@ help:
 	@echo "                                      Download LeRobot diffusion PushT policy"
 	@echo "  make download-lerobot-smolvla-base-policy"
 	@echo "                                      Download LeRobot SmolVLA base policy"
+	@echo "  make download-lerobot-fastwam-libero-policy"
+	@echo "                                      Download LeRobot-compatible FastWAM LIBERO policy"
 	@echo "  make lerobot-data-smoke            Inspect LeRobot dataset"
 	@echo "  make lerobot-train-smoke           Run LeRobot train with LEROBOT_TRAIN_CONFIG"
 	@echo "  make lerobot-train-act             Run ACT/PushT train profile"
@@ -103,6 +105,14 @@ download-lerobot-smolvla-base-policy:
 	LEROBOT_POLICY_TYPE=smolvla \
 	LEROBOT_POLICY_REPO_ID=lerobot/smolvla_base \
 	LEROBOT_POLICY_LOCAL_DIR="$${EMBODIED_MODEL_ROOT:-$$(pwd)/models}/lerobot/smolvla/smolvla_base" \
+	bash scripts/lerobot/download_artifacts.sh
+
+download-lerobot-fastwam-libero-policy:
+	DOWNLOAD_LEROBOT_DATASET=0 DOWNLOAD_LEROBOT_POLICY=1 \
+	ARTIFACT_MANIFEST_NAME=lerobot_fastwam_libero_policy_manifest.json \
+	LEROBOT_POLICY_TYPE=fastwam \
+	LEROBOT_POLICY_REPO_ID=lerobot/fastwam_libero_uncond_2cam224 \
+	LEROBOT_POLICY_LOCAL_DIR="$${EMBODIED_MODEL_ROOT:-$$(pwd)/models}/lerobot/fastwam/fastwam_libero_uncond_2cam224" \
 	bash scripts/lerobot/download_artifacts.sh
 
 download-data-rovid20k:

@@ -131,6 +131,25 @@ models:
       - This is the first VLA/foundation-model training profile in the LeRobot route.
       - Keep batch size adjustable; start with batch_size=8 on A100/A800 and reduce if needed.
 
+  lerobot_fastwam_libero:
+    status: downloaded_on_scut
+    path_type: lerobot_native
+    policy_type: fastwam
+    dataset_repo_id: yuanty/LIBERO-fastwam
+    policy_repo_id: lerobot/fastwam_libero_uncond_2cam224
+    smoke_targets:
+      - LEROBOT_POLICY_TYPE=fastwam LEROBOT_POLICY_PATH="$EMBODIED_MODEL_ROOT/lerobot/fastwam/fastwam_libero_uncond_2cam224" make lerobot-infer-smoke
+    download_targets:
+      - make download-lerobot-fastwam-libero-policy
+    artifact_location:
+      release_dataset: "$EMBODIED_DATA_ROOT/fastwam/libero-fastwam/"
+      policy_path: "$EMBODIED_MODEL_ROOT/lerobot/fastwam/fastwam_libero_uncond_2cam224"
+    capability_claim: lerobot_compatible_fastwam_policy
+    notes:
+      - This is different from models/fastwam_release, which belongs to the custom/FastWAM route.
+      - The downloaded policy contains model.safetensors and normalizer/postprocessor assets.
+      - FastWAM LIBERO data is LeRobot v2.1; convert a copy before using the current LeRobot v3 loader.
+
   lerobot_pi0fast_template:
     status: template_only
     path_type: lerobot_native

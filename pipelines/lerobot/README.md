@@ -45,6 +45,7 @@ data/lerobot/pusht
 data/lerobot/svla_so100_pickplace                  # SmolVLA fine-tune 数据
 models/lerobot/diffusion/diffusion_pusht        # 可选开源预训练 policy
 models/lerobot/smolvla/smolvla_base             # SmolVLA base policy
+models/lerobot/fastwam/fastwam_libero_uncond_2cam224
 hf_cache/torch/hub/checkpoints/resnet18-f37072fd.pth
 runs/lerobot/<run_name>/<run_id>/loss_summary.json
 ```
@@ -85,6 +86,7 @@ LeRobot 主线的资产分四层：
 | Backbone cache | `hf_cache/torch/hub/checkpoints/resnet18-f37072fd.pth` | ACT 默认 ResNet18 视觉 backbone |
 | Open policy | `models/lerobot/diffusion/diffusion_pusht` | 可直接下载的 LeRobot diffusion PushT 预训练 policy |
 | VLA base policy | `models/lerobot/smolvla/smolvla_base` | SmolVLA fine-tune 起点 |
+| FastWAM policy | `models/lerobot/fastwam/fastwam_libero_uncond_2cam224` | LeRobot-compatible FastWAM LIBERO 权重 |
 | Local checkpoint | `runs/lerobot/<run>/lerobot_output` 或整理到 `models/lerobot/act/pusht/<name>` | 我们自己训练得到的 ACT checkpoint |
 
 注意：ACT/PushT 当前主线优先用于训练 smoke。开源预训练 policy 先用 `lerobot/diffusion_pusht` 作为“可下载、可管理”的 policy 样例，后续再补 ACT 或 FastWAM 的 LeRobot-native checkpoint。
@@ -131,6 +133,18 @@ make download-lerobot-smolvla-base-policy
 
 ```text
 models/lerobot/smolvla/smolvla_base
+```
+
+LeRobot-compatible FastWAM LIBERO policy：
+
+```bash
+make download-lerobot-fastwam-libero-policy
+```
+
+默认落盘：
+
+```text
+models/lerobot/fastwam/fastwam_libero_uncond_2cam224
 ```
 
 ResNet18 backbone，如果不存在：

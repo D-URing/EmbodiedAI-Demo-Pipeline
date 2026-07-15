@@ -24,9 +24,9 @@ runs/
 | P0 | ACT | `lerobot/pusht` | 保底真实训练，快速看 loss | 已在 SCUT 验证 |
 | P0 | Diffusion | `lerobot/pusht` | 第二条 IL 训练链路 | 已配置 |
 | P1 | SmolVLA | `lerobot/svla_so100_pickplace` + `lerobot/smolvla_base` | A100 上的 VLA fine-tune | 已配置，待集群验证 |
+| P1 | FastWAM | LIBERO/FastWAM 数据 + `lerobot/fastwam_libero_uncond_2cam224` | LeRobot-compatible world/action model 权重推理 | 权重已下载 |
 | P2 | Pi0-FAST | `lerobot/aloha_sim_insertion_human` + base policy | 重 VLA 候选 | 模板已放入，不作为第一轮必跑 |
 | P2 | GR00T N1.7 | DROID/LIBERO/SIMPLER 相关数据 | 大模型/评测候选 | 后续单独开任务 |
-| P2 | FastWAM in LeRobot | LIBERO/FastWAM 数据 | world/action model 接入 | 等官方接口和本地适配稳定 |
 
 ## 为什么先选这三个
 
@@ -69,6 +69,7 @@ make download-lerobot-pusht-dataset
 make download-lerobot-svla-so100-pickplace-dataset
 make download-lerobot-diffusion-pusht-policy
 make download-lerobot-smolvla-base-policy
+make download-lerobot-fastwam-libero-policy
 ```
 
 训练 ACT：
