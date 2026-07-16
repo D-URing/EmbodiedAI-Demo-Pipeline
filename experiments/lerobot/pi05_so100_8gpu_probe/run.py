@@ -16,9 +16,9 @@ def find_project_root(start: Path) -> Path:
 def main() -> int:
     here = Path(__file__).resolve().parent
     project_root = find_project_root(here)
-    config = here / "config.sh"
-    runner = project_root / "scripts/lerobot/run_train_accelerate.sh"
-    command = ["bash", str(runner), str(config), *sys.argv[1:]]
+    config = here / "config.yaml"
+    runner = project_root / "scripts/lerobot/run_config.py"
+    command = [sys.executable, str(runner), "--config", str(config), *sys.argv[1:]]
     return subprocess.call(command, cwd=project_root)
 
 

@@ -158,11 +158,14 @@ pi05 / SO100 单机八卡测速探针：
 ```bash
 make prepare-lerobot-pi05-so100-assets
 
-export LEROBOT_NUM_PROCESSES=8
-export LEROBOT_BATCH_SIZE=1
-export LEROBOT_STEPS=200
-
+python experiments/lerobot/pi05_so100_8gpu_probe/run.py --dry-run
 python experiments/lerobot/pi05_so100_8gpu_probe/run.py
+```
+
+训练规模和多卡参数在这里改：
+
+```text
+experiments/lerobot/pi05_so100_8gpu_probe/config.yaml
 ```
 
 已验证 2-step evidence：
@@ -176,9 +179,7 @@ parsed_step_metrics.max_memory_gb=45.76
 
 如果只想先排错，不想把首次 `torch.compile` 编译耗时混入测速：
 
-```bash
-LEROBOT_POLICY_COMPILE_MODEL=false python experiments/lerobot/pi05_so100_8gpu_probe/run.py
-```
+把 `config.yaml` 中 `policy.compile_model` 设为 `false`。
 
 Slurm：
 

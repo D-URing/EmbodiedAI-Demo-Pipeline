@@ -31,24 +31,43 @@ make prepare-lerobot-pi05-so100-assets
 
 ## 单机八卡探针
 
+本实验的主入口配置是：
+
+```text
+experiments/lerobot/pi05_so100_8gpu_probe/config.yaml
+```
+
+日常不要手写一长串 `LEROBOT_*` 环境变量。先改 YAML，再 dry-run 看解析结果：
+
 ```bash
-conda activate lerobot
+python experiments/lerobot/pi05_so100_8gpu_probe/run.py --dry-run
+```
+
+确认无误后启动：
+
+```bash
 python experiments/lerobot/pi05_so100_8gpu_probe/run.py
 ```
 
-等价入口：
+`launch.sh` 只是兼容入口，等价于调用 `run.py`：
 
 ```bash
-bash experiments/lerobot/pi05_so100_8gpu_probe/launch.sh
+bash experiments/lerobot/pi05_so100_8gpu_probe/launch.sh --dry-run
 ```
 
-默认是 200 steps、每卡 batch size 1，用于快速确认能否训练和测速。常用覆盖：
+当前 YAML 默认是已验证过的真实 8 卡 2-step 探针。常用修改位置：
 
-```bash
-LEROBOT_STEPS=1000 \
-LEROBOT_BATCH_SIZE=2 \
-LEROBOT_POLICY_COMPILE_MODEL=false \
-python experiments/lerobot/pi05_so100_8gpu_probe/run.py
+```yaml
+training:
+  steps: 200          # 从 2 改到 200/1000/20000
+  batch_size: 1       # 每卡 batch size
+  save_checkpoint: false
+
+policy:
+  compile_model: false
+
+distributed:
+  num_processes: 8
 ```
 
 输出：

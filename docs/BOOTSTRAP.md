@@ -188,15 +188,12 @@ export TORCH_HOME="$PWD/hf_cache/torch"
 hf auth login  # 仅当 gated cache 尚未下载或当前节点没有 HF 登录态
 make prepare-lerobot-pi05-so100-assets
 
-LEROBOT_STEPS=2 \
-LEROBOT_BATCH_SIZE=1 \
-LEROBOT_NUM_PROCESSES=8 \
-LEROBOT_NUM_WORKERS=0 \
-LEROBOT_LOG_FREQ=1 \
-LEROBOT_SAVE_CHECKPOINT=false \
-LEROBOT_POLICY_COMPILE_MODEL=false \
+python experiments/lerobot/pi05_so100_8gpu_probe/run.py --dry-run
 python experiments/lerobot/pi05_so100_8gpu_probe/run.py
 ```
+
+pi05 的训练步数、batch size、多卡数量、compile、checkpoint 保存等都在
+`experiments/lerobot/pi05_so100_8gpu_probe/config.yaml` 里改。
 
 检查：
 

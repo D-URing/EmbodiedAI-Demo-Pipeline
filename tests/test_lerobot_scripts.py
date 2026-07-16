@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
+import subprocess
+import sys
 
 import yaml
 
@@ -40,6 +43,66 @@ def test_lerobot_dataset_smoke_disables_downloads_by_default() -> None:
     assert 'LEROBOT_ALLOW_DOWNLOAD:-0' in config
     assert 'HF_HUB_OFFLINE="${HF_HUB_OFFLINE:-1}"' in runner
     assert "scripts/lerobot/inspect_dataset.py" in runner
+
+
+def test_lerobot_yaml_runner_renders_pi05_config(tmp_path: Path) -> None:
+    config = ROOT / "experiments/lerobot/pi05_so100_8gpu_probe/config.yaml"
+    generated = tmp_path / "generated.sh"
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts/lerobot/run_config.py"),
+            "--config",
+            str(config),
+            "--dry-run",
+            "--output-shell",
+            str(generated),
+        ],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+
+    rendered = generated.read_text(encoding="utf-8")
+    assert "LEROBOT_CONFIG_RESOLVED" in result.stdout
+    assert "LEROBOT_RUN_COMMAND" in result.stdout
+    assert "export LEROBOT_POLICY_TYPE=pi05" in rendered
+    assert "export LEROBOT_DATASET_REPO_ID=lerobot/svla_so100_pickplace" in rendered
+    assert "export LEROBOT_POLICY_PRETRAINED_PATH=" in rendered
+    assert "models/lerobot/pi05/pi05_base" in rendered
+    assert "export LEROBOT_STEPS=2" in rendered
+    assert "export LEROBOT_BATCH_SIZE=1" in rendered
+    assert "export LEROBOT_NUM_PROCESSES=8" in rendered
+    assert "export LEROBOT_SAVE_CHECKPOINT=false" in rendered
+    assert "export LEROBOT_POLICY_COMPILE_MODEL=false" in rendered
+    assert "export NCCL_DEBUG=WARN" in rendered
+
+    result_override = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts/lerobot/run_config.py"),
+            "--config",
+            str(config),
+            "--dry-run",
+            "--output-shell",
+            str(tmp_path / "generated_override.sh"),
+        ],
+        cwd=ROOT,
+        env={
+            **os.environ,
+            "LEROBOT_NUM_PROCESSES": "4",
+            "LEROBOT_MAIN_PROCESS_PORT": "29605",
+        },
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    rendered_override = (tmp_path / "generated_override.sh").read_text(encoding="utf-8")
+    assert result_override.returncode == 0
+    assert "export LEROBOT_NUM_PROCESSES=4" in rendered_override
+    assert "export LEROBOT_MAIN_PROCESS_PORT=29605" in rendered_override
 
 
 def test_lerobot_artifact_download_script_uses_explicit_hf_targets() -> None:

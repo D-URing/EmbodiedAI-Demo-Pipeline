@@ -23,6 +23,7 @@ scripts/lerobot/
 ├── install_lerobot_cluster.sh
 ├── download_artifacts.sh
 ├── augment_quantile_stats_local.py
+├── run_config.py
 ├── run_dataset_smoke.sh
 ├── run_pusht_act_gpu_smoke.sh
 ├── run_inference_smoke.sh
@@ -33,6 +34,8 @@ scripts/lerobot/
 ```
 
 训练/推理入口见 [`../experiments/README.md`](../experiments/README.md)。
+
+LeRobot 训练实验优先使用 `experiments/lerobot/*/config.yaml`，再由 `scripts/lerobot/run_config.py` 渲染为可复盘的 shell config。不要直接手写一长串 `LEROBOT_*` 命令启动长期实验。
 
 pi05/SO100 训练前需要本地 q01/q99 stats。使用：
 

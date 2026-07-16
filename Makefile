@@ -287,6 +287,7 @@ download-imagewam-flux2-base: prepare-imagewam-upstream
 
 lerobot-check-scripts:
 	$(VENV)/bin/python -m py_compile scripts/lerobot/augment_quantile_stats_local.py
+	$(VENV)/bin/python -m py_compile scripts/lerobot/run_config.py
 	bash -n scripts/lerobot/install_lerobot_cluster.sh
 	bash -n scripts/lerobot/download_artifacts.sh
 	bash -n scripts/lerobot/convert_fastwam_libero_v21_to_v30.sh
@@ -306,6 +307,7 @@ lerobot-check-scripts:
 	bash -n configs/lerobot/infer/svla_so100_pi05.sh
 	bash -n configs/lerobot/infer/fastwam_libero.sh
 	$(VENV)/bin/python scripts/lerobot/parse_train_log.py --log tests/fixtures/lerobot_train_stdout.log --output-dir build/lerobot-parser-test
+	$(VENV)/bin/python scripts/lerobot/run_config.py --config experiments/lerobot/pi05_so100_8gpu_probe/config.yaml --dry-run --output-shell build/lerobot-pi05-config-test/generated.sh >/dev/null
 	$(VENV)/bin/python scripts/lerobot/generate_data_to_inference_report.py --dataset-profile tests/fixtures/lerobot_dataset_profile.json --inference-evidence tests/fixtures/lerobot_inference_evidence.json --training-summary build/lerobot-parser-test/loss_summary.json --output-dir build/lerobot-chain-report-test
 
 lerobot-data-smoke:

@@ -287,16 +287,30 @@ make prepare-lerobot-pi05-so100-assets
 ```
 
 ```bash
-export LEROBOT_ALLOW_DOWNLOAD=0
-export LEROBOT_DATASET_ROOT="$PROJECT/data/lerobot/svla_so100_pickplace"
-export LEROBOT_POLICY_PRETRAINED_PATH="$PROJECT/models/lerobot/pi05/pi05_base"
-
-export LEROBOT_NUM_PROCESSES=8
-export LEROBOT_BATCH_SIZE=1
-export LEROBOT_STEPS=200
-export LEROBOT_SAVE_FREQ=100
-
+python experiments/lerobot/pi05_so100_8gpu_probe/run.py --dry-run
 python experiments/lerobot/pi05_so100_8gpu_probe/run.py
+```
+
+主入口配置：
+
+```text
+experiments/lerobot/pi05_so100_8gpu_probe/config.yaml
+```
+
+不要为了常规实验手写 `LEROBOT_*`。把训练规模、batch、保存频率、compile、多机参数写进 YAML：
+
+```yaml
+training:
+  steps: 200
+  batch_size: 1
+  save_checkpoint: false
+
+policy:
+  compile_model: false
+
+distributed:
+  num_processes: 8
+  num_machines: 1
 ```
 
 输出里重点看：
@@ -323,12 +337,10 @@ parsed_step_metrics.max_memory_gb: 45.76
 - `approx_*`：包含模型加载、optimizer 创建等全流程 wall-time，适合端到端时间估计；
 - `parsed_step_metrics`：从 LeRobot 每步日志解析，排除了初始化时间，更适合训练吞吐对比。
 
-第一次开启 `LEROBOT_POLICY_COMPILE_MODEL=true` 时，wall time 会包含编译开销。做纯吞吐对比时建议至少记录两组：
+第一次开启 `policy.compile_model: true` 时，wall time 会包含编译开销。做纯吞吐对比时建议至少记录两组 YAML：
 
-```bash
-LEROBOT_POLICY_COMPILE_MODEL=false python experiments/lerobot/pi05_so100_8gpu_probe/run.py
-LEROBOT_POLICY_COMPILE_MODEL=true  python experiments/lerobot/pi05_so100_8gpu_probe/run.py
-```
+- `policy.compile_model: false`
+- `policy.compile_model: true`
 
 Slurm：
 

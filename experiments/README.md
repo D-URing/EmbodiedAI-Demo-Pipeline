@@ -84,7 +84,14 @@ bash experiments/lerobot/smolvla_so100_8gpu_long/launch.sh
 pi05 / SO100 单机八卡测速探针：
 
 ```bash
+python experiments/lerobot/pi05_so100_8gpu_probe/run.py --dry-run
 python experiments/lerobot/pi05_so100_8gpu_probe/run.py
+```
+
+配置入口：
+
+```text
+experiments/lerobot/pi05_so100_8gpu_probe/config.yaml
 ```
 
 SmolVLA Slurm：
