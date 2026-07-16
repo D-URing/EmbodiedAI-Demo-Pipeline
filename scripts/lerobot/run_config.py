@@ -17,6 +17,7 @@ import argparse
 import json
 import os
 import shlex
+import shutil
 import subprocess
 import sys
 from datetime import datetime
@@ -229,13 +230,50 @@ def print_preflight(config: dict[str, Any], env: dict[str, str]) -> None:
     elif expected and not active:
         print(
             f"WARNING: expected conda env {expected!r}, but CONDA_DEFAULT_ENV is empty. "
-            "If you are not using conda, make sure this Python has LeRobot dependencies.",
+            "Actual training will use `conda run` automatically when conda is available.",
             file=sys.stderr,
         )
 
     public_env = {key: value for key, value in env.items() if "TOKEN" not in key and "PASSWORD" not in key}
     print("LEROBOT_CONFIG_RESOLVED")
     print(json.dumps(public_env, ensure_ascii=False, indent=2, sort_keys=True))
+
+
+def expected_conda_env(config: dict[str, Any]) -> str:
+    environment = config.get("environment") or {}
+    if not isinstance(environment, dict):
+        raise SystemExit("ERROR: environment section must be a mapping")
+    return str(environment.get("conda_env") or "").strip()
+
+
+def resolve_conda_bin(required: bool = True) -> str:
+    candidates = [
+        os.environ.get("CONDA_EXE", ""),
+        shutil.which("conda") or "",
+        "/opt/conda/bin/conda",
+        "/mnt/gpu11_200T/dingxibo/miniconda3/bin/conda",
+    ]
+    for candidate in candidates:
+        if candidate and Path(candidate).exists():
+            return candidate
+    if required:
+        raise SystemExit(
+            "ERROR: config requests a conda environment, but conda was not found. "
+            "Set CONDA_EXE=/path/to/conda or activate the environment before running."
+        )
+    return ""
+
+
+def command_with_expected_env(command: list[str], config: dict[str, Any], *, required: bool = True) -> list[str]:
+    expected = expected_conda_env(config)
+    active = os.environ.get("CONDA_DEFAULT_ENV", "")
+    if not expected or active == expected:
+        return command
+
+    conda_bin = resolve_conda_bin(required=required)
+    if not conda_bin:
+        return command
+    return [conda_bin, "run", "--no-capture-output", "-n", expected, *command]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -269,7 +307,8 @@ def main(argv: list[str] | None = None) -> int:
         )
     write_shell_config(generated_config, base_config, config_path, env)
 
-    command = ["bash", "scripts/lerobot/run_train_accelerate.sh", str(generated_config)]
+    raw_command = ["bash", "scripts/lerobot/run_train_accelerate.sh", str(generated_config)]
+    command = command_with_expected_env(raw_command, config, required=not args.dry_run)
     print_preflight(config, env)
     print("LEROBOT_GENERATED_CONFIG", generated_config)
     print("LEROBOT_RUN_COMMAND", " ".join(shlex.quote(part) for part in command))
