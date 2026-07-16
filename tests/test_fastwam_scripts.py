@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 from scripts.fastwam.parse_train_log import write_summary
@@ -56,6 +57,8 @@ def test_fastwam_runner_refuses_cpu_fallback_and_wraps_train_zero1() -> None:
     assert "TORCH_EXTENSIONS_DIR" in runner
     assert "TRITON_CACHE_DIR" in runner
     assert "PYTHONWARNINGS" in runner
+    assert "FASTWAM_ALLOW_UNSUPPORTED_GPU_ARCH" in runner
+    assert "torch.cuda.get_arch_list()" in runner
 
 
 def test_fastwam_yaml_runner_renders_single8_config(tmp_path: Path) -> None:
@@ -92,6 +95,31 @@ def test_fastwam_yaml_runner_renders_single8_config(tmp_path: Path) -> None:
     assert "export FASTWAM_PILOT_MAX_STEPS=20" in rendered
     assert "export FASTWAM_VIDEO_BACKEND=pyav" in rendered
     assert "export FASTWAM_TORCH_EXTENSIONS_DIR=" in rendered
+
+    result_override = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts/fastwam/run_config.py"),
+            "--config",
+            str(config),
+            "--dry-run",
+            "--output-shell",
+            str(tmp_path / "generated_override.sh"),
+        ],
+        cwd=ROOT,
+        env={
+            **os.environ,
+            "FASTWAM_MASTER_PORT": "29600",
+            "FASTWAM_TEXT_EMBED_MASTER_PORT": "29617",
+        },
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    rendered_override = (tmp_path / "generated_override.sh").read_text(encoding="utf-8")
+    assert result_override.returncode == 0
+    assert "export FASTWAM_MASTER_PORT=29600" in rendered_override
+    assert "export FASTWAM_TEXT_EMBED_MASTER_PORT=29617" in rendered_override
 
 
 def test_fastwam_prepare_uses_overlay_without_vendoring() -> None:

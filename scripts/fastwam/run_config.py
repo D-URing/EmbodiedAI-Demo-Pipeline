@@ -60,6 +60,13 @@ def project_path(project_root: Path, value: Any, default: str) -> str:
     return str(path)
 
 
+def env_override(name: str, value: Any) -> str:
+    override = os.environ.get(name)
+    if override is not None and override != "":
+        return override
+    return str(value)
+
+
 def export_line(name: str, value: Any) -> str:
     return f"export {name}={shlex.quote(bool_text(value))}"
 
@@ -118,11 +125,11 @@ def build_env(config: dict[str, Any], project_root: Path, config_path: Path) -> 
         "FASTWAM_MODE": str(fastwam.get("mode", "pilot")),
         "FASTWAM_RECIPE": str(fastwam.get("recipe", "v6_scratch")),
         "FASTWAM_INIT": str(fastwam.get("init", "random")),
-        "FASTWAM_GPUS_PER_NODE": str(distributed.get("gpus_per_node", 8)),
-        "FASTWAM_NNODES": str(distributed.get("nnodes", 1)),
-        "FASTWAM_NODE_RANK": str(distributed.get("node_rank", 0)),
-        "FASTWAM_MASTER_ADDR": str(distributed.get("master_addr", "127.0.0.1")),
-        "FASTWAM_MASTER_PORT": str(distributed.get("master_port", 29500)),
+        "FASTWAM_GPUS_PER_NODE": env_override("FASTWAM_GPUS_PER_NODE", distributed.get("gpus_per_node", 8)),
+        "FASTWAM_NNODES": env_override("FASTWAM_NNODES", distributed.get("nnodes", 1)),
+        "FASTWAM_NODE_RANK": env_override("FASTWAM_NODE_RANK", distributed.get("node_rank", 0)),
+        "FASTWAM_MASTER_ADDR": env_override("FASTWAM_MASTER_ADDR", distributed.get("master_addr", "127.0.0.1")),
+        "FASTWAM_MASTER_PORT": env_override("FASTWAM_MASTER_PORT", distributed.get("master_port", 29500)),
         "FASTWAM_REQUIRE_CUDA": str(int(bool(fastwam.get("require_cuda", True)))),
         "FASTWAM_MIXED_PRECISION": str(fastwam.get("mixed_precision", "bf16")),
         "FASTWAM_WANDB_ENABLE": bool_text(fastwam.get("wandb", False)),
@@ -173,15 +180,21 @@ def build_env(config: dict[str, Any], project_root: Path, config_path: Path) -> 
         if "precompute" in text_embeddings:
             env["FASTWAM_PRECOMPUTE_TEXT_EMBEDS"] = str(text_embeddings["precompute"])
         if "gpus" in text_embeddings:
-            env["FASTWAM_TEXT_EMBED_GPUS"] = str(text_embeddings["gpus"])
+            env["FASTWAM_TEXT_EMBED_GPUS"] = env_override("FASTWAM_TEXT_EMBED_GPUS", text_embeddings["gpus"])
         if "overwrite" in text_embeddings:
             env["FASTWAM_TEXT_EMBED_OVERWRITE"] = bool_text(text_embeddings["overwrite"])
         if "wait_timeout" in text_embeddings:
             env["FASTWAM_TEXT_EMBED_WAIT_TIMEOUT"] = str(text_embeddings["wait_timeout"])
         if "master_addr" in text_embeddings:
-            env["FASTWAM_TEXT_EMBED_MASTER_ADDR"] = str(text_embeddings["master_addr"])
+            env["FASTWAM_TEXT_EMBED_MASTER_ADDR"] = env_override(
+                "FASTWAM_TEXT_EMBED_MASTER_ADDR",
+                text_embeddings["master_addr"],
+            )
         if "master_port" in text_embeddings:
-            env["FASTWAM_TEXT_EMBED_MASTER_PORT"] = str(text_embeddings["master_port"])
+            env["FASTWAM_TEXT_EMBED_MASTER_PORT"] = env_override(
+                "FASTWAM_TEXT_EMBED_MASTER_PORT",
+                text_embeddings["master_port"],
+            )
 
     if "task_name" in fastwam:
         env["FASTWAM_TASK_NAME"] = str(fastwam["task_name"])

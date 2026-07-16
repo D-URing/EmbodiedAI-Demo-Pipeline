@@ -130,12 +130,26 @@ if [[ "${FASTWAM_REQUIRE_CUDA}" == "1" ]]; then
   if [[ -z "${CUDA_HOME:-}" && -n "${CONDA_PREFIX:-}" && -x "${CONDA_PREFIX}/bin/nvcc" ]]; then
     export CUDA_HOME="$CONDA_PREFIX"
   fi
-  python - <<'PY'
+  FASTWAM_ALLOW_UNSUPPORTED_GPU_ARCH="${FASTWAM_ALLOW_UNSUPPORTED_GPU_ARCH:-0}" python - <<'PY'
+import os
 import torch
 if not torch.cuda.is_available():
     raise SystemExit("ERROR: CUDA is required for FastWAM; CPU fallback is intentionally disabled.")
 print(f"CUDA OK: {torch.cuda.get_device_name(0)}")
 print(f"torch={torch.__version__}")
+capability = torch.cuda.get_device_capability(0)
+arch = f"sm_{capability[0]}{capability[1]}"
+supported_arches = set(torch.cuda.get_arch_list())
+if supported_arches and arch not in supported_arches:
+    message = (
+        "current PyTorch build does not support this GPU architecture. "
+        f"gpu_arch={arch}, torch_supported_arches={sorted(supported_arches)}, torch={torch.__version__}. "
+        "Install a PyTorch/CUDA build that includes this architecture."
+    )
+    if os.environ.get("FASTWAM_ALLOW_UNSUPPORTED_GPU_ARCH") == "1":
+        print(f"WARNING: {message} Continuing because FASTWAM_ALLOW_UNSUPPORTED_GPU_ARCH=1.")
+    else:
+        raise SystemExit(f"ERROR: {message}")
 PY
 fi
 

@@ -101,6 +101,15 @@ FASTWAM_SOURCE_MODE=reuse FASTWAM_INSTALL=0 bash scripts/fastwam/prepare_fastwam
 
 这些目录在项目内、由 `.gitignore` 忽略。只要共享盘缓存不被删，同一环境的后续实验应复用缓存，不应每次重新编译。
 
+如果同一节点上已有未结束的 `torchrun`，可能占用默认端口。可以不改 YAML，直接用环境变量换端口：
+
+```bash
+FASTWAM_MASTER_PORT=29600 FASTWAM_TEXT_EMBED_MASTER_PORT=29617 \
+python experiments/custom/fastwam_realrobot_single8_random/run.py
+```
+
+如果日志出现 `gpu_arch=sm_120` 但 `torch_supported_arches` 只到 `sm_90`，说明当前 PyTorch wheel 不支持这张 GPU。此时不要继续测速，应该切换到支持该 GPU 架构的 PyTorch/CUDA 环境。
+
 ## 启动实验
 
 训练/评测入口放在 `experiments/`，不要用 Makefile 启动：
