@@ -243,12 +243,30 @@ summary = {
 }
 path = Path("${RUN_DIR}") / "speed_summary.json"
 path.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+wall_step_per_second = summary["approx_step_per_second"]
+wall_sample_per_second = summary["approx_sample_per_second"]
+mean_update_seconds = step_metrics.get("mean_update_seconds")
+mean_data_seconds = step_metrics.get("mean_data_seconds")
+mean_samples_per_second = step_metrics.get("mean_samples_per_second")
+max_memory_gb = step_metrics.get("max_memory_gb")
+
 print(
     "LEROBOT_SPEED_REPORT "
     f"completed={str(completed).lower()} "
-    f"step_per_second={summary['approx_step_per_second']} "
-    f"sample_per_second={summary['approx_sample_per_second']} "
+    f"wall_step_per_second={wall_step_per_second} "
+    f"wall_sample_per_second={wall_sample_per_second} "
+    f"train_mean_update_seconds={mean_update_seconds} "
+    f"train_mean_sample_per_second={mean_samples_per_second} "
+    f"max_memory_gb={max_memory_gb} "
     f"path={path}"
+)
+print(
+    "LEROBOT_SPEED_HUMAN "
+    f"end_to_end={wall_step_per_second:.3f} step/s, {wall_sample_per_second:.1f} sample/s; "
+    f"train_loop={mean_update_seconds:.3f}s/step, {mean_samples_per_second:.1f} sample/s; "
+    f"data={mean_data_seconds:.3f}s/step; gpu_mem={max_memory_gb:.2f}GB"
+    if all(v is not None for v in [wall_step_per_second, wall_sample_per_second, mean_update_seconds, mean_samples_per_second, mean_data_seconds, max_memory_gb])
+    else "LEROBOT_SPEED_HUMAN unavailable: no parsed step metrics found"
 )
 PY
 
