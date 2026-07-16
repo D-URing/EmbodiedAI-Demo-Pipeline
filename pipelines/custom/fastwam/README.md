@@ -65,6 +65,17 @@ print("gpu_count", torch.cuda.device_count())
 PY
 ```
 
+如果容器自带的是 Python 3.11，而不是推荐的 Python 3.10，可以先用于测速：
+
+```bash
+FASTWAM_SOURCE_MODE=sync FASTWAM_INSTALL=1 FASTWAM_CREATE_CONDA=0 \
+FASTWAM_SKIP_TORCH_INSTALL=1 FASTWAM_INSTALL_NVCC=0 \
+FASTWAM_ALLOW_PYTHON_MINOR_MISMATCH=1 \
+bash scripts/fastwam/prepare_fastwam_overlay.sh
+```
+
+注意：这只是快速兼容模式。长期正式实验仍建议使用 Python 3.10 环境，减少 DeepSpeed、CUDA extension 和上游依赖的隐性兼容风险。
+
 ## 日志和编译缓存
 
 当前集群上 `torchcodec` 能被 Python 发现，但缺少匹配的 FFmpeg `libavutil`，所以 upstream LeRobot 默认路径会先打印一大段 torchcodec loading traceback，再回退到 `pyav`。本项目默认：

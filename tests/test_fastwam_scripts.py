@@ -106,6 +106,7 @@ def test_fastwam_prepare_uses_overlay_without_vendoring() -> None:
     assert "FASTWAM_PIP_INDEX_URL" in prepare
     assert "FASTWAM_INSTALL_NVCC" in prepare
     assert "FASTWAM_SKIP_TORCH_INSTALL" in prepare
+    assert "FASTWAM_ALLOW_PYTHON_MINOR_MISMATCH" in prepare
     assert "Reuse existing torch=" in prepare
     assert "patch_fastwam_video_backend_default" in prepare
     assert "get_safe_default_codec" in prepare

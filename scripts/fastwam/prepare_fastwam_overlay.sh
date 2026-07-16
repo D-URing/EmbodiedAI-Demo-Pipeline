@@ -43,6 +43,7 @@ FASTWAM_PIP_RETRIES="${FASTWAM_PIP_RETRIES:-20}"
 FASTWAM_PIP_RESUME_RETRIES="${FASTWAM_PIP_RESUME_RETRIES:-50}"
 FASTWAM_CUSTOM_LIBERO_DATA="${FASTWAM_CUSTOM_LIBERO_DATA:-$EMBODIED_REPO_ROOT/data/custom/fastwam/libero-fastwam}"
 FASTWAM_SKIP_TORCH_INSTALL="${FASTWAM_SKIP_TORCH_INSTALL:-0}"
+FASTWAM_ALLOW_PYTHON_MINOR_MISMATCH="${FASTWAM_ALLOW_PYTHON_MINOR_MISMATCH:-0}"
 CONDA_EXE="${CONDA_EXE:-conda}"
 CONDA_CHANNEL_ARGS="${CONDA_CHANNEL_ARGS:---override-channels -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge}"
 
@@ -229,10 +230,16 @@ elif [[ "$FASTWAM_SKIP_TORCH_INSTALL" == "1" ]]; then
   echo "FASTWAM_SKIP_TORCH_INSTALL=1, skipped conda cuda-nvcc installation."
 fi
 
-python - <<'PY'
+FASTWAM_ALLOW_PYTHON_MINOR_MISMATCH="$FASTWAM_ALLOW_PYTHON_MINOR_MISMATCH" python - <<'PY'
+import os
 import sys
+
 if sys.version_info[:2] != (3, 10):
-    raise SystemExit(f"ERROR: FastWAM environment should use Python 3.10, got {sys.version.split()[0]}")
+    message = f"FastWAM environment is recommended to use Python 3.10, got {sys.version.split()[0]}"
+    if os.environ.get("FASTWAM_ALLOW_PYTHON_MINOR_MISMATCH") == "1":
+        print(f"WARNING: {message}; continuing because FASTWAM_ALLOW_PYTHON_MINOR_MISMATCH=1.")
+    else:
+        raise SystemExit(f"ERROR: {message}. Set FASTWAM_ALLOW_PYTHON_MINOR_MISMATCH=1 only for quick compatibility tests.")
 print(f"Python OK: {sys.version.split()[0]}")
 PY
 
