@@ -11,7 +11,7 @@ LeRobot 是当前第一阶段主线：验证开源 LeRobot 生态下的 dataset 
 | ACT / PushT | 训练 | 已在 SCUT `gpu11` 验证，2-step loss 下降 | `experiments/lerobot/pusht_act_smoke/launch.sh` |
 | Diffusion / PushT | 训练 | 入口已准备 | `experiments/lerobot/pusht_diffusion_train/launch.sh` |
 | SmolVLA / SO100 | 单机八卡/多机训练 | 入口已准备 | `experiments/lerobot/smolvla_so100_8gpu_long/launch.sh` |
-| pi05 / SO100 | 单机八卡训练测速 | 入口已准备，待集群实测 | `experiments/lerobot/pi05_so100_8gpu_probe/run.py` |
+| pi05 / SO100 | 单机八卡训练测速 | 已在 `cluster_120` 验证真实 8 卡 2-step，loss `0.347 -> 0.141` | `experiments/lerobot/pi05_so100_8gpu_probe/run.py` |
 | Diffusion / PushT | 推理 | 入口已准备，依赖本地 policy | `experiments/lerobot/diffusion_pusht_infer/launch.sh` |
 | SmolVLA / SO100 | 推理 | 入口已准备，依赖本地 policy/base | `experiments/lerobot/smolvla_so100_infer/launch.sh` |
 | pi05 / SO100 | 推理 | 入口已准备，依赖本地 pi05 base/checkpoint | `experiments/lerobot/pi05_so100_infer/run.py` |
@@ -86,6 +86,7 @@ make download-lerobot-diffusion-pusht-policy
 make download-lerobot-smolvla-base-policy
 make download-lerobot-pi05-base-policy
 make download-lerobot-pi05-runtime-cache
+make augment-lerobot-svla-so100-quantile-stats
 make download-lerobot-fastwam-libero-policy
 make download-lerobot-fastwam-libero-dataset
 make convert-lerobot-fastwam-libero-v3
@@ -110,7 +111,15 @@ hf_cache/hub/models--Wan-AI--Wan2.2-TI2V-5B-Diffusers/
 hf_cache/hub/models--google--umt5-xxl/
 ```
 
-pi05 运行时还会通过 tokenizer processor 读取 `google/paligemma-3b-pt-224` 的 tokenizer/config。该 repo 可能是 gated；如果下载报 `Access denied`，先完成 Hugging Face 访问申请，并在集群侧 `hf auth login` 或设置 `HF_TOKEN` 后重试 `make download-lerobot-pi05-runtime-cache`。
+pi05 运行时还会通过 tokenizer processor 读取 `google/paligemma-3b-pt-224` 的 tokenizer/config。该 repo 可能是 gated；如果下载报 `Access denied`，先完成 Hugging Face 访问申请，并在集群侧 `hf auth login` 或设置临时 `HF_TOKEN` 后重试 `make download-lerobot-pi05-runtime-cache`。
+
+只准备 pi05/SO100 时可直接执行：
+
+```bash
+make prepare-lerobot-pi05-so100-assets
+```
+
+这会额外补齐本地 SO100 数据的 q01/q99 stats。该步骤只写本地 `meta/stats.json`，不会上传 Hugging Face Hub。
 
 LeRobot 路线不直接读写 custom/FastWAM 数据：
 
@@ -147,11 +156,22 @@ bash experiments/lerobot/smolvla_so100_8gpu_long/launch.sh
 pi05 / SO100 单机八卡测速探针：
 
 ```bash
+make prepare-lerobot-pi05-so100-assets
+
 export LEROBOT_NUM_PROCESSES=8
 export LEROBOT_BATCH_SIZE=1
 export LEROBOT_STEPS=200
 
 python experiments/lerobot/pi05_so100_8gpu_probe/run.py
+```
+
+已验证 2-step evidence：
+
+```text
+run_id=smoke2_quiet_20260716_202905
+loss=0.347 -> 0.141
+parsed_step_metrics.mean_samples_per_second=6.0
+parsed_step_metrics.max_memory_gb=45.76
 ```
 
 如果只想先排错，不想把首次 `torch.compile` 编译耗时混入测速：

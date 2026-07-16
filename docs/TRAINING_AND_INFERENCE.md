@@ -87,6 +87,7 @@ make download-lerobot-diffusion-pusht-policy
 make download-lerobot-smolvla-base-policy
 make download-lerobot-pi05-base-policy
 make download-lerobot-pi05-runtime-cache
+make augment-lerobot-svla-so100-quantile-stats
 make download-lerobot-fastwam-libero-policy
 ```
 
@@ -104,7 +105,28 @@ models/lerobot/fastwam/fastwam_libero_uncond_2cam224/
 hf_cache/hub/models--google--paligemma-3b-pt-224/
 ```
 
-说明：pi05 base 权重不等于完整运行资产。LeRobot pi05 的 processor 会读取 `google/paligemma-3b-pt-224` tokenizer/config；该 Hugging Face repo 可能需要访问审批。若下载时报 `Access denied`，先在集群环境执行 `hf auth login` 或设置 `HF_TOKEN`。
+说明：pi05 base 权重不等于完整运行资产。LeRobot pi05 的 processor 会读取 `google/paligemma-3b-pt-224` tokenizer/config；该 Hugging Face repo 可能需要访问审批。若下载时报 `Access denied`，先在集群环境执行 `hf auth login` 或设置临时 `HF_TOKEN`。
+
+如果只准备 pi05/SO100 训练和推理，推荐用聚合 target：
+
+```bash
+hf auth login  # 如果 gated cache 尚未授权
+make prepare-lerobot-pi05-so100-assets
+```
+
+pi05 默认使用 quantile normalization。若本地 SO100 数据缺少 `q01/q99`，训练会报：
+
+```text
+QUANTILES normalization mode requires q01 and q99 stats
+```
+
+此时运行：
+
+```bash
+make augment-lerobot-svla-so100-quantile-stats
+```
+
+该步骤只改本地 `data/lerobot/svla_so100_pickplace/meta/stats.json`，不会上传 Hugging Face Hub。
 
 ### LeRobot FastWAM LIBERO
 
@@ -258,6 +280,12 @@ bash experiments/lerobot/smolvla_so100_8gpu_long/launch.sh
 
 pi05 是重型 VLA policy。第一步建议先跑短探针，确认 LeRobot 官方 policy、项目内 SO100 数据、本地 pi05 base 权重、多卡训练、loss 解析和吞吐统计能完整打通。
 
+训练前先确保资产完整：
+
+```bash
+make prepare-lerobot-pi05-so100-assets
+```
+
 ```bash
 export LEROBOT_ALLOW_DOWNLOAD=0
 export LEROBOT_DATASET_ROOT="$PROJECT/data/lerobot/svla_so100_pickplace"
@@ -277,6 +305,23 @@ python experiments/lerobot/pi05_so100_8gpu_probe/run.py
 runs/experiments/lerobot/pi05_so100_8gpu_probe/<run_id>/loss_summary.json
 runs/experiments/lerobot/pi05_so100_8gpu_probe/<run_id>/speed_summary.json
 ```
+
+已在 `cluster_120` 跑通 8 卡真实 2-step 探针：
+
+```text
+run_id: smoke2_quiet_20260716_202905
+torch: 2.13.0+cu130
+effective_batch_size: 8
+learnable_params: 4,143,404,816
+loss: 0.347 -> 0.141
+parsed_step_metrics.mean_samples_per_second: 6.0
+parsed_step_metrics.max_memory_gb: 45.76
+```
+
+`speed_summary.json` 里有两类吞吐：
+
+- `approx_*`：包含模型加载、optimizer 创建等全流程 wall-time，适合端到端时间估计；
+- `parsed_step_metrics`：从 LeRobot 每步日志解析，排除了初始化时间，更适合训练吞吐对比。
 
 第一次开启 `LEROBOT_POLICY_COMPILE_MODEL=true` 时，wall time 会包含编译开销。做纯吞吐对比时建议至少记录两组：
 
@@ -490,6 +535,7 @@ make lerobot-data-smoke
 | FastWAM policy 找 `transformers` / `diffusers` | 安装 fastwam extra 或 `pip install transformers diffusers` |
 | FastWAM policy 离线找不到 Wan/T5 | `make download-lerobot-fastwam-base-cache`，并设置 `HF_HOME=$PROJECT/hf_cache` |
 | pi05 加载 tokenizer 时报 `google/paligemma-3b-pt-224` 离线缺失 | `make download-lerobot-pi05-runtime-cache`；如果 `Access denied`，先申请 gated repo 权限并 `hf auth login` |
+| pi05 训练报缺少 `q01/q99` | `make augment-lerobot-svla-so100-quantile-stats` |
 | LeRobot FastWAM 数据格式不对 | `make convert-lerobot-fastwam-libero-v3` |
 | 计算节点不能访问外网 | 在管理节点下载到项目内 `data/`、`models/`、`hf_cache/`，计算节点设置 offline 环境变量 |
 | 误把训练从 Make 启动 | 不新增 Make train target，复制 `experiments/<route>/<experiment>/` |
@@ -501,7 +547,7 @@ make lerobot-data-smoke
 | LeRobot ACT / PushT training smoke | 已在 `gpu11` 验证，loss 正常下降 |
 | LeRobot Diffusion / PushT train | 入口已准备，待长期实验验证 |
 | LeRobot SmolVLA / SO100 8-GPU train | 入口已准备，支持单机八卡和多机参数 |
-| LeRobot pi05 / SO100 8-GPU train | 入口已准备，支持 loss 和 speed summary，待集群实测 |
+| LeRobot pi05 / SO100 8-GPU train | 已在 `cluster_120` 验证真实 8 卡 2-step，loss `0.347 -> 0.141`，step-level `mean_samples_per_second=6.0`，约 `45.76GB/GPU` |
 | LeRobot Diffusion / PushT inference | 入口已准备，依赖本地 policy |
 | LeRobot SmolVLA / SO100 inference | 入口已准备，依赖本地 policy/base |
 | LeRobot pi05 / SO100 inference | 入口已准备，依赖本地 pi05 base/checkpoint |

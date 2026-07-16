@@ -207,6 +207,14 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+loss_summary_path = Path("${RUN_DIR}") / "loss_summary.json"
+step_metrics = {}
+if loss_summary_path.is_file():
+    try:
+        step_metrics = json.loads(loss_summary_path.read_text(encoding="utf-8")).get("step_metrics", {})
+    except json.JSONDecodeError:
+        step_metrics = {}
+
 elapsed_seconds = max(float("${run_elapsed_seconds}"), 1.0)
 steps = int("${LEROBOT_STEPS}")
 effective_batch_size = int("${LEROBOT_BATCH_SIZE}") * int("${LEROBOT_NUM_PROCESSES}")
@@ -226,8 +234,10 @@ summary = {
     "wall_time_seconds": elapsed_seconds,
     "approx_step_per_second": steps / elapsed_seconds if completed else None,
     "approx_sample_per_second": steps * effective_batch_size / elapsed_seconds if completed else None,
+    "parsed_step_metrics": step_metrics,
     "notes": [
         "step/sample throughput uses configured_steps when training exits successfully.",
+        "parsed_step_metrics comes from LeRobot per-step logs and excludes model initialization time.",
         "First run may include torch.compile or kernel warmup overhead if enabled.",
     ],
 }

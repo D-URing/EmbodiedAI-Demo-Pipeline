@@ -22,6 +22,7 @@ scripts/
 scripts/lerobot/
 ├── install_lerobot_cluster.sh
 ├── download_artifacts.sh
+├── augment_quantile_stats_local.py
 ├── run_dataset_smoke.sh
 ├── run_pusht_act_gpu_smoke.sh
 ├── run_inference_smoke.sh
@@ -32,6 +33,18 @@ scripts/lerobot/
 ```
 
 训练/推理入口见 [`../experiments/README.md`](../experiments/README.md)。
+
+pi05/SO100 训练前需要本地 q01/q99 stats。使用：
+
+```bash
+make prepare-lerobot-pi05-so100-assets
+```
+
+或单独补齐：
+
+```bash
+make augment-lerobot-svla-so100-quantile-stats
+```
 
 ## FastWAM / custom
 

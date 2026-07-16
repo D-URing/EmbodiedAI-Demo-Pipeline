@@ -59,6 +59,12 @@ export HUGGINGFACE_HUB_CACHE="${HUGGINGFACE_HUB_CACHE:-$HF_HOME/hub}"
 export HF_DATASETS_CACHE="${HF_DATASETS_CACHE:-$HF_HOME/datasets}"
 export TORCH_HOME="${TORCH_HOME:-$EMBODIED_REPO_ROOT/hf_cache/torch}"
 
+# 集群默认可能打开 NCCL INFO，8 卡启动时会刷出大量通信拓扑日志。
+# 探针和长期训练默认压到 WARN；需要排查通信问题时使用：
+#   LEROBOT_NCCL_DEBUG=INFO python experiments/lerobot/pi05_so100_8gpu_probe/run.py
+export LEROBOT_NCCL_DEBUG="${LEROBOT_NCCL_DEBUG:-WARN}"
+export NCCL_DEBUG="$LEROBOT_NCCL_DEBUG"
+
 # Accelerate 分布式参数。默认单机 8 卡；多机时覆盖下面 4 个变量即可。
 export LEROBOT_NUM_PROCESSES="${LEROBOT_NUM_PROCESSES:-8}"
 export LEROBOT_NUM_MACHINES="${LEROBOT_NUM_MACHINES:-1}"

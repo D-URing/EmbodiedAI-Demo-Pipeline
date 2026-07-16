@@ -2,7 +2,7 @@ PYTHON ?= python3.11
 VENV ?= .venv
 CONSTRAINTS ?= requirements/constraints-py311.txt
 
-.PHONY: help setup doctor test validate prepare-dirs prepare-assets-lerobot prepare-assets-custom-fastwam prepare-sources-custom-fastwam prepare-env-custom-fastwam prepare-assets-imagewam check-assets check-assets-core check-assets-lerobot check-assets-custom-fastwam check-assets-imagewam download-lerobot-artifacts download-lerobot-pusht-dataset download-lerobot-svla-so100-pickplace-dataset download-lerobot-fastwam-libero-dataset convert-lerobot-fastwam-libero-v3 download-lerobot-fastwam-base-cache download-lerobot-diffusion-pusht-policy download-lerobot-smolvla-base-policy download-lerobot-pi05-base-policy download-lerobot-pi05-runtime-cache download-lerobot-fastwam-libero-policy download-data-rovid20k download-data-rovidx download-data-mdm-depth download-data-xperience10m-sample download-data-abc130k download-data-agibotworld-alpha download-data-interndata-a1 download-custom-fastwam-libero-dataset download-fastwam-artifacts prepare-imagewam-upstream download-imagewam-artifacts download-imagewam-flux2-base lerobot-check-scripts fastwam-check-scripts imagewam-check-scripts experiments-check-scripts lerobot-data-smoke schemas clean
+.PHONY: help setup doctor test validate prepare-dirs prepare-assets-lerobot prepare-lerobot-pi05-so100-assets prepare-assets-custom-fastwam prepare-sources-custom-fastwam prepare-env-custom-fastwam prepare-assets-imagewam check-assets check-assets-core check-assets-lerobot check-assets-custom-fastwam check-assets-imagewam download-lerobot-artifacts download-lerobot-pusht-dataset download-lerobot-svla-so100-pickplace-dataset augment-lerobot-svla-so100-quantile-stats download-lerobot-fastwam-libero-dataset convert-lerobot-fastwam-libero-v3 download-lerobot-fastwam-base-cache download-lerobot-diffusion-pusht-policy download-lerobot-smolvla-base-policy download-lerobot-pi05-base-policy download-lerobot-pi05-runtime-cache download-lerobot-fastwam-libero-policy download-data-rovid20k download-data-rovidx download-data-mdm-depth download-data-xperience10m-sample download-data-abc130k download-data-agibotworld-alpha download-data-interndata-a1 download-custom-fastwam-libero-dataset download-fastwam-artifacts prepare-imagewam-upstream download-imagewam-artifacts download-imagewam-flux2-base lerobot-check-scripts fastwam-check-scripts imagewam-check-scripts experiments-check-scripts lerobot-data-smoke schemas clean
 
 help:
 	@echo "EmbodiedAI Demo Pipeline"
@@ -22,6 +22,8 @@ help:
 	@echo
 	@echo "Bootstrap 资产和环境准备:"
 	@echo "  make prepare-assets-lerobot        下载第一批 LeRobot 数据、policy 和 base cache"
+	@echo "  make prepare-lerobot-pi05-so100-assets"
+	@echo "                                      准备 pi05/SO100 训练所需数据、权重、runtime cache 和本地 q01/q99 stats"
 	@echo "  make prepare-assets-custom-fastwam 下载 custom FastWAM 数据、release ckpt、Wan runtime assets 并准备 overlay"
 	@echo "  make prepare-sources-custom-fastwam 在有网络节点同步 FastWAM 官方源码和 overlay"
 	@echo "  make prepare-env-custom-fastwam    创建/安装 custom FastWAM conda 环境（不要在无网计算节点跑）"
@@ -45,6 +47,8 @@ help:
 	@echo "                                      Download LeRobot pi05 base policy"
 	@echo "  make download-lerobot-pi05-runtime-cache"
 	@echo "                                      Download gated PaliGemma tokenizer/config cache required by pi05"
+	@echo "  make augment-lerobot-svla-so100-quantile-stats"
+	@echo "                                      Compute local q01/q99 stats required by pi05 quantile normalization"
 	@echo "  make download-lerobot-fastwam-libero-policy"
 	@echo "                                      Download LeRobot-compatible FastWAM LIBERO policy"
 	@echo
@@ -105,6 +109,12 @@ prepare-assets-lerobot: prepare-dirs
 	$(MAKE) convert-lerobot-fastwam-libero-v3
 	$(MAKE) download-lerobot-fastwam-base-cache
 
+prepare-lerobot-pi05-so100-assets: prepare-dirs
+	$(MAKE) download-lerobot-svla-so100-pickplace-dataset
+	$(MAKE) download-lerobot-pi05-base-policy
+	$(MAKE) download-lerobot-pi05-runtime-cache
+	$(MAKE) augment-lerobot-svla-so100-quantile-stats
+
 prepare-assets-custom-fastwam: prepare-dirs
 	$(MAKE) download-custom-fastwam-libero-dataset
 	$(MAKE) download-fastwam-artifacts
@@ -150,6 +160,13 @@ download-lerobot-svla-so100-pickplace-dataset:
 	LEROBOT_DATASET_REPO_ID=lerobot/svla_so100_pickplace \
 	LEROBOT_DATASET_LOCAL_DIR="$${EMBODIED_DATA_ROOT:-$$(pwd)/data}/lerobot/svla_so100_pickplace" \
 	bash scripts/lerobot/download_artifacts.sh
+
+augment-lerobot-svla-so100-quantile-stats:
+	"$${PYTHON_BIN:-python}" scripts/lerobot/augment_quantile_stats_local.py \
+	  --repo-id lerobot/svla_so100_pickplace \
+	  --root "$${EMBODIED_DATA_ROOT:-$$(pwd)/data}/lerobot/svla_so100_pickplace" \
+	  --video-backend "$${LEROBOT_DATASET_VIDEO_BACKEND:-pyav}" \
+	  --manifest "$${EMBODIED_RUN_ROOT:-$$(pwd)/runs}/artifact_manifests/lerobot_svla_so100_quantile_stats_manifest.json"
 
 download-lerobot-fastwam-libero-dataset:
 	ARTIFACT_FAMILY=lerobot ARTIFACT_MANIFEST_NAME=lerobot_fastwam_libero_dataset_manifest.json \
@@ -269,6 +286,7 @@ download-imagewam-flux2-base: prepare-imagewam-upstream
 	bash scripts/flux2/prepare_flux2_files.sh
 
 lerobot-check-scripts:
+	$(VENV)/bin/python -m py_compile scripts/lerobot/augment_quantile_stats_local.py
 	bash -n scripts/lerobot/install_lerobot_cluster.sh
 	bash -n scripts/lerobot/download_artifacts.sh
 	bash -n scripts/lerobot/convert_fastwam_libero_v21_to_v30.sh
