@@ -72,6 +72,20 @@ CONDA_EXE="$CONDA" LEROBOT_CREATE_CONDA=1 LEROBOT_CONDA_ENV=lerobot \
 bash scripts/lerobot/install_lerobot_cluster.sh
 ```
 
+新架构 GPU / CUDA 13 wheel 节点，例如 `sm_120`，需要保留较新的 PyTorch wheel，避免 LeRobot 官方依赖范围把 torch 降级：
+
+```bash
+CONDA_EXE=/opt/conda/bin/conda \
+LEROBOT_CREATE_CONDA=1 \
+LEROBOT_CONDA_ENV=lerobot-sm120 \
+LEROBOT_INSTALL_NO_DEPS=1 \
+LEROBOT_FORCE_OPENCV_HEADLESS=1 \
+TORCH_INDEX_URL=https://download.pytorch.org/whl/cu130 \
+LEROBOT_TORCH_SPEC='torch==2.13.0+cu130' \
+LEROBOT_TORCHVISION_SPEC='torchvision==0.28.0+cu130' \
+bash scripts/lerobot/install_lerobot_cluster.sh
+```
+
 ### Custom FastWAM 环境
 
 FastWAM overlay 通常使用独立 `fastwam` 环境。注意：如果计算节点不能联网，源码同步、数据下载和 pip/conda 安装都应该在管理节点或登录节点完成，落盘到共享项目目录；计算节点只负责激活环境和训练。
@@ -136,10 +150,19 @@ data/lerobot/libero-fastwam/v3/
 
 models/lerobot/diffusion/diffusion_pusht/
 models/lerobot/smolvla/smolvla_base/
+models/lerobot/pi05/pi05_base/
 models/lerobot/fastwam/fastwam_libero_uncond_2cam224/
 
+hf_cache/hub/models--google--paligemma-3b-pt-224/
 hf_cache/hub/models--Wan-AI--Wan2.2-TI2V-5B-Diffusers/
 hf_cache/hub/models--google--umt5-xxl/
+```
+
+pi05 的 PaliGemma tokenizer/config cache 可能需要 Hugging Face gated repo 权限；准备 pi05 训练/推理前额外执行：
+
+```bash
+hf auth login
+make download-lerobot-pi05-runtime-cache
 ```
 
 检查：
@@ -218,6 +241,7 @@ LeRobot 训练/推理：
 
 ```bash
 bash experiments/lerobot/pusht_act_smoke/launch.sh
+bash experiments/lerobot/pi05_so100_8gpu_probe/launch.sh
 bash experiments/lerobot/fastwam_libero_infer/launch.sh
 ```
 

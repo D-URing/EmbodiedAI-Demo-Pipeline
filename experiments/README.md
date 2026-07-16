@@ -22,8 +22,10 @@ experiments/
 │   ├── pusht_act_smoke/               # ACT / PushT training
 │   ├── pusht_diffusion_train/         # Diffusion / PushT training
 │   ├── smolvla_so100_8gpu_long/       # SmolVLA / SO100 8-GPU training
+│   ├── pi05_so100_8gpu_probe/         # pi05 / SO100 8-GPU train + speed probe
 │   ├── diffusion_pusht_infer/         # Diffusion / PushT inference
 │   ├── smolvla_so100_infer/           # SmolVLA / SO100 inference
+│   ├── pi05_so100_infer/              # pi05 / SO100 inference
 │   └── fastwam_libero_infer/          # FastWAM / LIBERO inference
 └── custom/
     ├── fastwam_realrobot_single8_random/
@@ -41,6 +43,8 @@ make download-lerobot-pusht-dataset
 make download-lerobot-svla-so100-pickplace-dataset
 make download-lerobot-diffusion-pusht-policy
 make download-lerobot-smolvla-base-policy
+make download-lerobot-pi05-base-policy
+make download-lerobot-pi05-runtime-cache
 make download-lerobot-fastwam-libero-policy
 make download-lerobot-fastwam-libero-dataset
 make convert-lerobot-fastwam-libero-v3
@@ -77,6 +81,12 @@ SmolVLA / SO100 单机八卡：
 bash experiments/lerobot/smolvla_so100_8gpu_long/launch.sh
 ```
 
+pi05 / SO100 单机八卡测速探针：
+
+```bash
+python experiments/lerobot/pi05_so100_8gpu_probe/run.py
+```
+
 SmolVLA Slurm：
 
 ```bash
@@ -95,6 +105,12 @@ SmolVLA / SO100：
 
 ```bash
 bash experiments/lerobot/smolvla_so100_infer/launch.sh
+```
+
+pi05 / SO100：
+
+```bash
+python experiments/lerobot/pi05_so100_infer/run.py
 ```
 
 FastWAM / LIBERO：

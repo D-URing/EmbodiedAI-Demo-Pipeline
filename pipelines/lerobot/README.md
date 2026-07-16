@@ -11,8 +11,10 @@ LeRobot 是当前第一阶段主线：验证开源 LeRobot 生态下的 dataset 
 | ACT / PushT | 训练 | 已在 SCUT `gpu11` 验证，2-step loss 下降 | `experiments/lerobot/pusht_act_smoke/launch.sh` |
 | Diffusion / PushT | 训练 | 入口已准备 | `experiments/lerobot/pusht_diffusion_train/launch.sh` |
 | SmolVLA / SO100 | 单机八卡/多机训练 | 入口已准备 | `experiments/lerobot/smolvla_so100_8gpu_long/launch.sh` |
+| pi05 / SO100 | 单机八卡训练测速 | 入口已准备，待集群实测 | `experiments/lerobot/pi05_so100_8gpu_probe/run.py` |
 | Diffusion / PushT | 推理 | 入口已准备，依赖本地 policy | `experiments/lerobot/diffusion_pusht_infer/launch.sh` |
 | SmolVLA / SO100 | 推理 | 入口已准备，依赖本地 policy/base | `experiments/lerobot/smolvla_so100_infer/launch.sh` |
+| pi05 / SO100 | 推理 | 入口已准备，依赖本地 pi05 base/checkpoint | `experiments/lerobot/pi05_so100_infer/run.py` |
 | FastWAM / LIBERO | 推理 | 已在 SCUT `gpu11` 验证 CUDA inference | `experiments/lerobot/fastwam_libero_infer/launch.sh` |
 
 已验证 FastWAM evidence：
@@ -55,6 +57,20 @@ CONDA_EXE="$CONDA" LEROBOT_CREATE_CONDA=1 LEROBOT_CONDA_ENV=lerobot \
 bash scripts/lerobot/install_lerobot_cluster.sh
 ```
 
+新架构 GPU / CUDA 13 wheel 节点可使用：
+
+```bash
+CONDA_EXE=/opt/conda/bin/conda \
+LEROBOT_CREATE_CONDA=1 \
+LEROBOT_CONDA_ENV=lerobot-sm120 \
+LEROBOT_INSTALL_NO_DEPS=1 \
+LEROBOT_FORCE_OPENCV_HEADLESS=1 \
+TORCH_INDEX_URL=https://download.pytorch.org/whl/cu130 \
+LEROBOT_TORCH_SPEC='torch==2.13.0+cu130' \
+LEROBOT_TORCHVISION_SPEC='torchvision==0.28.0+cu130' \
+bash scripts/lerobot/install_lerobot_cluster.sh
+```
+
 SCUT `gpu11` 需要注意：
 
 - `ffmpeg=6.*`，避免旧 glibc 节点上 `ffmpeg=8` native ABI 问题；
@@ -68,6 +84,8 @@ make download-lerobot-pusht-dataset
 make download-lerobot-svla-so100-pickplace-dataset
 make download-lerobot-diffusion-pusht-policy
 make download-lerobot-smolvla-base-policy
+make download-lerobot-pi05-base-policy
+make download-lerobot-pi05-runtime-cache
 make download-lerobot-fastwam-libero-policy
 make download-lerobot-fastwam-libero-dataset
 make convert-lerobot-fastwam-libero-v3
@@ -84,11 +102,15 @@ data/lerobot/libero-fastwam/v3/
 
 models/lerobot/diffusion/diffusion_pusht/
 models/lerobot/smolvla/smolvla_base/
+models/lerobot/pi05/pi05_base/
 models/lerobot/fastwam/fastwam_libero_uncond_2cam224/
 
+hf_cache/hub/models--google--paligemma-3b-pt-224/
 hf_cache/hub/models--Wan-AI--Wan2.2-TI2V-5B-Diffusers/
 hf_cache/hub/models--google--umt5-xxl/
 ```
+
+pi05 运行时还会通过 tokenizer processor 读取 `google/paligemma-3b-pt-224` 的 tokenizer/config。该 repo 可能是 gated；如果下载报 `Access denied`，先完成 Hugging Face 访问申请，并在集群侧 `hf auth login` 或设置 `HF_TOKEN` 后重试 `make download-lerobot-pi05-runtime-cache`。
 
 LeRobot 路线不直接读写 custom/FastWAM 数据：
 
@@ -122,6 +144,22 @@ export LEROBOT_STEPS=20000
 bash experiments/lerobot/smolvla_so100_8gpu_long/launch.sh
 ```
 
+pi05 / SO100 单机八卡测速探针：
+
+```bash
+export LEROBOT_NUM_PROCESSES=8
+export LEROBOT_BATCH_SIZE=1
+export LEROBOT_STEPS=200
+
+python experiments/lerobot/pi05_so100_8gpu_probe/run.py
+```
+
+如果只想先排错，不想把首次 `torch.compile` 编译耗时混入测速：
+
+```bash
+LEROBOT_POLICY_COMPILE_MODEL=false python experiments/lerobot/pi05_so100_8gpu_probe/run.py
+```
+
 Slurm：
 
 ```bash
@@ -140,6 +178,12 @@ SmolVLA / SO100：
 
 ```bash
 bash experiments/lerobot/smolvla_so100_infer/launch.sh
+```
+
+pi05 / SO100：
+
+```bash
+python experiments/lerobot/pi05_so100_infer/run.py
 ```
 
 FastWAM / LIBERO：
@@ -165,6 +209,7 @@ runs/experiments/lerobot/<experiment>/<run_id>/
 ├── backend_manifest.json
 ├── train_stdout.log
 ├── loss_summary.json
+├── speed_summary.json
 └── lerobot_output/
 ```
 

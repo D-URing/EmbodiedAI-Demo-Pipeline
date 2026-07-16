@@ -50,12 +50,12 @@ elif [[ -n "$HF_CLI_BIN" ]]; then
   fi
   DOWNLOADER_KIND="hf_cli"
   HF_DOWNLOAD_CMD=("$HF_CLI_BIN" download)
-elif command -v huggingface-cli >/dev/null 2>&1; then
-  DOWNLOADER_KIND="hf_cli"
-  HF_DOWNLOAD_CMD=(huggingface-cli download)
 elif command -v hf >/dev/null 2>&1; then
   DOWNLOADER_KIND="hf_cli"
   HF_DOWNLOAD_CMD=(hf download)
+elif command -v huggingface-cli >/dev/null 2>&1; then
+  DOWNLOADER_KIND="hf_cli"
+  HF_DOWNLOAD_CMD=(huggingface-cli download)
 else
   echo "A Hugging Face downloader is required." >&2
   echo "Expected /home/scut/hfd.sh, HFD_BIN=/path/to/hfd.sh, 'huggingface-cli', or the newer 'hf' command on PATH." >&2

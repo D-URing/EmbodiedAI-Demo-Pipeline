@@ -70,6 +70,8 @@ export PIP_CACHE_DIR="$PROJECT_ROOT/hf_cache/pip"
 | ResNet18 backbone | `hf_cache/torch/hub/checkpoints/resnet18-f37072fd.pth` | ACT 默认视觉 backbone |
 | LeRobot diffusion PushT policy | `models/lerobot/diffusion/diffusion_pusht` | 可选开源预训练 policy |
 | LeRobot SmolVLA base | `models/lerobot/smolvla/smolvla_base` | SmolVLA fine-tune 起点 |
+| LeRobot pi05 base | `models/lerobot/pi05/pi05_base` | pi05 fine-tune / inference 起点 |
+| LeRobot pi05 PaliGemma tokenizer/config cache | `hf_cache/hub/models--google--paligemma-3b-pt-224` | pi05 processor 运行时依赖，可能 gated |
 | LeRobot FastWAM LIBERO policy | `models/lerobot/fastwam/fastwam_libero_uncond_2cam224` | LeRobot-compatible FastWAM 权重 |
 | LeRobot FastWAM Wan/T5 base cache | `hf_cache/hub/models--Wan-AI--Wan2.2-TI2V-5B-Diffusers`、`hf_cache/hub/models--google--umt5-xxl` | FastWAM policy 运行时加载的 frozen VAE/text encoder/tokenizer |
 | FastWAM release ckpt | `models/custom/fastwam/release/libero_uncond_2cam224.pt` | 约 12G |

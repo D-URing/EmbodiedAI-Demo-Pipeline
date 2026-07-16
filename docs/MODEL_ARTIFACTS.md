@@ -15,6 +15,7 @@
 | ACT / PushT | `lerobot/pusht` | `policy.type=act` | SCUT 已验证真实训练 smoke | 快速回答 loss 是否下降 |
 | Diffusion / PushT | `lerobot/pusht` | `policy.type=diffusion` | 训练/推理入口已配置 | 第二条 IL baseline |
 | SmolVLA / SO100 | `lerobot/svla_so100_pickplace` | `lerobot/smolvla_base` | 长期实验入口已配置 | 轻量 VLA fine-tune |
+| pi05 / SO100 | `lerobot/svla_so100_pickplace` | `lerobot/pi05_base` | 训练测速/推理入口已配置 | 重型 VLA LeRobot 适配与测速 |
 | FastWAM / LIBERO | LIBERO/FastWAM v3 | `lerobot/fastwam_libero_uncond_2cam224` | SCUT 已验证 CUDA offline inference | LeRobot-compatible world/action model 推理 |
 
 真实闭环、仿真闭环和真机评测仍未声明为已完成。
@@ -25,7 +26,7 @@
 
 | 路径 | 说明 | 当前代表 | 何时使用 |
 |---|---|---|---|
-| LeRobot-native path | 模型已能通过 LeRobot dataset/policy/train/inference API 跑通 | ACT/PushT、Diffusion/PushT、SmolVLA/SO100、FastWAM/LIBERO | 第一优先级，适合标准 demo |
+| LeRobot-native path | 模型已能通过 LeRobot dataset/policy/train/inference API 跑通 | ACT/PushT、Diffusion/PushT、SmolVLA/SO100、pi05/SO100、FastWAM/LIBERO | 第一优先级，适合标准 demo |
 | Custom backend path | 需要自定义训练、私有数据、特殊 action head 或未进入 LeRobot 的模型 | FastWAM realrobot overlay | 自研/改模型/真机扩展 |
 
 FastWAM 当前 custom overlay 不是完全从零自拟模型，而是基于 FastWAM 公开结构/权重做 realrobot 数据微调、recipe 适配和离线 probe。它是 custom backend 的第一个样板。
@@ -153,7 +154,7 @@ DOWNLOAD_LEROBOT_POLICY=1 \
 bash scripts/lerobot/download_artifacts.sh
 ```
 
-当前已有明确下载 target 的 policy 优先使用专用 target，例如 `make download-lerobot-diffusion-pusht-policy`、`make download-lerobot-smolvla-base-policy`、`make download-lerobot-fastwam-libero-policy`。如果没有明确 ACT/PushT checkpoint，优先通过 `bash experiments/lerobot/pusht_act_smoke/launch.sh` 训练一个本地 checkpoint。
+当前已有明确下载 target 的 policy 优先使用专用 target，例如 `make download-lerobot-diffusion-pusht-policy`、`make download-lerobot-smolvla-base-policy`、`make download-lerobot-pi05-base-policy`、`make download-lerobot-fastwam-libero-policy`。pi05 还需要 `make download-lerobot-pi05-runtime-cache` 准备 PaliGemma tokenizer/config cache。如果没有明确 ACT/PushT checkpoint，优先通过 `bash experiments/lerobot/pusht_act_smoke/launch.sh` 训练一个本地 checkpoint。
 
 ### Dataset smoke
 

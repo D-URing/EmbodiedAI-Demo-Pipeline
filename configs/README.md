@@ -26,6 +26,7 @@ configs/lerobot/train/
 ├── pusht_diffusion.sh
 ├── svla_so100_smolvla.sh
 ├── svla_so100_smolvla_8gpu_long.sh
+├── svla_so100_pi05_8gpu_probe.sh
 └── aloha_pi0fast_template.sh
 ```
 
@@ -35,6 +36,7 @@ configs/lerobot/train/
 configs/lerobot/infer/
 ├── pusht_diffusion.sh
 ├── svla_so100_smolvla.sh
+├── svla_so100_pi05.sh
 └── fastwam_libero.sh
 ```
 

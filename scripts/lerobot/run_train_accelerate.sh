@@ -27,6 +27,7 @@ command -v lerobot-train >/dev/null || {
   echo "ERROR: lerobot-train is not on PATH. Run scripts/lerobot/install_lerobot_cluster.sh first." >&2
   exit 2
 }
+LEROBOT_TRAIN_BIN="$(command -v lerobot-train)"
 
 python - <<'PY'
 import os
@@ -60,7 +61,7 @@ mkdir -p "$RUN_DIR" "$(dirname "$OUTPUT_DIR")"
 cp "$CONFIG_PATH" "$RUN_DIR/config.sh"
 
 TRAIN_CMD=(
-  lerobot-train
+  "$LEROBOT_TRAIN_BIN"
   --policy.type="$LEROBOT_POLICY_TYPE"
   --policy.device="$LEROBOT_POLICY_DEVICE"
   --policy.repo_id="$LEROBOT_POLICY_REPO_ID"
@@ -111,7 +112,7 @@ if [[ "${LEROBOT_RESUME:-0}" == "1" ]]; then
     echo "Example: LEROBOT_RESUME_CONFIG_PATH=runs/lerobot/<run>/<id>/lerobot_output/checkpoints/<step>/train_config.json" >&2
     exit 2
   fi
-  TRAIN_CMD=(lerobot-train --config_path="$LEROBOT_RESUME_CONFIG_PATH" --resume=true --output_dir="$OUTPUT_DIR")
+  TRAIN_CMD=("$LEROBOT_TRAIN_BIN" --config_path="$LEROBOT_RESUME_CONFIG_PATH" --resume=true --output_dir="$OUTPUT_DIR")
   if [[ -n "${LEROBOT_TRAIN_EXTRA_ARGS:-}" ]]; then
     # shellcheck disable=SC2206
     RESUME_EXTRA_ARGS=( ${LEROBOT_TRAIN_EXTRA_ARGS} )
@@ -186,16 +187,60 @@ PY
 echo "LEROBOT_ACCELERATE_TRAIN_START run_dir=$RUN_DIR output_dir=$OUTPUT_DIR"
 echo "LEROBOT_ACCELERATE_EFFECTIVE_BATCH_SIZE $(( LEROBOT_BATCH_SIZE * LEROBOT_NUM_PROCESSES ))"
 
+run_start_epoch=$(date +%s)
 set +e
 "${FULL_CMD[@]}" 2>&1 | tee "$RUN_DIR/train_stdout.log"
 train_status=${PIPESTATUS[0]}
 set -e
+run_end_epoch=$(date +%s)
+run_elapsed_seconds=$(( run_end_epoch - run_start_epoch ))
 
 if python scripts/lerobot/parse_train_log.py --log "$RUN_DIR/train_stdout.log" --output-dir "$RUN_DIR"; then
   echo "LEROBOT_LOSS_REPORT $RUN_DIR/loss_summary.json"
 else
   echo "WARNING: LeRobot loss parser did not find complete train records in $RUN_DIR/train_stdout.log" >&2
 fi
+
+python - <<PY
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+elapsed_seconds = max(float("${run_elapsed_seconds}"), 1.0)
+steps = int("${LEROBOT_STEPS}")
+effective_batch_size = int("${LEROBOT_BATCH_SIZE}") * int("${LEROBOT_NUM_PROCESSES}")
+completed = int("${train_status}") == 0
+summary = {
+    "schema_version": "1.0",
+    "backend": "lerobot",
+    "policy_type": "${LEROBOT_POLICY_TYPE}",
+    "dataset_repo_id": "${LEROBOT_DATASET_REPO_ID}",
+    "run_dir": "${RUN_DIR}",
+    "output_dir": "${OUTPUT_DIR}",
+    "completed": completed,
+    "configured_steps": steps,
+    "per_process_batch_size": int("${LEROBOT_BATCH_SIZE}"),
+    "num_processes": int("${LEROBOT_NUM_PROCESSES}"),
+    "effective_batch_size": effective_batch_size,
+    "wall_time_seconds": elapsed_seconds,
+    "approx_step_per_second": steps / elapsed_seconds if completed else None,
+    "approx_sample_per_second": steps * effective_batch_size / elapsed_seconds if completed else None,
+    "notes": [
+        "step/sample throughput uses configured_steps when training exits successfully.",
+        "First run may include torch.compile or kernel warmup overhead if enabled.",
+    ],
+}
+path = Path("${RUN_DIR}") / "speed_summary.json"
+path.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+print(
+    "LEROBOT_SPEED_REPORT "
+    f"completed={str(completed).lower()} "
+    f"step_per_second={summary['approx_step_per_second']} "
+    f"sample_per_second={summary['approx_sample_per_second']} "
+    f"path={path}"
+)
+PY
 
 if (( train_status != 0 )); then
   echo "ERROR: LeRobot accelerate training failed with status ${train_status}. See $RUN_DIR/train_stdout.log" >&2

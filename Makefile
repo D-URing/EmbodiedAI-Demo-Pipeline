@@ -2,7 +2,7 @@ PYTHON ?= python3.11
 VENV ?= .venv
 CONSTRAINTS ?= requirements/constraints-py311.txt
 
-.PHONY: help setup doctor test validate prepare-dirs prepare-assets-lerobot prepare-assets-custom-fastwam prepare-sources-custom-fastwam prepare-env-custom-fastwam prepare-assets-imagewam check-assets check-assets-core check-assets-lerobot check-assets-custom-fastwam check-assets-imagewam download-lerobot-artifacts download-lerobot-pusht-dataset download-lerobot-svla-so100-pickplace-dataset download-lerobot-fastwam-libero-dataset convert-lerobot-fastwam-libero-v3 download-lerobot-fastwam-base-cache download-lerobot-diffusion-pusht-policy download-lerobot-smolvla-base-policy download-lerobot-fastwam-libero-policy download-data-rovid20k download-data-rovidx download-data-mdm-depth download-data-xperience10m-sample download-data-abc130k download-data-agibotworld-alpha download-data-interndata-a1 download-custom-fastwam-libero-dataset download-fastwam-artifacts prepare-imagewam-upstream download-imagewam-artifacts download-imagewam-flux2-base lerobot-check-scripts fastwam-check-scripts imagewam-check-scripts experiments-check-scripts lerobot-data-smoke schemas clean
+.PHONY: help setup doctor test validate prepare-dirs prepare-assets-lerobot prepare-assets-custom-fastwam prepare-sources-custom-fastwam prepare-env-custom-fastwam prepare-assets-imagewam check-assets check-assets-core check-assets-lerobot check-assets-custom-fastwam check-assets-imagewam download-lerobot-artifacts download-lerobot-pusht-dataset download-lerobot-svla-so100-pickplace-dataset download-lerobot-fastwam-libero-dataset convert-lerobot-fastwam-libero-v3 download-lerobot-fastwam-base-cache download-lerobot-diffusion-pusht-policy download-lerobot-smolvla-base-policy download-lerobot-pi05-base-policy download-lerobot-pi05-runtime-cache download-lerobot-fastwam-libero-policy download-data-rovid20k download-data-rovidx download-data-mdm-depth download-data-xperience10m-sample download-data-abc130k download-data-agibotworld-alpha download-data-interndata-a1 download-custom-fastwam-libero-dataset download-fastwam-artifacts prepare-imagewam-upstream download-imagewam-artifacts download-imagewam-flux2-base lerobot-check-scripts fastwam-check-scripts imagewam-check-scripts experiments-check-scripts lerobot-data-smoke schemas clean
 
 help:
 	@echo "EmbodiedAI Demo Pipeline"
@@ -41,6 +41,10 @@ help:
 	@echo "                                      Download LeRobot diffusion PushT policy"
 	@echo "  make download-lerobot-smolvla-base-policy"
 	@echo "                                      Download LeRobot SmolVLA base policy"
+	@echo "  make download-lerobot-pi05-base-policy"
+	@echo "                                      Download LeRobot pi05 base policy"
+	@echo "  make download-lerobot-pi05-runtime-cache"
+	@echo "                                      Download gated PaliGemma tokenizer/config cache required by pi05"
 	@echo "  make download-lerobot-fastwam-libero-policy"
 	@echo "                                      Download LeRobot-compatible FastWAM LIBERO policy"
 	@echo
@@ -95,6 +99,7 @@ prepare-assets-lerobot: prepare-dirs
 	$(MAKE) download-lerobot-svla-so100-pickplace-dataset
 	$(MAKE) download-lerobot-diffusion-pusht-policy
 	$(MAKE) download-lerobot-smolvla-base-policy
+	$(MAKE) download-lerobot-pi05-base-policy
 	$(MAKE) download-lerobot-fastwam-libero-policy
 	$(MAKE) download-lerobot-fastwam-libero-dataset
 	$(MAKE) convert-lerobot-fastwam-libero-v3
@@ -173,6 +178,24 @@ download-lerobot-smolvla-base-policy:
 	LEROBOT_POLICY_REPO_ID=lerobot/smolvla_base \
 	LEROBOT_POLICY_LOCAL_DIR="$${EMBODIED_MODEL_ROOT:-$$(pwd)/models}/lerobot/smolvla/smolvla_base" \
 	bash scripts/lerobot/download_artifacts.sh
+
+download-lerobot-pi05-base-policy:
+	DOWNLOAD_LEROBOT_DATASET=0 DOWNLOAD_LEROBOT_POLICY=1 \
+	ARTIFACT_MANIFEST_NAME=lerobot_pi05_base_policy_manifest.json \
+	LEROBOT_POLICY_TYPE=pi05 \
+	LEROBOT_POLICY_REPO_ID=lerobot/pi05_base \
+	LEROBOT_POLICY_LOCAL_DIR="$${EMBODIED_MODEL_ROOT:-$$(pwd)/models}/lerobot/pi05/pi05_base" \
+	bash scripts/lerobot/download_artifacts.sh
+
+download-lerobot-pi05-runtime-cache:
+	HF_HOME="$${HF_HOME:-$$(pwd)/hf_cache}" \
+	HUGGINGFACE_HUB_CACHE="$${HUGGINGFACE_HUB_CACHE:-$$(pwd)/hf_cache/hub}" \
+	HF_HUB_DISABLE_XET="$${HF_HUB_DISABLE_XET:-1}" \
+	hf download google/paligemma-3b-pt-224 \
+	  --include "config.json" \
+	  --include "tokenizer*" \
+	  --include "special_tokens_map.json" \
+	  --include "added_tokens.json"
 
 download-lerobot-fastwam-libero-policy:
 	DOWNLOAD_LEROBOT_DATASET=0 DOWNLOAD_LEROBOT_POLICY=1 \
@@ -258,9 +281,11 @@ lerobot-check-scripts:
 	bash -n configs/lerobot/train/pusht_diffusion.sh
 	bash -n configs/lerobot/train/svla_so100_smolvla.sh
 	bash -n configs/lerobot/train/svla_so100_smolvla_8gpu_long.sh
+	bash -n configs/lerobot/train/svla_so100_pi05_8gpu_probe.sh
 	bash -n configs/lerobot/train/aloha_pi0fast_template.sh
 	bash -n configs/lerobot/infer/pusht_diffusion.sh
 	bash -n configs/lerobot/infer/svla_so100_smolvla.sh
+	bash -n configs/lerobot/infer/svla_so100_pi05.sh
 	bash -n configs/lerobot/infer/fastwam_libero.sh
 	$(VENV)/bin/python scripts/lerobot/parse_train_log.py --log tests/fixtures/lerobot_train_stdout.log --output-dir build/lerobot-parser-test
 	$(VENV)/bin/python scripts/lerobot/generate_data_to_inference_report.py --dataset-profile tests/fixtures/lerobot_dataset_profile.json --inference-evidence tests/fixtures/lerobot_inference_evidence.json --training-summary build/lerobot-parser-test/loss_summary.json --output-dir build/lerobot-chain-report-test

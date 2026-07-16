@@ -28,6 +28,10 @@ DEFAULT_POLICY_CLASSES = {
         "lerobot.policies.pi0.modeling_pi0.PI0Policy",
         "lerobot.common.policies.pi0.modeling_pi0.PI0Policy",
     ],
+    "pi05": [
+        "lerobot.policies.pi05.modeling_pi05.PI05Policy",
+        "lerobot.common.policies.pi05.modeling_pi05.PI05Policy",
+    ],
     "pi0_fast": [
         "lerobot.policies.pi0fast.modeling_pi0fast.PI0FASTPolicy",
         "lerobot.common.policies.pi0fast.modeling_pi0fast.PI0FASTPolicy",

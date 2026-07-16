@@ -38,6 +38,8 @@ ASSETS: tuple[Asset, ...] = (
     Asset("lerobot", "SO100 pick-place dataset", "data/lerobot/svla_so100_pickplace"),
     Asset("lerobot", "Diffusion PushT policy", "models/lerobot/diffusion/diffusion_pusht"),
     Asset("lerobot", "SmolVLA base policy", "models/lerobot/smolvla/smolvla_base"),
+    Asset("lerobot", "pi05 base policy", "models/lerobot/pi05/pi05_base"),
+    Asset("lerobot", "pi05 PaliGemma tokenizer cache", "hf_cache/hub/models--google--paligemma-3b-pt-224", required=False),
     Asset("lerobot", "FastWAM LIBERO policy", "models/lerobot/fastwam/fastwam_libero_uncond_2cam224"),
     Asset("lerobot", "FastWAM LIBERO v2.1 raw", "data/lerobot/libero-fastwam/v2.1"),
     Asset("lerobot", "FastWAM LIBERO v3 converted", "data/lerobot/libero-fastwam/v3"),
