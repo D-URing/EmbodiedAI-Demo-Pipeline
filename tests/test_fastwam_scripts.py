@@ -113,6 +113,8 @@ def test_fastwam_prepare_uses_overlay_without_vendoring() -> None:
     assert "--no-deps -e" in prepare
     assert 'name not in {"torch", "torchvision"}' in prepare
     assert "libero_mujoco3.3.2" in prepare
+    assert "sync_fastwam_overlay_tree" in prepare
+    assert "falling back to tar overlay copy" in prepare
     assert "rsync -a" in prepare
     assert "--exclude \"runs/\"" in prepare
     assert "--exclude \"checkpoints/\"" in prepare

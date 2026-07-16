@@ -47,11 +47,37 @@ CONDA_EXE="${CONDA_EXE:-conda}"
 CONDA_CHANNEL_ARGS="${CONDA_CHANNEL_ARGS:---override-channels -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge}"
 
 command -v git >/dev/null || { echo "ERROR: git is required." >&2; exit 2; }
-if [[ "$FASTWAM_SOURCE_MODE" == "sync" ]]; then
-  command -v rsync >/dev/null || { echo "ERROR: rsync is required." >&2; exit 2; }
-fi
 
 mkdir -p "$FASTWAM_CACHE_ROOT"
+
+sync_fastwam_overlay_tree() {
+  if command -v rsync >/dev/null 2>&1; then
+    rsync -a \
+      --exclude ".git/" \
+      --exclude "runs/" \
+      --exclude "data/" \
+      --exclude "checkpoints/" \
+      --exclude "evaluate_results/" \
+      "$FASTWAM_OVERLAY_DIR"/ "$FASTWAM_WORKDIR"/
+    return
+  fi
+
+  if command -v tar >/dev/null 2>&1; then
+    echo "WARNING: rsync is not available; falling back to tar overlay copy." >&2
+    tar -C "$FASTWAM_OVERLAY_DIR" \
+      --exclude "./.git" \
+      --exclude "./runs" \
+      --exclude "./data" \
+      --exclude "./checkpoints" \
+      --exclude "./evaluate_results" \
+      -cf - . | tar -C "$FASTWAM_WORKDIR" -xf -
+    return
+  fi
+
+  echo "ERROR: rsync or tar is required to merge the FastWAM overlay." >&2
+  echo "Install rsync, or provide a base image with tar." >&2
+  exit 2
+}
 
 patch_fastwam_video_backend_default() {
   local video_utils="$FASTWAM_WORKDIR/src/fastwam/datasets/lerobot/lerobot/datasets/video_utils.py"
@@ -133,13 +159,7 @@ case "$FASTWAM_SOURCE_MODE" in
     git -C "$FASTWAM_OVERLAY_DIR" fetch origin "$FASTWAM_OVERLAY_REF"
     git -C "$FASTWAM_OVERLAY_DIR" checkout --detach "$FASTWAM_OVERLAY_REF"
 
-    rsync -a \
-      --exclude ".git/" \
-      --exclude "runs/" \
-      --exclude "data/" \
-      --exclude "checkpoints/" \
-      --exclude "evaluate_results/" \
-      "$FASTWAM_OVERLAY_DIR"/ "$FASTWAM_WORKDIR"/
+    sync_fastwam_overlay_tree
 
     echo "FastWAM overlay prepared."
     echo "Official FastWAM: $FASTWAM_OFFICIAL_REF -> $FASTWAM_WORKDIR"
