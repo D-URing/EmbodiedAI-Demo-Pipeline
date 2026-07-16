@@ -1,5 +1,7 @@
 schema_version: "1.0"
 updated: "2026-07-14"
+# 模型注册表：用于说明每条模型路线的状态、资产位置、启动入口和能力边界。
+# 它帮助团队判断“该跑哪个入口”，但不存放任何权重、数据或私密路径。
 purpose: >
   Track model/policy paths used by the demo pipeline. This registry records
   metadata and storage conventions only; it must not contain weights, datasets,
@@ -28,6 +30,7 @@ storage:
     - private real-robot videos
 
 models:
+  # LeRobot 轻量基线：最适合第一次证明训练 loss 能下降。
   lerobot_act_pusht:
     status: gpu_smoke_verified
     path_type: lerobot_native
@@ -53,6 +56,7 @@ models:
       - Training defaults use dataset.video_backend=pyav and policy.push_to_hub=false.
       - Downloads are disabled by default; set LEROBOT_ALLOW_DOWNLOAD=1 only intentionally.
 
+  # LeRobot FastWAM 官方路线占位：用于区分 LeRobot policy 和 custom/FastWAM backend。
   lerobot_fastwam:
     status: planned
     path_type: lerobot_native
@@ -72,6 +76,7 @@ models:
       - Preferred official FastWAM path inside LeRobot.
       - Must be implemented before claiming FastWAM-native LeRobot inference.
 
+  # 可下载 policy 的离线推理路线，不等于训练路线。
   lerobot_diffusion_pusht:
     status: downloadable_policy
     path_type: lerobot_native
@@ -165,27 +170,32 @@ models:
     notes:
       - Do not put this in first acceptance; keep as the next heavy VLA candidate.
 
+  # custom/FastWAM 主线：当前已跑通 single-node 8-GPU 真实训练。
   fastwam_realrobot_custom_backend:
-    status: implemented_scaffold
+    status: single8_training_verified_on_scut
     path_type: custom_backend
     upstream: yuantianyuan01/FastWAM
     overlay: D-URing/fastwam-realrobot-pipeline
     default_config: configs/fastwam/realrobot_train_eval.sh
     smoke_targets:
-      - bash experiments/custom/fastwam_realrobot_smoke/launch.sh
-      - FASTWAM_MODE=pilot FASTWAM_RECIPE=joint_base bash experiments/custom/fastwam_realrobot_smoke/launch.sh
-      - embodied-demo report-fastwam
+      - python experiments/custom/fastwam_realrobot_single8_random/run.py --dry-run
+      - python experiments/custom/fastwam_realrobot_single8_random/run.py
+      - embodied-demo report-fastwam --run-dir runs/experiments/custom/fastwam_realrobot_single8_random/<run_id>
     download_targets:
       - make download-fastwam-artifacts
       - make download-custom-fastwam-libero-dataset
+      - make prepare-assets-custom-fastwam
     artifact_location:
       release_weights: "$EMBODIED_MODEL_ROOT/custom/fastwam/release/"
+      wan_runtime_assets: "$EMBODIED_MODEL_ROOT/Wan-AI/"
       release_dataset: "$EMBODIED_DATA_ROOT/custom/fastwam/libero-fastwam/"
-      custom_outputs: "$EMBODIED_RUN_ROOT/experiments/custom/fastwam_realrobot_smoke/"
+      custom_outputs: "$EMBODIED_RUN_ROOT/experiments/custom/fastwam_realrobot_single8_random/"
     capability_claim: custom_finetuning_training_evidence
     notes:
-      - This is not a from-scratch self-designed model.
-      - It is a customized finetuning/realrobot overlay path.
+      - This is not a from-scratch self-designed model; it is a FastWAM-based custom backend route.
+      - 当前默认 config 使用 init=random，是真实训练链路验证，不等于 release checkpoint 微调。
+      - 正式微调请使用 init=release/base，并在 extra_overrides 中显式设置 resume=...。
+      - 训练前会自动预计算 Wan/T5 text embedding cache。
       - Keep this dataset separate from data/lerobot/libero-fastwam.
       - SCUT private overlay clone currently needs GitHub private repository credentials.
 

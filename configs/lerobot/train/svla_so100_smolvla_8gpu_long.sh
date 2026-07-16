@@ -1,7 +1,8 @@
 # shellcheck shell=bash
 
-# Long-running single-node 8-GPU LeRobot profile for SmolVLA fine-tuning.
-# This is the first "real experiment" profile, not a 2-step smoke.
+# LeRobot 长实验配置：单机 8 卡 SmolVLA 微调。
+# 用途：不是 2-step 快速检查，而是后续较正式的 LeRobot 长训模板。
+# 使用前请先确认数据和 smolvla_base 已下载到项目内。
 
 export EMBODIED_REPO_ROOT="${EMBODIED_REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 
@@ -18,7 +19,7 @@ export LEROBOT_POLICY_PRETRAINED_PATH="${LEROBOT_POLICY_PRETRAINED_PATH:-$EMBODI
 export LEROBOT_POLICY_DTYPE="${LEROBOT_POLICY_DTYPE:-bfloat16}"
 export LEROBOT_POLICY_ENABLE_GRADIENT_CHECKPOINTING="${LEROBOT_POLICY_ENABLE_GRADIENT_CHECKPOINTING:-true}"
 
-# Per-process batch size. Effective batch size = LEROBOT_BATCH_SIZE * LEROBOT_NUM_PROCESSES.
+# 每个进程的 batch size。有效 batch size = LEROBOT_BATCH_SIZE * LEROBOT_NUM_PROCESSES。
 export LEROBOT_STEPS="${LEROBOT_STEPS:-20000}"
 export LEROBOT_BATCH_SIZE="${LEROBOT_BATCH_SIZE:-8}"
 export LEROBOT_NUM_WORKERS="${LEROBOT_NUM_WORKERS:-4}"
@@ -29,7 +30,7 @@ export LEROBOT_SAVE_CHECKPOINT="${LEROBOT_SAVE_CHECKPOINT:-true}"
 export LEROBOT_SAVE_FREQ="${LEROBOT_SAVE_FREQ:-1000}"
 export LEROBOT_SEED="${LEROBOT_SEED:-1002}"
 
-# Keep simulator eval disabled for long offline fine-tuning. Enable eval_split/eval_steps explicitly later.
+# 当前只做离线数据微调，默认关闭 simulator eval。需要评测时再显式设置 eval_split/eval_steps。
 export LEROBOT_ENV_EVAL_FREQ="${LEROBOT_ENV_EVAL_FREQ:-0}"
 export LEROBOT_EVAL_STEPS="${LEROBOT_EVAL_STEPS:-0}"
 export LEROBOT_MAX_EVAL_SAMPLES="${LEROBOT_MAX_EVAL_SAMPLES:-}"
@@ -39,7 +40,7 @@ export LEROBOT_RUN_NAME="${LEROBOT_RUN_NAME:-svla_so100_smolvla_8gpu_long}"
 export LEROBOT_RUN_ROOT="${LEROBOT_RUN_ROOT:-$EMBODIED_REPO_ROOT/runs/lerobot}"
 export TORCH_HOME="${TORCH_HOME:-$EMBODIED_REPO_ROOT/hf_cache/torch}"
 
-# Accelerate launcher. Single-node 8-GPU by default; multi-node can override these.
+# Accelerate 分布式启动参数。默认单机 8 卡；多机时需要覆盖机器数、rank 和主节点地址。
 export LEROBOT_NUM_PROCESSES="${LEROBOT_NUM_PROCESSES:-8}"
 export LEROBOT_NUM_MACHINES="${LEROBOT_NUM_MACHINES:-1}"
 export LEROBOT_MACHINE_RANK="${LEROBOT_MACHINE_RANK:-0}"
@@ -47,7 +48,7 @@ export LEROBOT_MAIN_PROCESS_IP="${LEROBOT_MAIN_PROCESS_IP:-127.0.0.1}"
 export LEROBOT_MAIN_PROCESS_PORT="${LEROBOT_MAIN_PROCESS_PORT:-29501}"
 export LEROBOT_ACCELERATE_MIXED_PRECISION="${LEROBOT_ACCELERATE_MIXED_PRECISION:-bf16}"
 
-# Resume support:
+# 断点续训：
 #   export LEROBOT_RESUME=1
 #   export LEROBOT_RESUME_CONFIG_PATH=runs/lerobot/<run>/<id>/lerobot_output/checkpoints/<step>/train_config.json
 export LEROBOT_RESUME="${LEROBOT_RESUME:-0}"

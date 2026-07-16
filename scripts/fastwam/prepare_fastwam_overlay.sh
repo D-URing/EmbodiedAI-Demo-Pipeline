@@ -1,23 +1,22 @@
 #!/usr/bin/env bash
-# Prepare the runnable custom FastWAM workspace and, optionally, its Python/CUDA
-# environment.
+# 准备 custom FastWAM 可运行 workspace，以及可选的 Python/CUDA 环境。
 #
-# Intended usage:
-#   - Networked/login node:
-#       FASTWAM_SOURCE_MODE=sync bash scripts/fastwam/prepare_fastwam_overlay.sh
-#     This clones/updates the official FastWAM repo and overlays the project
-#     real-robot pipeline into upstreams/FastWAM-realrobot.
-#   - Shared conda env preparation, still on a networked/login node:
-#       FASTWAM_SOURCE_MODE=reuse FASTWAM_CREATE_CONDA=1 FASTWAM_INSTALL=1 \
-#       bash scripts/fastwam/prepare_fastwam_overlay.sh
-#     This reuses the already prepared source tree and installs packages into
-#     the shared conda environment. Do not run this on offline compute nodes.
-#   - Offline compute node:
-#       source .../miniconda3/etc/profile.d/conda.sh
-#       conda activate fastwam
-#       python experiments/custom/fastwam_realrobot_single8_random/run.py
+# 推荐使用方式：
+#   1. 管理/登录节点有网络时，同步源码 overlay：
+#        FASTWAM_SOURCE_MODE=sync bash scripts/fastwam/prepare_fastwam_overlay.sh
+#      这会把官方 FastWAM + realrobot overlay 合成为 upstreams/FastWAM-realrobot。
 #
-# This script intentionally does not start training.
+#   2. 仍在有网络的管理/登录节点，安装共享 conda 环境：
+#        FASTWAM_SOURCE_MODE=reuse FASTWAM_CREATE_CONDA=1 FASTWAM_INSTALL=1 \
+#        bash scripts/fastwam/prepare_fastwam_overlay.sh
+#      注意：不要在不能联网的计算节点上做 pip/conda 安装。
+#
+#   3. 计算节点只激活环境并训练：
+#        source .../miniconda3/etc/profile.d/conda.sh
+#        conda activate fastwam
+#        python experiments/custom/fastwam_realrobot_single8_random/run.py
+#
+# 本脚本只准备环境和源码，不启动训练。
 set -euo pipefail
 
 CONFIG_PATH="${1:-configs/fastwam/realrobot_train_eval.sh}"

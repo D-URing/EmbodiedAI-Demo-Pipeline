@@ -2,6 +2,12 @@
 
 这里放真正用于启动训练、推理、长期试验的入口。
 
+读这个目录时先记住三句话：
+
+1. LeRobot 路线用于贴近官方生态，优先验证标准 dataset/policy/inference；
+2. custom 路线用于我们自己的模型训练封装，目前主线是 FastWAM；
+3. `random` 是真实训练链路验证，`release/base + resume` 才更接近正式微调。
+
 原则：
 
 > `make` 只做环境、下载、转换和检查；训练/推理从 `experiments/<route>/<experiment>/run.py` 或 `launch.sh` 启动。
@@ -113,6 +119,16 @@ FastWAM 单机 8 卡随机初始化，当前优先真实训练入口：
 ```bash
 python experiments/custom/fastwam_realrobot_single8_random/run.py --dry-run
 python experiments/custom/fastwam_realrobot_single8_random/run.py
+```
+
+说明：这个默认入口 `init=random`，用于证明真实数据、真实模型组件、8 卡训练、loss、checkpoint 全部能跑通。它不是 release checkpoint 微调。正式微调建议复制该目录新建实验，并在 `config.yaml` 中设置：
+
+```yaml
+fastwam:
+  init: release
+  extra_overrides:
+    - resume=/mnt/.../models/custom/fastwam/release/libero_uncond_2cam224.pt
+    - learning_rate=3e-5
 ```
 
 FastWAM 8 机随机初始化，后续长期多机入口：

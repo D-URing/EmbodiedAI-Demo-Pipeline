@@ -2,12 +2,16 @@ schema_version: "1.0"
 chain_id: fastwam_realrobot_v0
 name: FastWAM Real-Robot Evidence Chain v0
 status: experimental
+# custom/FastWAM 证据链定义。
+# 用途：把一次真实训练 run 变成可交付材料，包括配置、日志、loss、checkpoint 和边界声明。
+# 注意：这里证明“训练链路和 checkpoint 产出”，不证明 RoboDojo/仿真/真机闭环成功。
 purpose: >
   Turn FastWAM custom training runs into a deliverable evidence chain with
   CUDA training logs, loss summaries, checkpoint records, and handoff reports.
 
 stages:
   - id: wrapper_validation
+    # 先验证脚本语法、schema 和 parser，避免跑到集群才发现入口坏了。
     command: make validate
     required: true
     evidence:
@@ -15,7 +19,8 @@ stages:
       - evidence schemas export
 
   - id: fastwam_training_pilot
-    command: FASTWAM_MODE=pilot FASTWAM_RECIPE=joint_base bash scripts/fastwam/run_realrobot_train_eval.sh
+    # 推荐使用 YAML + run.py，而不是手写 FASTWAM_*。
+    command: python experiments/custom/fastwam_realrobot_single8_random/run.py
     required: true
     evidence:
       - runs/fastwam/*/backend_manifest.json
@@ -23,6 +28,7 @@ stages:
       - FastWAM native checkpoint path
 
   - id: evidence_report
+    # 对已有 run_dir 生成交付报告。run_dir 来自 runs/experiments/custom/fastwam_realrobot_single8_random/<run_id>。
     command: embodied-demo report-fastwam --run-dir <runs/fastwam/...>
     required: true
     evidence:

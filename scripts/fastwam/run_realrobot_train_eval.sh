@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
-# Low-level FastWAM training wrapper.
+# FastWAM 底层训练 wrapper。
 #
-# This script expects a resolved shell config, usually generated from an
-# experiment YAML by scripts/fastwam/run_config.py. It then:
-#   1. validates CUDA, source tree, task config, and checkpoint requirements;
-#   2. translates project-level env vars to the upstream FastWAM train_zero1.sh;
-#   3. mirrors stdout, command, manifest, and parsed loss summary into runs/.
-#
-# User-facing training should normally start from:
+# 普通用户不要直接从这里启动实验；推荐入口是：
 #   python experiments/custom/fastwam_realrobot_single8_random/run.py
 #
-# Directly calling this script is only for debugging backend integration.
+# 这个脚本的职责：
+#   1. 读取 run_config.py 生成的 config.sh；
+#   2. 检查 CUDA、上游源码、task config、checkpoint/runtime assets 是否存在；
+#   3. 训练前自动预计算 text embedding cache；
+#   4. 把项目级 FASTWAM_* 配置翻译成 upstream FastWAM 的 Hydra 参数；
+#   5. 记录 command、manifest、stdout，并解析 loss_summary.json。
+#
+# 只有调试 backend 封装时才建议直接调用本脚本。
 set -euo pipefail
 
 CONFIG_PATH="${1:-configs/fastwam/realrobot_train_eval.sh}"

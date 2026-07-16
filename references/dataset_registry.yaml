@@ -1,5 +1,7 @@
 schema_version: "1.0"
 updated: "2026-07-15"
+# 数据注册表：用于说明“哪些数据放在哪里、给哪条 pipeline 用、当前是否适合下载”。
+# 这不是论文综述，也不是自动下载清单；真正下载入口仍以 Makefile target 为准。
 purpose: >
   Track open datasets that may feed the LeRobot and custom/FastWAM pipelines.
   This registry is an engineering routing table, not a literature survey.
@@ -11,6 +13,7 @@ storage:
     or environment variables; do not copy datasets into pipeline directories.
 
 tiers:
+  # 第一优先级：能马上支持 loss/inference 检查的小数据或已验证数据。
   immediate_training:
     description: Small or already validated assets for first loss/inference checks.
     datasets:
@@ -32,6 +35,7 @@ tiers:
         download_target: make download-lerobot-svla-so100-pickplace-dataset
         status: planned_download
 
+  # custom/FastWAM 专用数据。注意不要和 data/lerobot 下的 LIBERO 副本混用。
   immediate_fastwam_backend:
     description: Release data for the FastWAM custom backend route.
     datasets:
@@ -46,6 +50,7 @@ tiers:
           - Keep original v2.1 data immutable.
           - Convert a copy before using current LeRobot v3 loaders.
 
+  # 可先下载小样本做探索的数据，不承诺进入第一阶段训练主线。
   practical_open_data_samples:
     description: Useful open data that can be downloaded early without committing to huge full corpora.
     datasets:
@@ -68,6 +73,7 @@ tiers:
         download_target: make download-data-xperience10m-sample
         status: recommended_sample_first
 
+  # 大规模/受限数据：只记录路线和用途，下载前必须确认存储、许可证和账号。
   large_or_gated_open_data:
     description: High-value datasets that need storage, license, or account planning before full download.
     datasets:
@@ -117,6 +123,7 @@ tiers:
         download_target: make download-data-interndata-a1
         status: gated_license_and_large
 
+  # 需要官方下载器或额外权限的数据；不要假设 make target 能直接完整下载。
   external_access_workflows:
     description: Datasets that need their own official downloader or access workflow.
     datasets:

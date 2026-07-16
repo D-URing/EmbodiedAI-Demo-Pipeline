@@ -2,6 +2,9 @@ schema_version: "1.0"
 chain_id: lerobot_fastwam_data_to_inference_v0
 name: LeRobot FastWAM Data-to-Inference Chain v0
 status: planned
+# LeRobot 路线证据链定义。
+# 用途：说明 LeRobot 数据读取、policy 加载/训练、离线推理和报告产物的标准顺序。
+# 注意：这是 offline data-to-inference，不是 simulator benchmark，也不是真机闭环。
 purpose: >
   Make LeRobot the primary demo-pipeline reference: read LeRobot data, train or
   load a LeRobot policy, run offline inference, and normalize the evidence into
@@ -10,6 +13,7 @@ purpose: >
 
 stages:
   - id: dataset_inspection
+    # 只检查本地 dataset 能否读取、字段 shape 是否符合预期。
     command: make lerobot-data-smoke
     required: true
     evidence:
@@ -19,6 +23,7 @@ stages:
       - observation/action keys
 
   - id: train_or_load_policy
+    # 这里可以是短训 checkpoint，也可以是已下载 policy；必须记录来源。
     command: make lerobot-train-smoke or make lerobot-fastwam-train-smoke
     required: true
     evidence:
@@ -28,6 +33,7 @@ stages:
       - policy type and device
 
   - id: offline_inference
+    # 对本地 sample 做一次 policy forward，记录 action shape/device/latency。
     command: make lerobot-infer-smoke
     required: true
     evidence:

@@ -1,8 +1,8 @@
 # shellcheck shell=bash
 
-# LeRobot profile 3: SmolVLA fine-tuning.
-# Goal: A100-friendly VLA path with a real pretrained model and a small public LeRobot dataset.
-# Official LeRobot docs recommend SmolVLA fine-tuning from lerobot/smolvla_base.
+# LeRobot 训练配置 3：SO100 pick-place + SmolVLA 微调。
+# 用途：A100/A800 友好的 VLA 微调入口，使用真实 pretrained SmolVLA base。
+# 相比 PushT/ACT，这条更接近我们后续 VLA 模型接入方式。
 
 export EMBODIED_REPO_ROOT="${EMBODIED_REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 

@@ -7,6 +7,7 @@ export PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$EXPERIMENT_DIR/../../.." && pwd)}"
 # shellcheck disable=SC1091
 source "$PROJECT_ROOT/configs/lerobot/infer/svla_so100_smolvla.sh"
 
+# SmolVLA 离线推理实验：读取本地 SO100 sample，加载本地 policy，输出 action evidence。
 export EXPERIMENT_ROUTE="lerobot"
 export EXPERIMENT_NAME="smolvla_so100_infer"
 export LEROBOT_RUN_ROOT="${EXPERIMENT_RUN_ROOT:-$PROJECT_ROOT/runs/experiments/$EXPERIMENT_ROUTE}"

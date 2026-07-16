@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+# LeRobot 单卡/短训 wrapper。
+#
+# 名字里保留 smoke 是历史原因；这里跑的是真实 LeRobot 训练，不是 mock。
+# 用于 ACT/PushT、Diffusion/PushT 这类轻量训练入口。长训/多卡 SmolVLA 请用
+# scripts/lerobot/run_train_accelerate.sh。
 set -euo pipefail
 
 CONFIG_PATH="${1:-configs/lerobot/pusht_act_gpu_smoke.sh}"

@@ -9,13 +9,25 @@
 | LeRobot | 复刻 LeRobot data-to-train-to-inference，并真实训练/推理多个 policy | [`pipelines/lerobot/`](pipelines/lerobot/) |
 | Custom WAM | 保留自建模型/custom backend 路径，FastWAM 和 ImageWAM 并列接入 | [`pipelines/custom/`](pipelines/custom/) |
 
+## 我应该跑哪个入口？
+
+| 目标 | 推荐入口 | 说明 |
+|---|---|---|
+| 快速证明 LeRobot 能训练出 loss | `bash experiments/lerobot/pusht_act_smoke/launch.sh` | 轻量 ACT/PushT 真实训练 |
+| 跑 LeRobot VLA 微调 | `bash experiments/lerobot/smolvla_so100_8gpu_long/launch.sh` | 单机 8 卡 SmolVLA 长训模板 |
+| 跑 LeRobot 离线推理 | `bash experiments/lerobot/*_infer/launch.sh` | 只证明 data-to-policy inference，不是环境评测 |
+| 跑 custom FastWAM 真实训练链路 | `python experiments/custom/fastwam_realrobot_single8_random/run.py` | 当前已在 gpu11 跑通 8 卡真实训练 |
+| 做 custom FastWAM release 微调 | 复制 `fastwam_realrobot_single8_random` 新建实验，改 `init=release` 和 `resume=...` | 不要把默认 `init=random` 说成正式微调 |
+| 准备多机 FastWAM | `experiments/custom/fastwam_realrobot_8node_random/` | 等单机稳定后再用 |
+| 研究 ImageWAM | `experiments/custom/imagewam_flux2_4b_libero_pilot/` | 候选路线，不是当前主线交付 |
+
 ## 当前状态
 
 - LeRobot ACT/PushT 已在 SCUT `gpu11` 跑通真实 GPU training smoke，并观察到 2-step loss 下降：`96.987 -> 83.351`；
 - LeRobot FastWAM/LIBERO 已在 SCUT `gpu11` 跑通 CUDA inference smoke，输出 `action.shape=[1, 7]`；
 - LeRobot 训练/推理入口已覆盖 ACT、Diffusion、SmolVLA、FastWAM/LIBERO；
-- Custom FastWAM realrobot overlay 入口已准备，支持 `release|base|random` 初始化和多节点启动；
-- ImageWAM 已作为 `custom/imagewam` 后端接入，默认走 FLUX.2 4B + LIBERO；
+- Custom FastWAM realrobot overlay 已在 SCUT `gpu11` 跑通单机 8 卡真实训练，支持 `release|base|random` 初始化和多节点启动；
+- ImageWAM 已作为 `custom/imagewam` 候选后端接入，默认走 FLUX.2 4B + LIBERO，但不作为当前主线验收；
 - 不维护 CPU toy trainer，不维护本地符号 rollout，不声明仿真或真机 closed-loop 成功。
 
 ## 阅读顺序

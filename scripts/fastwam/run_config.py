@@ -1,6 +1,18 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+# 将 experiments/custom/*/config.yaml 转换为底层 FastWAM shell config，并启动训练。
+#
+# 普通使用：
+#   python experiments/custom/fastwam_realrobot_single8_random/run.py --dry-run
+#   python experiments/custom/fastwam_realrobot_single8_random/run.py
+#
+# run.py 会调用本脚本。本脚本负责：
+#   1. 读取 YAML；
+#   2. 把中文友好的实验配置转换成 FASTWAM_* 环境变量；
+#   3. 生成 runs/generated_configs/fastwam/.../*.sh 便于复盘；
+#   4. 调用 scripts/fastwam/run_realrobot_train_eval.sh。
+
 import argparse
 import json
 import os

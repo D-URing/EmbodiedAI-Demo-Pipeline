@@ -7,6 +7,7 @@ export PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$EXPERIMENT_DIR/../../.." && pwd)}"
 # shellcheck disable=SC1091
 source "$PROJECT_ROOT/configs/lerobot/train/pusht_diffusion.sh"
 
+# 实验层只覆盖身份和输出目录；训练模型/数据等默认来自 configs/lerobot/train/pusht_diffusion.sh。
 export EXPERIMENT_ROUTE="lerobot"
 export EXPERIMENT_NAME="pusht_diffusion_train"
 export LEROBOT_RUN_ROOT="${EXPERIMENT_RUN_ROOT:-$PROJECT_ROOT/runs/experiments/$EXPERIMENT_ROUTE}"

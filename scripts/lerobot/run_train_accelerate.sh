@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# LeRobot accelerate 多卡训练 wrapper。
+#
+# 主要用于 SmolVLA 单机 8 卡/后续多机训练。它读取 configs/lerobot/train/*.sh，
+# 检查 CUDA 和 lerobot-train，然后通过 accelerate 启动真实训练。
 set -euo pipefail
 
 CONFIG_PATH="${1:-configs/lerobot/train/svla_so100_smolvla_8gpu_long.sh}"

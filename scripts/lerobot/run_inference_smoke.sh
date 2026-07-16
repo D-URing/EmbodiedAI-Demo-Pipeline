@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# LeRobot 离线推理 wrapper。
+#
+# 读取本地 dataset sample 和本地 policy/checkpoint，做一次 policy forward 并写 evidence。
+# 这不是仿真评测，也不声明任务成功率。默认禁止运行时下载。
 set -euo pipefail
 
 CONFIG_PATH="${1:-configs/lerobot/native_pusht_act_pipeline.sh}"

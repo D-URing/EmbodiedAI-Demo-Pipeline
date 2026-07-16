@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# LeRobot dataset 检查 wrapper。
+#
+# 只验证本地 dataset 是否能读取、字段和 shape 是否符合预期。
+# 默认 offline，不会自动从 Hugging Face 下载。
 set -euo pipefail
 
 CONFIG_PATH="${1:-configs/lerobot/native_pusht_act_pipeline.sh}"

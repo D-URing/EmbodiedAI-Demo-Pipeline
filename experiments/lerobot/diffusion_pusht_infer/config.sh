@@ -7,6 +7,7 @@ export PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$EXPERIMENT_DIR/../../.." && pwd)}"
 # shellcheck disable=SC1091
 source "$PROJECT_ROOT/configs/lerobot/infer/pusht_diffusion.sh"
 
+# 实验层只设置输出目录和实验名；policy/data 路径来自 infer profile。
 export EXPERIMENT_ROUTE="lerobot"
 export EXPERIMENT_NAME="diffusion_pusht_infer"
 export LEROBOT_RUN_ROOT="${EXPERIMENT_RUN_ROOT:-$PROJECT_ROOT/runs/experiments/$EXPERIMENT_ROUTE}"

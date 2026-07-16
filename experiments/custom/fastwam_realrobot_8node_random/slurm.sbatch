@@ -8,6 +8,13 @@
 #SBATCH --output=runs/slurm/fastwam-8node-random-%j.out
 #SBATCH --error=runs/slurm/fastwam-8node-random-%j.err
 
+# Slurm 多机示例：8 节点 x 8 GPU。
+# 使用前确认：
+#   1. 共享盘上的 data/models/upstreams/conda env 已在管理节点准备好；
+#   2. 单机 8 卡 fastwam_realrobot_single8_random 已经跑通；
+#   3. MASTER_ADDR 对其它计算节点可达。
+# 当前默认 init=random，适合扩展性验证；正式微调请通过环境变量覆盖 FASTWAM_INIT/FASTWAM_EXTRA_OVERRIDES。
+
 set -euo pipefail
 
 PROJECT="${PROJECT:-$PWD}"

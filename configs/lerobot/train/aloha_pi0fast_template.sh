@@ -1,7 +1,8 @@
 # shellcheck shell=bash
 
-# Optional heavy VLA template: Pi0-FAST.
-# Keep this outside first acceptance because it depends on heavier model/dependency paths.
+# 可选重型 VLA 模板：Pi0-FAST。
+# 当前不是第一阶段验收主线，因为依赖更重的模型和环境。
+# 保留本配置是为了后续扩展，不建议新人第一天就跑它。
 
 export EMBODIED_REPO_ROOT="${EMBODIED_REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 

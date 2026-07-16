@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Multi-node FastWAM launcher.
+# FastWAM 多机启动入口。
 #
-# This is kept for the later 8-node route. For the current real single-node
-# 8-GPU validation, prefer:
+# 当前推荐：先用单机 8 卡 YAML 入口跑通，再使用本脚本。
 #   python experiments/custom/fastwam_realrobot_single8_random/run.py
 #
-# When used without Slurm, every node must set FASTWAM_NNODES, FASTWAM_NODE_RANK,
-# FASTWAM_MASTER_ADDR, FASTWAM_MASTER_PORT, and the same FASTWAM_RUN_ID.
+# 不通过 Slurm 手动多机时，每个节点必须设置：
+#   FASTWAM_NNODES、FASTWAM_NODE_RANK、FASTWAM_MASTER_ADDR、FASTWAM_MASTER_PORT、FASTWAM_RUN_ID。
+# FASTWAM_RUN_ID 必须所有节点一致，否则 checkpoint/log 会分裂到不同目录。
 set -euo pipefail
 
 EXPERIMENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

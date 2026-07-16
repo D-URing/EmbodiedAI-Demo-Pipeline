@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+# LeRobot 数据和 policy 下载脚本。
+#
+# 由 Makefile 中的 download-lerobot-* target 调用。默认把数据放到 data/lerobot，
+# policy 放到 models/lerobot，HF cache 放到 hf_cache，全部位于项目内并被 .gitignore 忽略。
+# 优先使用 /home/scut/hfd.sh；没有时回退到 hf/huggingface-cli。
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

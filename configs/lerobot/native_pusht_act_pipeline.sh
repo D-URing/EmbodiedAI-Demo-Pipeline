@@ -1,8 +1,8 @@
 # shellcheck shell=bash
 
-# LeRobot-native data-to-inference smoke config.
-# Defaults avoid large downloads: scripts run with HF offline flags unless
-# LEROBOT_ALLOW_DOWNLOAD=1 is explicitly set by the caller.
+# LeRobot-native data-to-inference 配置。
+# 用途：读取一个本地 PushT sample，加载本地 ACT policy/checkpoint，做离线推理。
+# 默认不下载远端资产；只有显式设置 LEROBOT_ALLOW_DOWNLOAD=1 才允许联网。
 
 export EMBODIED_REPO_ROOT="${EMBODIED_REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 export LEROBOT_UPSTREAM_COMMIT="${LEROBOT_UPSTREAM_COMMIT:-e40b58a8dfa9e7b86918c374791599d070518d11}"

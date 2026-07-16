@@ -1,7 +1,8 @@
 # shellcheck shell=bash
 
-# LeRobot profile 2: diffusion policy on PushT.
-# Goal: a second real LeRobot training path that is still small enough for early cluster checks.
+# LeRobot 训练配置 2：PushT + Diffusion Policy。
+# 用途：作为 ACT 之外的第二条真实 LeRobot 训练路径，仍然足够轻量。
+# 适合验证“不同 policy 类型”能复用同一套训练 wrapper。
 
 export EMBODIED_REPO_ROOT="${EMBODIED_REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 

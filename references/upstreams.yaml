@@ -1,11 +1,14 @@
 schema_version: "1.0"
 freeze_date: "2026-07-13"
+# 上游项目注册表：记录我们参考/集成的外部项目、固定 commit 和使用边界。
+# 这里不是依赖安装文件；真正拉源码由 scripts/*/prepare_* 或 Make target 完成。
 purpose: >
   Pin external projects that influence the demo pipeline architecture, evaluation
   protocol, and future integration work. These pins are reference anchors, not
   vendored dependencies.
 
 sources:
+  # 后续仿真/评测参考。当前不作为第一阶段训练链路依赖。
   robodojo:
     role: external_simulation_and_evaluation_target
     repository: https://github.com/RoboDojo-Benchmark/RoboDojo
@@ -42,6 +45,7 @@ sources:
       - blocking_m2_m3_on_isaac_installation
       - remote_submission_as_current_requirement
 
+  # LeRobot 是官方生态路线的主参考。
   lerobot:
     role: primary_data_to_inference_pipeline_reference
     repository: https://github.com/huggingface/lerobot
@@ -76,6 +80,7 @@ sources:
       - vendoring_lerobot_code
       - requiring_lerobot_in_core_python_environment
 
+  # FastWAM 是 custom/FastWAM 训练后端和 LeRobot FastWAM policy 的共同参考。
   fastwam:
     role: world_action_model_policy_reference_and_custom_backend_base
     repository: https://github.com/yuantianyuan01/FastWAM
@@ -102,6 +107,7 @@ sources:
       - installing_cuda_dependencies_in_core_environment
       - claiming_closed_loop_task_success_from_base_fastwam_alone
 
+  # ImageWAM 是后续 custom 扩展候选，不是当前主线交付。
   imagewam:
     role: image_editing_world_action_model_custom_backend
     repository: https://github.com/yuyangalin/ImageWAM
@@ -126,6 +132,7 @@ sources:
       - forcing_imagewam_into_lerobot_policy_api_in_m1
       - claiming_libero_or_robotwin_success_rate_without_sim_eval
 
+  # 私有 overlay：把官方 FastWAM 接到 realrobot/LIBERO 训练配置。
   fastwam_realrobot_pipeline:
     role: internal_fastwam_realrobot_overlay
     repository: https://github.com/D-URing/fastwam-realrobot-pipeline.git

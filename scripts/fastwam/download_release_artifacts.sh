@@ -1,4 +1,13 @@
 #!/usr/bin/env bash
+# 下载 custom FastWAM 路线需要的模型资产。
+#
+# 这个脚本由 make download-fastwam-artifacts / make prepare-assets-custom-fastwam 调用。
+# 它会下载两类东西：
+#   1. FastWAM release checkpoint 和 dataset stats；
+#   2. 训练/预计算 text cache 必需的 Wan2.2 VAE、Wan2.2 T5 text encoder、Wan2.1 tokenizer。
+#
+# 默认优先使用 /home/scut/hfd.sh；如果存在 modelscope，也可用于 Wan runtime assets。
+# 所有文件都落到项目内 models/，不会提交进 git。
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

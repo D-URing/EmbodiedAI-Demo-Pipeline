@@ -7,6 +7,7 @@ export PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$EXPERIMENT_DIR/../../.." && pwd)}"
 # shellcheck disable=SC1091
 source "$PROJECT_ROOT/configs/lerobot/infer/fastwam_libero.sh"
 
+# LeRobot 路线的 FastWAM 离线推理实验。不要和 custom/FastWAM 训练路线混用数据目录。
 export EXPERIMENT_ROUTE="lerobot"
 export EXPERIMENT_NAME="fastwam_libero_infer"
 export LEROBOT_RUN_ROOT="${EXPERIMENT_RUN_ROOT:-$PROJECT_ROOT/runs/experiments/$EXPERIMENT_ROUTE}"

@@ -1,46 +1,58 @@
 # shellcheck shell=bash
 
-# FastWAM real-robot training/evaluation backend defaults.
+# FastWAM custom 路线的底层默认配置。
 #
-# This config intentionally describes an external, CUDA-only policy/training
-# environment. It is not sourced by the lightweight core demo environment.
+# 这不是用户日常直接执行的实验入口；推荐入口是：
+#   experiments/custom/fastwam_realrobot_single8_random/config.yaml + run.py
+# 本文件只定义可复用默认值，供 run_config.py 渲染出的 config.sh 继承。
+#
+# 重要边界：这是 CUDA-only 训练后端，不提供 CPU 伪实现。
 
-# Official FastWAM base repository plus the private internal real-robot overlay.
+# 上游源码来源：官方 FastWAM + realrobot overlay。
+# prepare_fastwam_overlay.sh 会把 overlay 覆盖到 upstreams/FastWAM-realrobot，形成可运行树。
 export EMBODIED_REPO_ROOT="${EMBODIED_REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 export FASTWAM_OFFICIAL_REPO="${FASTWAM_OFFICIAL_REPO:-https://github.com/yuantianyuan01/FastWAM.git}"
 export FASTWAM_OFFICIAL_REF="${FASTWAM_OFFICIAL_REF:-45d8e1458921d83f8ad6cf9ce993d371208dabd0}"
 export FASTWAM_OVERLAY_REPO="${FASTWAM_OVERLAY_REPO:-https://github.com/D-URing/fastwam-realrobot-pipeline.git}"
 export FASTWAM_OVERLAY_REF="${FASTWAM_OVERLAY_REF:-5b9791f7d49956b96e0694786f46ff94e8214eca}"
 
-# Source layout. FASTWAM_WORKDIR is the overlaid runnable FastWAM tree.
+# 源码布局：
+#   FASTWAM_WORKDIR  = 覆盖 overlay 后真正执行训练的 FastWAM tree；
+#   FASTWAM_OVERLAY_DIR = overlay 仓库缓存；
+#   FASTWAM_RESET_WORKDIR=1 会重置 generated workspace，谨慎使用。
 export FASTWAM_CACHE_ROOT="${FASTWAM_CACHE_ROOT:-$EMBODIED_REPO_ROOT/upstreams}"
 export FASTWAM_WORKDIR="${FASTWAM_WORKDIR:-$FASTWAM_CACHE_ROOT/FastWAM-realrobot}"
 export FASTWAM_OVERLAY_DIR="${FASTWAM_OVERLAY_DIR:-$FASTWAM_CACHE_ROOT/fastwam-realrobot-pipeline}"
 export FASTWAM_RESET_WORKDIR="${FASTWAM_RESET_WORKDIR:-0}"
 
-# Model/checkpoint locations. Defaults are repo-local because the project itself
-# is expected to live on shared storage during early cluster testing.
+# 模型和 checkpoint 位置。
+# 默认放项目内 models/ 和 checkpoints/，因为当前项目部署在共享盘上。
+# 注意：FASTWAM_RELEASE_CKPT 是 release 微调/恢复训练时会用到的资产；
+# random 初始化不会 resume 它。
 export FASTWAM_MODEL_BASE="${FASTWAM_MODEL_BASE:-$EMBODIED_REPO_ROOT/models}"
 export FASTWAM_RELEASE_DIR="${FASTWAM_RELEASE_DIR:-$FASTWAM_MODEL_BASE/custom/fastwam/release}"
 export FASTWAM_RELEASE_CKPT="${FASTWAM_RELEASE_CKPT:-$FASTWAM_RELEASE_DIR/libero_uncond_2cam224.pt}"
 export FASTWAM_RELEASE_DATASET_STATS="${FASTWAM_RELEASE_DATASET_STATS:-$FASTWAM_RELEASE_DIR/libero_uncond_2cam224_dataset_stats.json}"
 export FASTWAM_ACTION_DIT_BACKBONE="${FASTWAM_ACTION_DIT_BACKBONE:-$EMBODIED_REPO_ROOT/checkpoints/fastwam/ActionDiT_linear_interp_Wan22_alphascale_1024hdim.pt}"
 
-# Optional pinned normalization stats for V6 multi-node recipes. Leave empty for
-# non-V6 smoke/pilot runs or when the FastWAM config should compute/read its own.
+# 可选：固定 normalization stats。
+# 主要给 V6/多机路线使用；LIBERO joint_base 初期验证一般留空，让 task config 自己处理。
 export FASTWAM_PIN_STATS="${FASTWAM_PIN_STATS:-}"
 
-# What to run.
-#   FASTWAM_MODE: smoke | pilot | full
+# 训练选择。
+#   FASTWAM_MODE:
+#     smoke = 极小链路检查；pilot = 短实验；full = 长实验。
 #   FASTWAM_RECIPE:
-#     joint_base | pose_base | v6_clean | v6_decision | v6_codebook |
-#     v6_scratch | v6_discrim | v6_dagger | v6_robust
-#   FASTWAM_TASK_NAME can override the recipe-to-task mapping directly.
+#     对常用 upstream task config 的别名。
+#   FASTWAM_TASK_NAME:
+#     显式指定 upstream configs/task/<name>.yaml；设置后优先级高于 recipe。
 export FASTWAM_MODE="${FASTWAM_MODE:-smoke}"
 export FASTWAM_RECIPE="${FASTWAM_RECIPE:-joint_base}"
 export FASTWAM_TASK_NAME="${FASTWAM_TASK_NAME:-}"
 
-# CUDA-only. The runner refuses to execute without CUDA by default.
+# CUDA/distributed 配置。
+# 单机 8 卡通常只需要设置 FASTWAM_GPUS_PER_NODE=8。
+# 多机必须所有节点共享 FASTWAM_RUN_ID，并正确设置 MASTER_ADDR/PORT/NODE_RANK。
 export FASTWAM_REQUIRE_CUDA="${FASTWAM_REQUIRE_CUDA:-1}"
 export FASTWAM_GPUS_PER_NODE="${FASTWAM_GPUS_PER_NODE:-}"
 export FASTWAM_NNODES="${FASTWAM_NNODES:-${NNODES:-1}}"
@@ -54,11 +66,10 @@ export FASTWAM_MODEL_ID="${FASTWAM_MODEL_ID:-Wan-AI/Wan2.2-TI2V-5B}"
 export FASTWAM_TOKENIZER_MODEL_ID="${FASTWAM_TOKENIZER_MODEL_ID:-Wan-AI/Wan2.1-T2V-1.3B}"
 export FASTWAM_REDIRECT_COMMON_FILES="${FASTWAM_REDIRECT_COMMON_FILES:-false}"
 
-# FastWAM reads cached T5/Wan text embeddings during training. The cache is a
-# real prerequisite, not a smoke-test artifact. Keep it enabled by default so a
-# training run first materializes missing prompt embeddings under the upstream
-# runnable tree, which points back to project-local data/ through a symlink.
-# Values: auto|1|true|yes to run, 0|false|no to require pre-existing cache.
+# 文本 embedding cache。
+# FastWAM 训练时不在线加载 text encoder，而是读取预计算好的 Wan/T5 context cache。
+# 这是训练真实依赖，不是 smoke artifact。默认 auto 会在训练前补齐缺失缓存。
+# 可选值：auto|1|true|yes 表示运行预计算；0|false|no 表示要求缓存已经存在。
 export FASTWAM_PRECOMPUTE_TEXT_EMBEDS="${FASTWAM_PRECOMPUTE_TEXT_EMBEDS:-auto}"
 export FASTWAM_TEXT_EMBED_GPUS="${FASTWAM_TEXT_EMBED_GPUS:-}"
 export FASTWAM_TEXT_EMBED_OVERWRITE="${FASTWAM_TEXT_EMBED_OVERWRITE:-false}"
@@ -66,15 +77,16 @@ export FASTWAM_TEXT_EMBED_WAIT_TIMEOUT="${FASTWAM_TEXT_EMBED_WAIT_TIMEOUT:-3600}
 export FASTWAM_TEXT_EMBED_MASTER_ADDR="${FASTWAM_TEXT_EMBED_MASTER_ADDR:-127.0.0.1}"
 export FASTWAM_TEXT_EMBED_MASTER_PORT="${FASTWAM_TEXT_EMBED_MASTER_PORT:-29517}"
 
-# Manual run artifact mirror owned by this demo pipeline. Experiment launchers
-# override this to runs/experiments/custom/<experiment>/.
-# FastWAM still writes its native checkpoints under FASTWAM_WORKDIR/runs/<task>/<run_id>/.
+# 本项目自己的 run 目录。
+# 实验 launcher 会覆盖到 runs/experiments/custom/<experiment>/。
+# 同时，FastWAM upstream 仍会在 FASTWAM_WORKDIR/runs/<task>/<run_id>/ 写原生 checkpoint。
 export FASTWAM_RUN_ROOT="${FASTWAM_RUN_ROOT:-$EMBODIED_REPO_ROOT/runs/manual/fastwam}"
 export FASTWAM_RUN_NAME="${FASTWAM_RUN_NAME:-realrobot_${FASTWAM_RECIPE}_${FASTWAM_MODE}}"
 export FASTWAM_RUN_ID="${FASTWAM_RUN_ID:-}"
 
-# Mode presets. These are intentionally modest; use environment overrides on the
-# cluster rather than editing this shared config.
+# 三种训练规模默认值。
+# 这里的默认值保守；具体实验优先在 experiments/*/config.yaml 里覆盖，
+# 不建议为了某一次实验直接改这个共享 base config。
 export FASTWAM_SMOKE_MAX_STEPS="${FASTWAM_SMOKE_MAX_STEPS:-1}"
 export FASTWAM_SMOKE_BATCH_SIZE="${FASTWAM_SMOKE_BATCH_SIZE:-1}"
 export FASTWAM_SMOKE_NUM_WORKERS="${FASTWAM_SMOKE_NUM_WORKERS:-0}"
@@ -89,11 +101,12 @@ export FASTWAM_FULL_NUM_WORKERS="${FASTWAM_FULL_NUM_WORKERS:-8}"
 export FASTWAM_FULL_NUM_EPOCHS="${FASTWAM_FULL_NUM_EPOCHS:-5}"
 export FASTWAM_FULL_SAVE_EVERY="${FASTWAM_FULL_SAVE_EVERY:-500}"
 
-# FASTWAM_INIT:
-#   release: use recipe defaults; non-scratch recipes require the public release ckpt.
-#   base:    do not resume release ckpt; keep Wan/ActionDiT base initialization.
-#   random:  do not resume release ckpt; skip Wan/ActionDiT pretrained loading.
+# 初始化语义：
+#   release = 按 task/recipe 默认行为运行，面向 release checkpoint 微调；
+#             建议在 extra overrides 里显式写 resume=...，避免语义含糊。
+#   base    = 不 resume release ckpt，但保留 Wan/ActionDiT base 初始化。
+#   random  = 跳过 release 和 pretrained DiT，适合验证训练链路，不等于正式微调。
 #
-# Additional Hydra overrides, space-separated. Example:
-#   FASTWAM_EXTRA_OVERRIDES='learning_rate=3e-5 keep_last_n_checkpoints=5'
+# 额外 Hydra 覆盖项，空格分隔。示例：
+#   FASTWAM_EXTRA_OVERRIDES='learning_rate=3e-5 keep_last_n_checkpoints=5 resume=/path/to/ckpt.pt'
 export FASTWAM_EXTRA_OVERRIDES="${FASTWAM_EXTRA_OVERRIDES:-}"

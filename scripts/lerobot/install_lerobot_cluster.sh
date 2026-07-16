@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# 安装 LeRobot 集群环境。
+#
+# 只应在有网络的管理节点/登录节点运行；计算节点如果不能联网，只激活已经安装好的共享环境。
+# 默认固定 LeRobot commit，安装 training/pusht/smolvla/pi/fastwam extras。
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

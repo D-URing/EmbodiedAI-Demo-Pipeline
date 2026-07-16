@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# ImageWAM 启动入口。
+# 当前不是主线交付路径；优先使用 custom/FastWAM。保留本脚本是为了后续接入 ImageWAM 时
+# 复用相同的 config.sh + launch.sh + slurm.sbatch 项目结构。
 set -euo pipefail
 
 EXPERIMENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
