@@ -138,6 +138,33 @@ def build_env(config: dict[str, Any], project_root: Path, config_path: Path) -> 
         env["FASTWAM_TOKENIZER_MODEL_ID"] = str(fastwam["tokenizer_model_id"])
     if "redirect_common_files" in fastwam:
         env["FASTWAM_REDIRECT_COMMON_FILES"] = bool_text(fastwam["redirect_common_files"])
+    if "video_backend" in fastwam:
+        env["FASTWAM_VIDEO_BACKEND"] = str(fastwam["video_backend"])
+    if "suppress_video_warnings" in fastwam:
+        env["FASTWAM_SUPPRESS_VIDEO_WARNINGS"] = str(int(bool(fastwam["suppress_video_warnings"])))
+
+    cache_paths = paths.get("cache_paths") or {}
+    if cache_paths:
+        if not isinstance(cache_paths, dict):
+            raise SystemExit("ERROR: paths.cache_paths must be a mapping")
+        if "torch_extensions" in cache_paths:
+            env["FASTWAM_TORCH_EXTENSIONS_DIR"] = project_path(
+                project_root,
+                cache_paths["torch_extensions"],
+                ".cache/torch_extensions/fastwam",
+            )
+        if "triton" in cache_paths:
+            env["FASTWAM_TRITON_CACHE_DIR"] = project_path(
+                project_root,
+                cache_paths["triton"],
+                ".cache/triton/fastwam",
+            )
+        if "xdg" in cache_paths:
+            env["FASTWAM_XDG_CACHE_HOME"] = project_path(
+                project_root,
+                cache_paths["xdg"],
+                ".cache",
+            )
 
     text_embeddings = fastwam.get("text_embeddings") or {}
     if text_embeddings:

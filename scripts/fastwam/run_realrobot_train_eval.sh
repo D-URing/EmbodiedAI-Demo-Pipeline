@@ -170,6 +170,32 @@ export MASTER_ADDR="${FASTWAM_MASTER_ADDR}"
 export MASTER_PORT="${FASTWAM_MASTER_PORT}"
 export RUN_ID
 
+# 默认绕开 torchcodec，避免当前集群缺 FFmpeg 动态库时每个 worker 都打印 traceback。
+# prepare_fastwam_overlay.sh 会给 generated FastWAM workspace 打一个很小的兼容补丁，
+# 让 upstream LeRobot 的默认 backend 可以读取 FASTWAM_VIDEO_BACKEND/LEROBOT_VIDEO_BACKEND。
+export FASTWAM_VIDEO_BACKEND="${FASTWAM_VIDEO_BACKEND:-pyav}"
+export LEROBOT_VIDEO_BACKEND="${LEROBOT_VIDEO_BACKEND:-$FASTWAM_VIDEO_BACKEND}"
+
+# 固定编译/运行缓存到项目内共享盘。第一次运行仍可能编译；后续同环境应复用。
+export XDG_CACHE_HOME="${FASTWAM_XDG_CACHE_HOME:-$EMBODIED_REPO_ROOT/.cache}"
+export TORCH_EXTENSIONS_DIR="${FASTWAM_TORCH_EXTENSIONS_DIR:-$EMBODIED_REPO_ROOT/.cache/torch_extensions/fastwam}"
+export TRITON_CACHE_DIR="${FASTWAM_TRITON_CACHE_DIR:-$EMBODIED_REPO_ROOT/.cache/triton/fastwam}"
+mkdir -p "$XDG_CACHE_HOME" "$TORCH_EXTENSIONS_DIR" "$TRITON_CACHE_DIR"
+
+append_pythonwarning() {
+  local rule="$1"
+  if [[ -z "${PYTHONWARNINGS:-}" ]]; then
+    export PYTHONWARNINGS="$rule"
+  else
+    export PYTHONWARNINGS="${PYTHONWARNINGS},${rule}"
+  fi
+}
+
+if [[ "${FASTWAM_SUPPRESS_VIDEO_WARNINGS:-1}" == "1" ]]; then
+  append_pythonwarning "ignore:torchcodec video decode failed:UserWarning"
+  append_pythonwarning "ignore:The video decoding and encoding capabilities of torchvision are deprecated:UserWarning"
+fi
+
 MODEL_ARGS=(
   "task=${TASK_NAME}"
   "model.model_id=${FASTWAM_MODEL_ID}"
@@ -313,6 +339,11 @@ manifest = {
     "init": "${FASTWAM_INIT}",
     "model_id": "${FASTWAM_MODEL_ID}",
     "redirect_common_files": "${FASTWAM_REDIRECT_COMMON_FILES}",
+    "video_backend": "${FASTWAM_VIDEO_BACKEND}",
+    "lerobot_video_backend": "${LEROBOT_VIDEO_BACKEND}",
+    "torch_extensions_dir": "${TORCH_EXTENSIONS_DIR}",
+    "triton_cache_dir": "${TRITON_CACHE_DIR}",
+    "xdg_cache_home": "${XDG_CACHE_HOME}",
     "cuda_home": "${CUDA_HOME:-}",
     "precompute_text_embeds": "${FASTWAM_PRECOMPUTE_TEXT_EMBEDS}",
     "text_embed_gpus": int("${TEXT_EMBED_GPUS}"),

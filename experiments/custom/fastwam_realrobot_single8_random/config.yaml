@@ -35,6 +35,12 @@ paths:
   cache_root: upstreams
   fastwam_workdir: upstreams/FastWAM-realrobot
   model_base: models
+  cache_paths:
+    # 编译/运行缓存固定在项目内共享盘，避免计算节点临时目录导致每次重编译。
+    # 注意：这些目录由 .gitignore 忽略，不会提交到仓库。
+    torch_extensions: .cache/torch_extensions/fastwam
+    triton: .cache/triton/fastwam
+    xdg: .cache
 
 distributed:
   # 单机 8 卡配置。当前已在 gpu11/A800 上跑通过。
@@ -71,6 +77,13 @@ fastwam:
   # false 表示直接使用 Wan-AI 官方文件名：Wan2.2_VAE.pth、models_t5_umt5-xxl-enc-bf16.pth。
   # true 会走 DiffSynth 转换权重路径；当前集群验证使用 false。
   redirect_common_files: false
+
+  # 视频解码默认走 pyav。
+  # 原因：当前 fastwam 环境里 torchcodec 可以被发现，但缺少匹配 FFmpeg libavutil，
+  # 会反复打印 torchcodec loading traceback，然后仍然回退 pyav。这里直接从源头跳过。
+  # 如果未来单独配好了 torchcodec + FFmpeg，可改成 torchcodec 做吞吐对比。
+  video_backend: pyav
+  suppress_video_warnings: true
 
   # 初始化方式非常关键：
   #   random  = 不加载 release checkpoint，也跳过 Wan/ActionDiT pretrained DiT；用于验证真实训练链路。

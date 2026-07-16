@@ -66,6 +66,22 @@ export FASTWAM_MODEL_ID="${FASTWAM_MODEL_ID:-Wan-AI/Wan2.2-TI2V-5B}"
 export FASTWAM_TOKENIZER_MODEL_ID="${FASTWAM_TOKENIZER_MODEL_ID:-Wan-AI/Wan2.1-T2V-1.3B}"
 export FASTWAM_REDIRECT_COMMON_FILES="${FASTWAM_REDIRECT_COMMON_FILES:-false}"
 
+# 视频解码后端。
+# upstream LeRobot/FastWAM 会优先尝试 torchcodec；在当前集群环境中 torchcodec 能 import，
+# 但缺少匹配 FFmpeg 动态库，因此会反复打印 libavutil/torchcodec traceback 后回退。
+# 本项目默认强制 pyav，直接走稳定路径，避免 log 刷屏。
+# 如果未来环境里 torchcodec + FFmpeg 已经配好，可以改成 torchcodec 做性能对比。
+export FASTWAM_VIDEO_BACKEND="${FASTWAM_VIDEO_BACKEND:-pyav}"
+export FASTWAM_SUPPRESS_VIDEO_WARNINGS="${FASTWAM_SUPPRESS_VIDEO_WARNINGS:-1}"
+
+# 编译缓存。
+# DeepSpeed/Torch/Triton 扩展第一次运行可能需要编译；把缓存固定到项目内共享盘后，
+# 后续同一 Python/Torch/CUDA 组合会复用缓存，不应每次重新编译。
+# 如果升级 torch/cuda/python 或缓存损坏，删除 .cache/torch_extensions/fastwam 后会重新编译。
+export FASTWAM_TORCH_EXTENSIONS_DIR="${FASTWAM_TORCH_EXTENSIONS_DIR:-$EMBODIED_REPO_ROOT/.cache/torch_extensions/fastwam}"
+export FASTWAM_TRITON_CACHE_DIR="${FASTWAM_TRITON_CACHE_DIR:-$EMBODIED_REPO_ROOT/.cache/triton/fastwam}"
+export FASTWAM_XDG_CACHE_HOME="${FASTWAM_XDG_CACHE_HOME:-$EMBODIED_REPO_ROOT/.cache}"
+
 # 文本 embedding cache。
 # FastWAM 训练时不在线加载 text encoder，而是读取预计算好的 Wan/T5 context cache。
 # 这是训练真实依赖，不是 smoke artifact。默认 auto 会在训练前补齐缺失缓存。

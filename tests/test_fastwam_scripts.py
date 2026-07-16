@@ -52,6 +52,10 @@ def test_fastwam_runner_refuses_cpu_fallback_and_wraps_train_zero1() -> None:
     assert "FASTWAM_NNODES" in runner
     assert "FASTWAM_MODEL_ID" in runner
     assert 'CUDA_HOME="$CONDA_PREFIX"' in runner
+    assert "FASTWAM_VIDEO_BACKEND" in runner
+    assert "TORCH_EXTENSIONS_DIR" in runner
+    assert "TRITON_CACHE_DIR" in runner
+    assert "PYTHONWARNINGS" in runner
 
 
 def test_fastwam_yaml_runner_renders_single8_config(tmp_path: Path) -> None:
@@ -86,6 +90,8 @@ def test_fastwam_yaml_runner_renders_single8_config(tmp_path: Path) -> None:
     assert "export FASTWAM_RECIPE=joint_base" in rendered
     assert "export FASTWAM_TASK_NAME=libero_joint_2cam224_1e-4" in rendered
     assert "export FASTWAM_PILOT_MAX_STEPS=20" in rendered
+    assert "export FASTWAM_VIDEO_BACKEND=pyav" in rendered
+    assert "export FASTWAM_TORCH_EXTENSIONS_DIR=" in rendered
 
 
 def test_fastwam_prepare_uses_overlay_without_vendoring() -> None:
@@ -99,6 +105,9 @@ def test_fastwam_prepare_uses_overlay_without_vendoring() -> None:
     assert "FASTWAM_TORCH_SPEC" in prepare
     assert "FASTWAM_PIP_INDEX_URL" in prepare
     assert "FASTWAM_INSTALL_NVCC" in prepare
+    assert "patch_fastwam_video_backend_default" in prepare
+    assert "get_safe_default_codec" in prepare
+    assert "FASTWAM_VIDEO_BACKEND" in prepare
     assert "--no-deps -e" in prepare
     assert 'name not in {"torch", "torchvision"}' in prepare
     assert "libero_mujoco3.3.2" in prepare
@@ -138,6 +147,8 @@ def test_fastwam_config_uses_repo_local_artifact_roots() -> None:
     assert 'FASTWAM_CACHE_ROOT="${FASTWAM_CACHE_ROOT:-$EMBODIED_REPO_ROOT/upstreams}"' in config
     assert 'FASTWAM_MODEL_BASE="${FASTWAM_MODEL_BASE:-$EMBODIED_REPO_ROOT/models}"' in config
     assert 'FASTWAM_RUN_ROOT="${FASTWAM_RUN_ROOT:-$EMBODIED_REPO_ROOT/runs/manual/fastwam}"' in config
+    assert 'FASTWAM_VIDEO_BACKEND="${FASTWAM_VIDEO_BACKEND:-pyav}"' in config
+    assert 'FASTWAM_TORCH_EXTENSIONS_DIR="${FASTWAM_TORCH_EXTENSIONS_DIR:-$EMBODIED_REPO_ROOT/.cache/torch_extensions/fastwam}"' in config
     assert "$EMBODIED_REPO_ROOT/checkpoints/fastwam/ActionDiT" in config
     assert 'FASTWAM_INIT="${FASTWAM_INIT:-release}"' in config
     assert 'FASTWAM_NNODES="${FASTWAM_NNODES:-${NNODES:-1}}"' in config

@@ -52,6 +52,62 @@ fi
 
 mkdir -p "$FASTWAM_CACHE_ROOT"
 
+patch_fastwam_video_backend_default() {
+  local video_utils="$FASTWAM_WORKDIR/src/fastwam/datasets/lerobot/lerobot/datasets/video_utils.py"
+  if [[ ! -f "$video_utils" ]]; then
+    echo "WARNING: cannot patch FastWAM video backend default; file not found: $video_utils" >&2
+    return
+  fi
+
+  python - "$video_utils" <<'PY'
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+text = path.read_text(encoding="utf-8")
+marker = "# Patched by EmbodiedAI-Demo-Pipeline: allow env-controlled default video backend."
+
+if marker not in text:
+    if "import os\n" not in text:
+        text = text.replace("import logging\n", "import logging\nimport os\n", 1)
+
+    old = '''def get_safe_default_codec():
+    if importlib.util.find_spec("torchcodec"):
+        return "torchcodec"
+    else:
+        logging.warning(
+            "'torchcodec' is not available in your platform, falling back to 'pyav' as a default decoder"
+        )
+        return "pyav"
+'''
+    new = f'''def get_safe_default_codec():
+    {marker}
+    override = os.environ.get("FASTWAM_VIDEO_BACKEND") or os.environ.get("LEROBOT_VIDEO_BACKEND")
+    if override:
+        return override
+    if importlib.util.find_spec("torchcodec"):
+        return "torchcodec"
+    else:
+        logging.warning(
+            "'torchcodec' is not available in your platform, falling back to 'pyav' as a default decoder"
+        )
+        return "pyav"
+'''
+    if old not in text:
+        raise SystemExit(
+            "ERROR: cannot patch get_safe_default_codec; upstream file changed. "
+            f"Please inspect {path}."
+        )
+    text = text.replace(old, new, 1)
+    path.write_text(text, encoding="utf-8")
+    print(f"FastWAM video backend patch applied: {path}")
+else:
+    print(f"FastWAM video backend patch already present: {path}")
+PY
+}
+
 case "$FASTWAM_SOURCE_MODE" in
   sync)
     if [[ ! -d "$FASTWAM_WORKDIR/.git" ]]; then
@@ -103,6 +159,8 @@ case "$FASTWAM_SOURCE_MODE" in
     exit 2
     ;;
 esac
+
+patch_fastwam_video_backend_default
 
 if [[ -d "$FASTWAM_CUSTOM_LIBERO_DATA" ]]; then
   mkdir -p "$FASTWAM_WORKDIR/data"

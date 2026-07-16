@@ -36,6 +36,31 @@ FASTWAM_SOURCE_MODE=sync bash scripts/fastwam/prepare_fastwam_overlay.sh
 
 `download-fastwam-artifacts` 不只下载 release ckpt/stats，也会准备 Wan2.2 VAE、Wan2.2 T5 text encoder 和 Wan2.1 tokenizer。它们是 text embedding cache 预计算的真实依赖。
 
+## 日志和编译缓存
+
+当前集群上 `torchcodec` 能被 Python 发现，但缺少匹配的 FFmpeg `libavutil`，所以 upstream LeRobot 默认路径会先打印一大段 torchcodec loading traceback，再回退到 `pyav`。本项目默认：
+
+```yaml
+fastwam:
+  video_backend: pyav
+  suppress_video_warnings: true
+```
+
+同时 `prepare_fastwam_overlay.sh` 会给 generated workspace 打一个很小的兼容补丁，让 `FASTWAM_VIDEO_BACKEND=pyav` 从源头生效。更新代码后在集群执行一次：
+
+```bash
+FASTWAM_SOURCE_MODE=reuse FASTWAM_INSTALL=0 bash scripts/fastwam/prepare_fastwam_overlay.sh
+```
+
+训练前的 Torch/DeepSpeed/Triton 扩展编译不能完全省掉；第一次运行或升级 Python/Torch/CUDA 后仍会编译。本项目把缓存固定到：
+
+```text
+.cache/torch_extensions/fastwam
+.cache/triton/fastwam
+```
+
+这些目录在项目内、由 `.gitignore` 忽略。只要共享盘缓存不被删，同一环境的后续实验应复用缓存，不应每次重新编译。
+
 ## 启动实验
 
 训练/评测入口放在 `experiments/`，不要用 Makefile 启动：
