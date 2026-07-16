@@ -97,6 +97,7 @@ from pathlib import Path
 path = Path(sys.argv[1])
 text = path.read_text(encoding="utf-8")
 marker = "# Patched by EmbodiedAI-Demo-Pipeline: allow env-controlled default video backend."
+video_reader_marker = "# Patched by EmbodiedAI-Demo-Pipeline: fallback when torchvision.io.VideoReader is unavailable."
 
 if marker not in text:
     if "import os\n" not in text:
@@ -130,10 +131,92 @@ if marker not in text:
             f"Please inspect {path}."
         )
     text = text.replace(old, new, 1)
-    path.write_text(text, encoding="utf-8")
     print(f"FastWAM video backend patch applied: {path}")
 else:
     print(f"FastWAM video backend patch already present: {path}")
+
+if video_reader_marker not in text:
+    helper = f'''
+
+def decode_video_frames_pyav_compat(
+    video_path: Path | str,
+    timestamps: list[float],
+    tolerance_s: float,
+    log_loaded_timestamps: bool = False,
+) -> torch.Tensor:
+    """Decode frames with PyAV when torchvision.io.VideoReader is unavailable."""
+    {video_reader_marker}
+    video_path = str(video_path)
+    container = av.open(video_path)
+    try:
+        stream = container.streams.video[0]
+        stream.thread_type = "AUTO"
+
+        first_ts = min(timestamps)
+        last_ts = max(timestamps)
+        time_base = float(stream.time_base) if stream.time_base is not None else 1.0
+        seek_offset = max(int(first_ts / time_base), 0)
+        container.seek(seek_offset, any_frame=False, backward=True, stream=stream)
+
+        loaded_frames = []
+        loaded_ts = []
+        for frame in container.decode(stream):
+            if frame.pts is None:
+                continue
+            current_ts = float(frame.pts * stream.time_base)
+            if current_ts + tolerance_s < first_ts:
+                continue
+            if log_loaded_timestamps:
+                logging.info(f"frame loaded at timestamp={{current_ts:.4f}}")
+            array = frame.to_ndarray(format="rgb24")
+            loaded_frames.append(torch.from_numpy(array).permute(2, 0, 1))
+            loaded_ts.append(current_ts)
+            if current_ts >= last_ts:
+                break
+    finally:
+        container.close()
+
+    if not loaded_frames:
+        raise RuntimeError(f"Could not load any frames from {{video_path}} around timestamps={{timestamps}}")
+
+    query_ts = torch.tensor(timestamps, dtype=torch.float32)
+    loaded_ts_tensor = torch.tensor(loaded_ts, dtype=torch.float32)
+    dist = torch.cdist(query_ts[:, None], loaded_ts_tensor[:, None], p=1)
+    min_, argmin_ = dist.min(1)
+    is_within_tol = min_ < tolerance_s
+    assert is_within_tol.all(), (
+        f"One or several query timestamps unexpectedly violate the tolerance ({{min_[~is_within_tol]}} > {{tolerance_s=}})."
+        f"\\nqueried timestamps: {{query_ts}}"
+        f"\\nloaded timestamps: {{loaded_ts_tensor}}"
+        f"\\nvideo: {{video_path}}"
+        "\\nbackend: pyav"
+    )
+    closest_frames = torch.stack([loaded_frames[idx] for idx in argmin_]).type(torch.float32) / 255
+    assert len(timestamps) == len(closest_frames)
+    return closest_frames
+'''
+    text = text.replace("\n\ndef decode_video_frames_torchvision(\n", helper + "\n\ndef decode_video_frames_torchvision(\n", 1)
+    old_fallback_point = '''    video_path = str(video_path)
+
+    # set backend
+'''
+    new_fallback_point = '''    video_path = str(video_path)
+    if not hasattr(torchvision.io, "VideoReader"):
+        return decode_video_frames_pyav_compat(video_path, timestamps, tolerance_s, log_loaded_timestamps)
+
+    # set backend
+'''
+    if old_fallback_point not in text:
+        raise SystemExit(
+            "ERROR: cannot patch torchvision VideoReader fallback; upstream file changed. "
+            f"Please inspect {path}."
+        )
+    text = text.replace(old_fallback_point, new_fallback_point, 1)
+    print(f"FastWAM torchvision VideoReader fallback patch applied: {path}")
+else:
+    print(f"FastWAM torchvision VideoReader fallback patch already present: {path}")
+
+path.write_text(text, encoding="utf-8")
 PY
 }
 
