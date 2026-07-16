@@ -42,6 +42,7 @@ FASTWAM_PIP_TIMEOUT="${FASTWAM_PIP_TIMEOUT:-120}"
 FASTWAM_PIP_RETRIES="${FASTWAM_PIP_RETRIES:-20}"
 FASTWAM_PIP_RESUME_RETRIES="${FASTWAM_PIP_RESUME_RETRIES:-50}"
 FASTWAM_CUSTOM_LIBERO_DATA="${FASTWAM_CUSTOM_LIBERO_DATA:-$EMBODIED_REPO_ROOT/data/custom/fastwam/libero-fastwam}"
+FASTWAM_EXTRACT_CUSTOM_LIBERO_DATA="${FASTWAM_EXTRACT_CUSTOM_LIBERO_DATA:-1}"
 FASTWAM_SKIP_TORCH_INSTALL="${FASTWAM_SKIP_TORCH_INSTALL:-0}"
 FASTWAM_ALLOW_PYTHON_MINOR_MISMATCH="${FASTWAM_ALLOW_PYTHON_MINOR_MISMATCH:-0}"
 CONDA_EXE="${CONDA_EXE:-conda}"
@@ -136,6 +137,55 @@ else:
 PY
 }
 
+prepare_custom_libero_data() {
+  local data_dir="$FASTWAM_CUSTOM_LIBERO_DATA"
+  local subsets=(
+    libero_spatial_no_noops_lerobot
+    libero_object_no_noops_lerobot
+    libero_goal_no_noops_lerobot
+    libero_10_no_noops_lerobot
+  )
+
+  if [[ ! -d "$data_dir" ]]; then
+    echo "WARNING: FastWAM custom LIBERO data not found: $data_dir" >&2
+    echo "Run make download-custom-fastwam-libero-dataset on a networked node before training." >&2
+    return 1
+  fi
+
+  if [[ "$FASTWAM_EXTRACT_CUSTOM_LIBERO_DATA" == "1" ]]; then
+    for subset in "${subsets[@]}"; do
+      local tasks_file="$data_dir/$subset/meta/tasks.jsonl"
+      local archive="$data_dir/$subset.tar.gz"
+      if [[ -f "$tasks_file" ]]; then
+        continue
+      fi
+      if [[ -f "$archive" ]]; then
+        command -v tar >/dev/null || {
+          echo "ERROR: tar is required to extract $archive" >&2
+          exit 2
+        }
+        echo "Extracting FastWAM LIBERO subset: $archive"
+        tar -xzf "$archive" -C "$data_dir"
+      fi
+    done
+  fi
+
+  local missing=0
+  for subset in "${subsets[@]}"; do
+    local tasks_file="$data_dir/$subset/meta/tasks.jsonl"
+    if [[ ! -f "$tasks_file" ]]; then
+      echo "ERROR: missing FastWAM LIBERO tasks file: $tasks_file" >&2
+      missing=1
+    fi
+  done
+  if (( missing != 0 )); then
+    echo "The custom FastWAM dataset may still be compressed or incomplete." >&2
+    echo "Expected archives: $data_dir/libero_*_no_noops_lerobot.tar.gz" >&2
+    echo "Expected extracted dirs: $data_dir/libero_*_no_noops_lerobot/meta/tasks.jsonl" >&2
+    exit 2
+  fi
+}
+
 case "$FASTWAM_SOURCE_MODE" in
   sync)
     if [[ ! -d "$FASTWAM_WORKDIR/.git" ]]; then
@@ -184,14 +234,10 @@ esac
 
 patch_fastwam_video_backend_default
 
-if [[ -d "$FASTWAM_CUSTOM_LIBERO_DATA" ]]; then
-  mkdir -p "$FASTWAM_WORKDIR/data"
-  ln -sfn "$FASTWAM_CUSTOM_LIBERO_DATA" "$FASTWAM_WORKDIR/data/libero_mujoco3.3.2"
-  echo "FastWAM LIBERO data linked: $FASTWAM_WORKDIR/data/libero_mujoco3.3.2 -> $FASTWAM_CUSTOM_LIBERO_DATA"
-else
-  echo "WARNING: FastWAM custom LIBERO data not found: $FASTWAM_CUSTOM_LIBERO_DATA" >&2
-  echo "Run make download-custom-fastwam-libero-dataset on a networked node before training." >&2
-fi
+prepare_custom_libero_data
+mkdir -p "$FASTWAM_WORKDIR/data"
+ln -sfn "$FASTWAM_CUSTOM_LIBERO_DATA" "$FASTWAM_WORKDIR/data/libero_mujoco3.3.2"
+echo "FastWAM LIBERO data linked: $FASTWAM_WORKDIR/data/libero_mujoco3.3.2 -> $FASTWAM_CUSTOM_LIBERO_DATA"
 
 if [[ "$FASTWAM_INSTALL" != "1" ]]; then
   if [[ "$FASTWAM_SOURCE_MODE" == "sync" ]]; then

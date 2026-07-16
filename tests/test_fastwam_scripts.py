@@ -111,6 +111,10 @@ def test_fastwam_prepare_uses_overlay_without_vendoring() -> None:
     assert "patch_fastwam_video_backend_default" in prepare
     assert "get_safe_default_codec" in prepare
     assert "FASTWAM_VIDEO_BACKEND" in prepare
+    assert "prepare_custom_libero_data" in prepare
+    assert "FASTWAM_EXTRACT_CUSTOM_LIBERO_DATA" in prepare
+    assert "libero_spatial_no_noops_lerobot" in prepare
+    assert 'tasks_file="$data_dir/$subset/meta/tasks.jsonl"' in prepare
     assert "--no-deps -e" in prepare
     assert 'name not in {"torch", "torchvision"}' in prepare
     assert "libero_mujoco3.3.2" in prepare
