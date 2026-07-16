@@ -42,6 +42,7 @@ FASTWAM_PIP_TIMEOUT="${FASTWAM_PIP_TIMEOUT:-120}"
 FASTWAM_PIP_RETRIES="${FASTWAM_PIP_RETRIES:-20}"
 FASTWAM_PIP_RESUME_RETRIES="${FASTWAM_PIP_RESUME_RETRIES:-50}"
 FASTWAM_CUSTOM_LIBERO_DATA="${FASTWAM_CUSTOM_LIBERO_DATA:-$EMBODIED_REPO_ROOT/data/custom/fastwam/libero-fastwam}"
+FASTWAM_SKIP_TORCH_INSTALL="${FASTWAM_SKIP_TORCH_INSTALL:-0}"
 CONDA_EXE="${CONDA_EXE:-conda}"
 CONDA_CHANNEL_ARGS="${CONDA_CHANNEL_ARGS:---override-channels -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge}"
 
@@ -197,13 +198,15 @@ if [[ "$FASTWAM_CREATE_CONDA" == "1" ]]; then
   conda activate "$FASTWAM_CONDA_ENV"
 fi
 
-if [[ "$FASTWAM_INSTALL_NVCC" == "1" ]]; then
+if [[ "$FASTWAM_INSTALL_NVCC" == "1" && "$FASTWAM_SKIP_TORCH_INSTALL" != "1" ]]; then
   command -v "$CONDA_EXE" >/dev/null || {
     echo "ERROR: FASTWAM_INSTALL_NVCC=1 but CONDA_EXE is not available: $CONDA_EXE" >&2
     exit 2
   }
   # shellcheck disable=SC2086
   "$CONDA_EXE" install -y -n "$FASTWAM_CONDA_ENV" $CONDA_CHANNEL_ARGS "$FASTWAM_CUDA_NVCC_SPEC"
+elif [[ "$FASTWAM_SKIP_TORCH_INSTALL" == "1" ]]; then
+  echo "FASTWAM_SKIP_TORCH_INSTALL=1, skipped conda cuda-nvcc installation."
 fi
 
 python - <<'PY'
@@ -229,7 +232,18 @@ fi
 
 python -m pip install "${PIP_NETWORK_ARGS[@]}" "${PIP_INDEX_ARGS[@]}" --upgrade pip setuptools wheel
 python -m pip install "${PIP_NETWORK_ARGS[@]}" "${PIP_INDEX_ARGS[@]}" PyYAML
-python -m pip install "${PIP_NETWORK_ARGS[@]}" "${TORCH_INDEX_ARGS[@]}" "$FASTWAM_TORCH_SPEC" "$FASTWAM_TORCHVISION_SPEC"
+if [[ "$FASTWAM_SKIP_TORCH_INSTALL" == "1" ]]; then
+  python - <<'PY'
+import torch
+import torchvision
+
+if not torch.cuda.is_available():
+    raise SystemExit("ERROR: FASTWAM_SKIP_TORCH_INSTALL=1 but active torch cannot see CUDA.")
+print(f"Reuse existing torch={torch.__version__}, torchvision={torchvision.__version__}, cuda={torch.version.cuda}")
+PY
+else
+  python -m pip install "${PIP_NETWORK_ARGS[@]}" "${TORCH_INDEX_ARGS[@]}" "$FASTWAM_TORCH_SPEC" "$FASTWAM_TORCHVISION_SPEC"
+fi
 
 FASTWAM_REQUIREMENTS_TMP="$(mktemp)"
 python - "$FASTWAM_WORKDIR/pyproject.toml" "$FASTWAM_REQUIREMENTS_TMP" <<'PY'

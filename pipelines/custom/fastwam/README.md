@@ -36,6 +36,35 @@ FASTWAM_SOURCE_MODE=sync bash scripts/fastwam/prepare_fastwam_overlay.sh
 
 `download-fastwam-artifacts` 不只下载 release ckpt/stats，也会准备 Wan2.2 VAE、Wan2.2 T5 text encoder 和 Wan2.1 tokenizer。它们是 text embedding cache 预计算的真实依赖。
 
+## 新集群测速准备
+
+如果新集群已经准备好了 Python、torch、torchvision 和 CUDA，不希望本项目脚本重装 torch，可以在已激活的环境里执行：
+
+```bash
+FASTWAM_SOURCE_MODE=sync FASTWAM_INSTALL=1 FASTWAM_CREATE_CONDA=0 \
+FASTWAM_SKIP_TORCH_INSTALL=1 FASTWAM_INSTALL_NVCC=0 \
+bash scripts/fastwam/prepare_fastwam_overlay.sh
+```
+
+这会做三件事：
+
+1. 同步官方 FastWAM 和 realrobot overlay；
+2. 安装 FastWAM 除 torch/torchvision 之外的 Python 依赖；
+3. 以 editable 方式安装 generated workspace。
+
+执行前建议先确认当前环境：
+
+```bash
+python - <<'PY'
+import torch, torchvision
+print("torch", torch.__version__)
+print("torchvision", torchvision.__version__)
+print("cuda", torch.version.cuda)
+print("cuda_available", torch.cuda.is_available())
+print("gpu_count", torch.cuda.device_count())
+PY
+```
+
 ## 日志和编译缓存
 
 当前集群上 `torchcodec` 能被 Python 发现，但缺少匹配的 FFmpeg `libavutil`，所以 upstream LeRobot 默认路径会先打印一大段 torchcodec loading traceback，再回退到 `pyav`。本项目默认：
