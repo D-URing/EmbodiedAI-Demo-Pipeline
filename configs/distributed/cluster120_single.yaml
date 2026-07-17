@@ -1,0 +1,38 @@
+# cluster_120 单节点 profile 模板。
+#
+# 这个文件用于在 cluster_120 上做单节点 8 卡测速；多节点时复制并添加 nodes。
+# 如果 cluster_120 的实际共享盘路径不同，请在该节点上按实际路径修改 repo_root。
+
+profile_name: cluster120_single
+
+paths:
+  repo_root: /mnt/pfs/qahi3i/dingxibo/EmbodiedAI-Demo-Pipeline
+
+environment:
+  conda_init: /opt/conda/etc/profile.d/conda.sh
+  backend_conda_envs:
+    lerobot: lerobot-sm120
+    fastwam: fastwam-sm120
+
+ssh:
+  options:
+    - BatchMode=yes
+    - StrictHostKeyChecking=accept-new
+    - ServerAliveInterval=30
+    - ServerAliveCountMax=6
+
+distributed:
+  master_addr: 127.0.0.1
+  master_port: 29505
+  backend_master_ports:
+    lerobot: 29505
+    fastwam: 29500
+  gpus_per_node: 8
+
+launch:
+  rank0_warmup_seconds: 3
+
+nodes:
+  - host: localhost
+    local: true
+    gpus: 8

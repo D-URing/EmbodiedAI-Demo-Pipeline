@@ -129,6 +129,11 @@ esac
 if [[ "${FASTWAM_REQUIRE_CUDA}" == "1" ]]; then
   if [[ -z "${CUDA_HOME:-}" && -n "${CONDA_PREFIX:-}" && -x "${CONDA_PREFIX}/bin/nvcc" ]]; then
     export CUDA_HOME="$CONDA_PREFIX"
+  elif [[ -z "${CUDA_HOME:-}" && -x "/usr/local/cuda/bin/nvcc" ]]; then
+    export CUDA_HOME="/usr/local/cuda"
+  fi
+  if [[ -n "${CUDA_HOME:-}" && -x "${CUDA_HOME}/bin/nvcc" ]]; then
+    export PATH="${CUDA_HOME}/bin:${PATH}"
   fi
   FASTWAM_ALLOW_UNSUPPORTED_GPU_ARCH="${FASTWAM_ALLOW_UNSUPPORTED_GPU_ARCH:-0}" python - <<'PY'
 import os
@@ -180,6 +185,8 @@ export DIFFSYNTH_MODEL_BASE_PATH="${FASTWAM_MODEL_BASE}"
 export DIFFSYNTH_SKIP_DOWNLOAD="${DIFFSYNTH_SKIP_DOWNLOAD:-true}"
 export TOKENIZERS_PARALLELISM="${TOKENIZERS_PARALLELISM:-false}"
 export WANDB_MODE="${WANDB_MODE:-offline}"
+export HYDRA_FULL_ERROR="${HYDRA_FULL_ERROR:-1}"
+export NCCL_DEBUG="${FASTWAM_NCCL_DEBUG:-WARN}"
 export MASTER_ADDR="${FASTWAM_MASTER_ADDR}"
 export MASTER_PORT="${FASTWAM_MASTER_PORT}"
 export RUN_ID

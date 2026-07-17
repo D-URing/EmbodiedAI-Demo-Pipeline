@@ -1,0 +1,63 @@
+# cluster_120 两节点 SSH profile。
+#
+# 已探测到的节点：
+#   node0: ssh cluster_120 / 外部端口 154
+#          hostname aibox-rfafa78dec4c-67f9c85899-v89q4
+#          eth0 192.168.32.7, rdma1 192.168.32.21
+#          repo /mnt/pfs/qahi3i/dingxibo/EmbodiedAI-Demo-Pipeline
+#          conda /opt/conda
+#   node1: ssh -p 5134 root@120.48.82.177
+#          hostname aibox-r546211a1f47-6dd5b96dff-d7qnt
+#          eth0 192.168.32.34, rdma1 192.168.32.43
+#          repo /mnt/pfs/tjj2fh/dingxibo/EmbodiedAI-Demo-Pipeline
+#          conda /root/miniforge
+#
+# 运行位置：
+#   在 node0/trainer0 上执行 scripts/distributed/ssh_launch.py。
+
+profile_name: cluster120_2node
+
+paths:
+  repo_root: /mnt/pfs/qahi3i/dingxibo/EmbodiedAI-Demo-Pipeline
+
+environment:
+  conda_init: /opt/conda/etc/profile.d/conda.sh
+  backend_conda_envs:
+    lerobot: lerobot-sm120
+    fastwam: fastwam-sm120
+
+ssh:
+  options:
+    - BatchMode=yes
+    - StrictHostKeyChecking=accept-new
+    - ServerAliveInterval=30
+    - ServerAliveCountMax=6
+
+distributed:
+  # torchrun/accelerate rendezvous 用 node0 普通网卡，先不要用 rdma1。
+  master_addr: 192.168.32.7
+  master_port: 29505
+  backend_master_ports:
+    lerobot: 29505
+    fastwam: 29500
+  gpus_per_node: 8
+
+launch:
+  rank0_warmup_seconds: 5
+
+nodes:
+  - host: localhost
+    local: true
+    gpus: 8
+    workdir: /mnt/pfs/qahi3i/dingxibo/EmbodiedAI-Demo-Pipeline
+    conda_init: /opt/conda/etc/profile.d/conda.sh
+
+  - host: 192.168.32.34
+    gpus: 8
+    workdir: /mnt/pfs/tjj2fh/dingxibo/EmbodiedAI-Demo-Pipeline
+    conda_init: /root/miniforge/etc/profile.d/conda.sh
+    backend_conda_envs:
+      # 从 node0 复制到相同绝对路径的 sm120 环境，并在 node1 重新 editable install 了 LeRobot。
+      lerobot: /opt/conda/envs/lerobot-sm120
+      # 从 node0 复制到相同绝对路径，并在 node1 重新 editable install 了 FastWAM。
+      fastwam: /opt/conda/envs/fastwam-sm120

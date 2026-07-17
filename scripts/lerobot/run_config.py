@@ -106,7 +106,10 @@ def build_env(config: dict[str, Any], project_root: Path, config_path: Path) -> 
     name = experiment.get("name") or config_path.parent.name
     route = experiment.get("route") or "lerobot"
     run_name = experiment.get("run_name") or name
-    run_id = experiment.get("run_id") or f"{name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    run_id = env_override(
+        "LEROBOT_RUN_ID",
+        experiment.get("run_id") or f"{name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+    )
 
     data_root = project_path(project_root, paths.get("data_root"), "data")
     model_root = project_path(project_root, paths.get("model_root"), "models")

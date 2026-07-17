@@ -319,8 +319,15 @@ patch_fastwam_video_backend_default
 
 prepare_custom_libero_data
 mkdir -p "$FASTWAM_WORKDIR/data"
-ln -sfn "$FASTWAM_CUSTOM_LIBERO_DATA" "$FASTWAM_WORKDIR/data/libero_mujoco3.3.2"
-echo "FastWAM LIBERO data linked: $FASTWAM_WORKDIR/data/libero_mujoco3.3.2 -> $FASTWAM_CUSTOM_LIBERO_DATA"
+FASTWAM_LIBERO_LINK_TARGET="$FASTWAM_CUSTOM_LIBERO_DATA"
+if [[ "$FASTWAM_CUSTOM_LIBERO_DATA" == "$EMBODIED_REPO_ROOT"/data/custom/fastwam/libero-fastwam ]]; then
+  # Keep the symlink relative to the runnable FastWAM tree.  On multi-node
+  # clusters the same project may be mounted with different absolute prefixes
+  # on each node; an absolute symlink from node0 can be broken on node1.
+  FASTWAM_LIBERO_LINK_TARGET="../../../data/custom/fastwam/libero-fastwam"
+fi
+ln -sfn "$FASTWAM_LIBERO_LINK_TARGET" "$FASTWAM_WORKDIR/data/libero_mujoco3.3.2"
+echo "FastWAM LIBERO data linked: $FASTWAM_WORKDIR/data/libero_mujoco3.3.2 -> $FASTWAM_LIBERO_LINK_TARGET"
 
 if [[ "$FASTWAM_INSTALL" != "1" ]]; then
   if [[ "$FASTWAM_SOURCE_MODE" == "sync" ]]; then

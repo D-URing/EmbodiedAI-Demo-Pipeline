@@ -104,7 +104,10 @@ def build_env(config: dict[str, Any], project_root: Path, config_path: Path) -> 
     name = experiment.get("name") or config_path.parent.name
     route = experiment.get("route") or "custom"
     run_name = experiment.get("run_name") or name
-    run_id = experiment.get("run_id") or f"{name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    run_id = env_override(
+        "FASTWAM_RUN_ID",
+        experiment.get("run_id") or f"{name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+    )
 
     run_root = project_path(project_root, paths.get("run_root"), f"runs/experiments/{route}")
     workdir = project_path(project_root, paths.get("fastwam_workdir"), "upstreams/FastWAM-realrobot")

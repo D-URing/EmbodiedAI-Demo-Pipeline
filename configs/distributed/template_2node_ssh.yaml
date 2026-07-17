@@ -1,0 +1,50 @@
+# 两节点 SSH 多机模板。
+#
+# 使用方式：
+#   1. 复制本文件，例如：
+#        cp configs/distributed/template_2node_ssh.yaml configs/distributed/my_cluster_2node.yaml
+#   2. 修改 repo_root、conda_init、master_addr、nodes；
+#   3. 确认 trainer0 到所有 nodes 都能免密 SSH；
+#   4. 在 trainer0 上执行 scripts/distributed/ssh_launch.py。
+
+profile_name: my_cluster_2node
+
+paths:
+  # 所有节点上都能看到的同一个项目路径。推荐共享盘路径。
+  repo_root: /mnt/shared/dingxibo/EmbodiedAI-Demo-Pipeline
+
+environment:
+  # 所有节点的 conda 初始化脚本。若集群使用 /opt/conda，可改成 /opt/conda/etc/profile.d/conda.sh。
+  conda_init: /mnt/shared/dingxibo/miniconda3/etc/profile.d/conda.sh
+  # 同一套节点 profile 可同时服务 LeRobot 和 FastWAM。
+  backend_conda_envs:
+    lerobot: lerobot
+    fastwam: fastwam
+
+ssh:
+  options:
+    - BatchMode=yes
+    - StrictHostKeyChecking=accept-new
+    - ServerAliveInterval=30
+    - ServerAliveCountMax=6
+
+distributed:
+  # 必须是 rank0/trainer0 节点可被其它节点访问的地址，不要用 127.0.0.1。
+  master_addr: trainer0
+  master_port: 29505
+  backend_master_ports:
+    lerobot: 29505
+    fastwam: 29500
+  gpus_per_node: 8
+
+launch:
+  # 给 rank0 几秒钟先写 run metadata，并准备 rendezvous。
+  rank0_warmup_seconds: 3
+
+nodes:
+  - host: trainer0
+    # rank0/trainer0 在本机直接启动，不要求 ssh localhost。
+    local: true
+    gpus: 8
+  - host: trainer1
+    gpus: 8

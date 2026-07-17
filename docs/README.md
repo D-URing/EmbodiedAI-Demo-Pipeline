@@ -9,6 +9,7 @@
 | [`../README.md`](../README.md) | 项目现在是什么，怎么快速跑 |
 | [`BOOTSTRAP.md`](BOOTSTRAP.md) | 从新 checkout 到可用工作区：目录、环境、数据、模型、cache |
 | [`TRAINING_AND_INFERENCE.md`](TRAINING_AND_INFERENCE.md) | 训练、推理、下载、结果路径和排障的唯一主入口 |
+| [`DISTRIBUTED_TRAINING.md`](DISTRIBUTED_TRAINING.md) | LeRobot/pi05 与 FastWAM 的 SSH 多机启动、profile 和测速顺序 |
 | [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) | 仓库结构，LeRobot / Custom 两条线怎么分 |
 | [`STORAGE_AND_ARTIFACTS.md`](STORAGE_AND_ARTIFACTS.md) | 数据、权重、cache、runs 分别放哪里 |
 | [`../pipelines/lerobot/README.md`](../pipelines/lerobot/README.md) | LeRobot 主线说明和入口索引 |
@@ -28,6 +29,7 @@
 ## 当前最重要的事实
 
 - 当前训练/推理命令以 [`TRAINING_AND_INFERENCE.md`](TRAINING_AND_INFERENCE.md) 为准；
+- 多机/多节点启动以 [`DISTRIBUTED_TRAINING.md`](DISTRIBUTED_TRAINING.md) 为准；
 - 已在 SCUT `gpu11` 跑通 LeRobot ACT/PushT 真实 GPU training smoke，并观察到 2-step loss 下降；
 - 已在 SCUT `gpu11` 跑通 LeRobot FastWAM/LIBERO CUDA inference smoke，输出 action evidence；
 - LeRobot 数据、policy、FastWAM v3 转换和 Wan/T5 base cache 均已项目内落盘；

@@ -1,0 +1,54 @@
+# SCUT gpu11 单节点 profile。
+#
+# 用途：
+#   - 在 gpu11/trainer0 上验证 SSH launcher 逻辑；
+#   - 作为后续多节点 profile 的最小模板。
+#
+# 注意：
+#   1. 这个 profile 只启动 1 个节点，不是多机；
+#   2. 真正多机时复制本文件，追加 nodes，并把 master_addr 改成 rank0 节点
+#      其它节点能访问到的 hostname/IP。
+
+profile_name: scut_gpu11_single
+
+paths:
+  repo_root: /mnt/gpu11_200T/dingxibo/EmbodiedAI-Demo-Pipeline
+
+environment:
+  conda_init: /mnt/gpu11_200T/dingxibo/miniconda3/etc/profile.d/conda.sh
+  backend_conda_envs:
+    lerobot: lerobot-cu126
+    fastwam: fastwam
+
+ssh:
+  options:
+    - BatchMode=yes
+    - StrictHostKeyChecking=accept-new
+    - ServerAliveInterval=30
+    - ServerAliveCountMax=6
+
+distributed:
+  # 单节点时 master_addr 用 127.0.0.1 即可。
+  # 多节点时必须改成 rank0/trainer0 可被其它节点访问的地址。
+  master_addr: 127.0.0.1
+
+  # pi05/LeRobot 默认用 29505；FastWAM 默认用 29500。
+  # 如果同一台机器上同时跑多组实验，必须错开端口。
+  master_port: 29505
+  backend_master_ports:
+    lerobot: 29505
+    fastwam: 29500
+  gpus_per_node: 8
+
+launch:
+  rank0_warmup_seconds: 3
+
+nodes:
+  # 这个 profile 默认在 gpu11/trainer0 上执行，所以 host 用 localhost。
+  # local=true 表示 rank0 本机直接启动，不要求 ssh localhost 免密。
+  # 如果你坚持从 mgt 节点启动，请复制本文件并把 host 改成 scut_gpu11，同时删除 local=true。
+  - host: localhost
+    local: true
+    gpus: 8
+    # 如果某个节点的环境名和 backend_conda_envs 不同，可在节点级覆盖：
+    # conda_env: lerobot-cu126

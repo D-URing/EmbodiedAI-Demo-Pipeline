@@ -17,6 +17,7 @@
 | 跑 LeRobot VLA 微调 | `bash experiments/lerobot/smolvla_so100_8gpu_long/launch.sh` | 单机 8 卡 SmolVLA 长训模板 |
 | 跑 LeRobot 离线推理 | `bash experiments/lerobot/*_infer/launch.sh` | 只证明 data-to-policy inference，不是环境评测 |
 | 跑 custom FastWAM 真实训练链路 | `python experiments/custom/fastwam_realrobot_single8_random/run.py` | 当前已在 gpu11 跑通 8 卡真实训练 |
+| 用 SSH launcher 做单机/多机测速 | `python scripts/distributed/ssh_launch.py --config ... --profile ...` | pi05 和 FastWAM 共用的 trainer0 一键启动入口 |
 | 做 custom FastWAM release 微调 | 复制 `fastwam_realrobot_single8_random` 新建实验，改 `init=release` 和 `resume=...` | 不要把默认 `init=random` 说成正式微调 |
 | 准备多机 FastWAM | `experiments/custom/fastwam_realrobot_8node_random/` | 等单机稳定后再用 |
 | 研究 ImageWAM | `experiments/custom/imagewam_flux2_4b_libero_pilot/` | 候选路线，不是当前主线交付 |
@@ -35,11 +36,12 @@
 1. [`docs/README.md`](docs/README.md)
 2. [`docs/BOOTSTRAP.md`](docs/BOOTSTRAP.md)
 3. [`docs/TRAINING_AND_INFERENCE.md`](docs/TRAINING_AND_INFERENCE.md)
-4. [`docs/PROJECT_STRUCTURE.md`](docs/PROJECT_STRUCTURE.md)
-5. [`docs/STORAGE_AND_ARTIFACTS.md`](docs/STORAGE_AND_ARTIFACTS.md)
-6. [`pipelines/lerobot/README.md`](pipelines/lerobot/README.md)
-7. [`pipelines/custom/README.md`](pipelines/custom/README.md)
-8. [`experiments/README.md`](experiments/README.md)
+4. [`docs/DISTRIBUTED_TRAINING.md`](docs/DISTRIBUTED_TRAINING.md)
+5. [`docs/PROJECT_STRUCTURE.md`](docs/PROJECT_STRUCTURE.md)
+6. [`docs/STORAGE_AND_ARTIFACTS.md`](docs/STORAGE_AND_ARTIFACTS.md)
+7. [`pipelines/lerobot/README.md`](pipelines/lerobot/README.md)
+8. [`pipelines/custom/README.md`](pipelines/custom/README.md)
+9. [`experiments/README.md`](experiments/README.md)
 
 ## 仓库结构
 
@@ -52,11 +54,13 @@
 ├── configs/
 │   ├── lerobot/          # LeRobot 配置
 │   ├── fastwam/          # FastWAM/custom 配置
-│   └── imagewam/         # ImageWAM/custom 配置
+│   ├── imagewam/         # ImageWAM/custom 配置
+│   └── distributed/      # SSH 多机 profile
 ├── scripts/
 │   ├── lerobot/          # LeRobot 下载、训练、推理、报告脚本
 │   ├── fastwam/          # FastWAM 下载、overlay、训练报告脚本
 │   ├── imagewam/         # ImageWAM 下载、上游源码、训练/评测 wrapper
+│   ├── distributed/      # trainer0 -> 多节点 SSH 启动器
 │   └── reference/        # 外部参考项目
 ├── src/embodied_demo/    # 轻量 core：schema、CLI、evidence report
 ├── demo_chains/          # evidence/report 链路定义
