@@ -150,6 +150,15 @@ cd /mnt/pfs/qahi3i/dingxibo/EmbodiedAI-Demo-Pipeline
 python experiments/lerobot/pi05_cluster120_2node_probe/run.py
 ```
 
+RDMA/RoCE A/B 测速入口：
+
+```bash
+python experiments/lerobot/pi05_cluster120_2node_probe/run.py \
+  --profile configs/distributed/cluster120_2node_rdma.yaml
+```
+
+`cluster120_2node_rdma.yaml` 会把 rendezvous master 切到 `rdma1` IP，并导出 `NCCL_SOCKET_IFNAME==rdma1`、`GLOO_SOCKET_IFNAME=rdma1`、`NCCL_IB_HCA==mlx5_2`。A/B 阶段默认打开 `NCCL_DEBUG=INFO`，用于确认 NCCL 实际使用的网络路径；稳定后可以改回 `WARN`。
+
 ## FastWAM
 
 单节点 SCUT dry-run：

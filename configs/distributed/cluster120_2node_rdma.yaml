@@ -1,0 +1,80 @@
+# cluster_120 两节点 RDMA/RoCE profile。
+#
+# 和 cluster120_2node.yaml 的区别：
+# - trainer/rendezvous master 使用 node0 的 rdma1 IP：192.168.32.21；
+# - node1 SSH 目标使用 node1 的 rdma1 IP：192.168.32.43；
+# - 显式注入 NCCL/GLOO 网络环境，优先走 rdma1 + mlx5_2。
+#
+# 用法：
+#   python experiments/lerobot/pi05_cluster120_2node_probe/run.py \
+#     --profile configs/distributed/cluster120_2node_rdma.yaml
+#
+# 如果测速明显优于 eth profile，再考虑把实验默认 launch.profile 切到本文件。
+
+profile_name: cluster120_2node_rdma
+
+paths:
+  repo_root: /mnt/pfs/qahi3i/dingxibo/EmbodiedAI-Demo-Pipeline
+
+environment:
+  conda_init: /opt/conda/etc/profile.d/conda.sh
+  backend_conda_envs:
+    lerobot: lerobot-sm120
+    fastwam: fastwam-sm120
+
+  # 集群级网络/通信配置。ssh_launch.py 会在每个 rank 启动前 export。
+  exports:
+    # rdma1 是两台训练节点可互通的 RoCE 网卡；用等号前缀表示 NCCL 精确匹配接口名。
+    NCCL_SOCKET_IFNAME: "=rdma1"
+    GLOO_SOCKET_IFNAME: rdma1
+
+    # mlx5_2 是当前容器里和 rdma1 对应的 active HCA。等号前缀表示精确匹配。
+    NCCL_IB_HCA: "=mlx5_2"
+    NCCL_IB_GID_INDEX: "7"
+    NCCL_IB_DISABLE: "0"
+
+    # 保留集群镜像里已有的 RoCE 调优项；如果集群文档给了新值，以集群文档为准。
+    NCCL_IB_TC: "162"
+    NCCL_IB_TIMEOUT: "22"
+    NCCL_IB_QPS_PER_CONNECTION: "8"
+    NCCL_IB_ADAPTIVE_ROUTING: "0"
+    NCCL_MIN_NCHANNELS: "8"
+
+    # RDMA A/B 阶段先打开 NCCL 初始化/网络日志，确认实际使用的网卡。
+    # 稳定后可改回 WARN，减少日志量。
+    NCCL_DEBUG: INFO
+    NCCL_DEBUG_SUBSYS: INIT,ENV,NET
+
+ssh:
+  options:
+    - BatchMode=yes
+    - StrictHostKeyChecking=accept-new
+    - ServerAliveInterval=30
+    - ServerAliveCountMax=6
+
+distributed:
+  # 使用 node0 的 rdma1 IP。不要用 127.0.0.1。
+  master_addr: 192.168.32.21
+  master_port: 29505
+  backend_master_ports:
+    lerobot: 29505
+    fastwam: 29500
+  gpus_per_node: 8
+
+launch:
+  rank0_warmup_seconds: 5
+
+nodes:
+  - host: localhost
+    local: true
+    gpus: 8
+    workdir: /mnt/pfs/qahi3i/dingxibo/EmbodiedAI-Demo-Pipeline
+    conda_init: /opt/conda/etc/profile.d/conda.sh
+
+  - host: 192.168.32.43
+    gpus: 8
+    workdir: /mnt/pfs/tjj2fh/dingxibo/EmbodiedAI-Demo-Pipeline
+    conda_init: /root/miniforge/etc/profile.d/conda.sh
+    backend_conda_envs:
+      lerobot: /opt/conda/envs/lerobot-sm120
+      fastwam: /opt/conda/envs/fastwam-sm120

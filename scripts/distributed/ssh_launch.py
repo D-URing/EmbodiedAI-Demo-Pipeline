@@ -127,6 +127,36 @@ def get_conda_env(experiment: dict[str, Any], profile: dict[str, Any], backend: 
     return env
 
 
+def profile_env_exports(profile: dict[str, Any], backend: str) -> dict[str, str]:
+    """Return extra environment variables requested by the distributed profile.
+
+    Use this for cluster-level transport knobs such as NCCL_SOCKET_IFNAME,
+    NCCL_IB_HCA and GLOO_SOCKET_IFNAME.  Experiment YAML stays focused on model
+    and training hyperparameters; profile YAML owns machine/network details.
+    """
+    env_section = profile.get("environment") or {}
+    if not isinstance(env_section, dict):
+        raise SystemExit("ERROR: profile.environment must be a mapping")
+
+    result: dict[str, str] = {}
+    exports = env_section.get("exports") or {}
+    if exports:
+        if not isinstance(exports, dict):
+            raise SystemExit("ERROR: profile.environment.exports must be a mapping")
+        result.update({str(k): str(v) for k, v in exports.items()})
+
+    backend_exports = env_section.get("backend_exports") or {}
+    if backend_exports:
+        if not isinstance(backend_exports, dict):
+            raise SystemExit("ERROR: profile.environment.backend_exports must be a mapping")
+        selected = backend_exports.get(backend) or {}
+        if selected:
+            if not isinstance(selected, dict):
+                raise SystemExit(f"ERROR: profile.environment.backend_exports.{backend} must be a mapping")
+            result.update({str(k): str(v) for k, v in selected.items()})
+    return result
+
+
 def parse_nodes(profile: dict[str, Any]) -> list[Node]:
     raw_nodes = profile.get("nodes")
     if not isinstance(raw_nodes, list) or not raw_nodes:
@@ -372,6 +402,11 @@ def main(argv: list[str] | None = None) -> int:
             master_addr=master_addr,
             master_port=master_port,
         )
+        extra_env = profile_env_exports(profile, backend)
+        if extra_env:
+            merged_env = dict(extra_env)
+            merged_env.update(env)
+            env = merged_env
         generated_rel = str(generated_dir / f"rank{rank:02d}_{node.label}.sh")
         script = remote_script(
             backend=backend,
