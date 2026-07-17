@@ -1,6 +1,20 @@
 # 多机分布式训练启动说明
 
-当前项目里，LeRobot/pi05 和 custom/FastWAM 都已经有单机多卡入口；多机自动化由统一 SSH launcher 负责：
+当前项目里，LeRobot/pi05 和 custom/FastWAM 都已经有单机多卡入口。日常不要手写底层 launcher 长命令，优先使用顶层 alias：
+
+```bash
+./run.py list
+./run.py pi05-2node
+./run.py fastwam-2node-smoke
+```
+
+alias 配置在：
+
+```bash
+configs/launch/aliases.yaml
+```
+
+底层多机自动化由统一 SSH launcher 负责，只有排查 profile/节点时才需要直接调用：
 
 ```bash
 python scripts/distributed/ssh_launch.py \
@@ -126,10 +140,7 @@ effective_batch = training.batch_size * distributed.num_processes * distributed.
 
 ```bash
 cd /mnt/pfs/qahi3i/dingxibo/EmbodiedAI-Demo-Pipeline
-/opt/conda/envs/lerobot-sm120/bin/python scripts/distributed/ssh_launch.py \
-  --config experiments/lerobot/pi05_so100_8gpu_probe/config.yaml \
-  --profile configs/distributed/cluster120_2node.yaml \
-  --run-id pi05_2node_$(date +%Y%m%d_%H%M%S)
+./run.py pi05-2node
 ```
 
 ## FastWAM
@@ -181,10 +192,7 @@ upstreams/FastWAM-realrobot/data/libero_mujoco3.3.2 \
 
 ```bash
 cd /mnt/pfs/qahi3i/dingxibo/EmbodiedAI-Demo-Pipeline
-/opt/conda/envs/fastwam-sm120/bin/python scripts/distributed/ssh_launch.py \
-  --config experiments/custom/fastwam_realrobot_2node_smoke/config.yaml \
-  --profile configs/distributed/cluster120_2node.yaml \
-  --run-id fastwam_smoke_$(date +%Y%m%d_%H%M%S)
+./run.py fastwam-2node-smoke
 ```
 
 长实验再切回 `experiments/custom/fastwam_realrobot_single8_random/config.yaml` 或复制新实验目录调整 `mode.pilot/full`。

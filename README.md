@@ -13,11 +13,16 @@
 
 | 目标 | 推荐入口 | 说明 |
 |---|---|---|
+| 查看所有常用训练入口 | `./run.py list` | 顶层统一启动入口，别再手写长命令 |
+| cluster_120 两节点 LeRobot/pi05 | `./run.py pi05-2node` | 自动选择 config/profile/conda python/run_id |
+| cluster_120 两节点 FastWAM smoke | `./run.py fastwam-2node-smoke` | 已实测 2 节点 × 8 卡；默认 1 step 连通性验证 |
+| cluster_120 两节点 FastWAM pilot | `./run.py fastwam-2node-pilot` | smoke 通过后再跑短实验 |
+| SCUT gpu11 单机 pi05/FastWAM | `./run.py pi05-scut` / `./run.py fastwam-scut` | 单机 8 卡入口 |
 | 快速证明 LeRobot 能训练出 loss | `bash experiments/lerobot/pusht_act_smoke/launch.sh` | 轻量 ACT/PushT 真实训练 |
 | 跑 LeRobot VLA 微调 | `bash experiments/lerobot/smolvla_so100_8gpu_long/launch.sh` | 单机 8 卡 SmolVLA 长训模板 |
 | 跑 LeRobot 离线推理 | `bash experiments/lerobot/*_infer/launch.sh` | 只证明 data-to-policy inference，不是环境评测 |
 | 跑 custom FastWAM 真实训练链路 | `python experiments/custom/fastwam_realrobot_single8_random/run.py` | 当前已在 gpu11 跑通 8 卡真实训练 |
-| 用 SSH launcher 做单机/多机测速 | `python scripts/distributed/ssh_launch.py --config ... --profile ...` | pi05 和 FastWAM 共用的 trainer0 一键启动入口 |
+| 底层 SSH launcher 排障 | `python scripts/distributed/ssh_launch.py --config ... --profile ...` | 只在需要调试 profile/节点时使用 |
 | 做 custom FastWAM release 微调 | 复制 `fastwam_realrobot_single8_random` 新建实验，改 `init=release` 和 `resume=...` | 不要把默认 `init=random` 说成正式微调 |
 | 准备多机 FastWAM | `experiments/custom/fastwam_realrobot_8node_random/` | 等单机稳定后再用 |
 | 研究 ImageWAM | `experiments/custom/imagewam_flux2_4b_libero_pilot/` | 候选路线，不是当前主线交付 |
@@ -50,8 +55,10 @@
 ├── pipelines/
 │   ├── lerobot/          # LeRobot 主线：dataset -> train/load -> inference -> report
 │   └── custom/           # Custom WAM 后端族：FastWAM / ImageWAM / future backends
+├── run.py                # 项目顶层统一启动入口：./run.py list / ./run.py pi05-2node
 ├── experiments/          # 训练/推理启动入口：优先 config.yaml + run.py，必要时保留 launch.sh/slurm
 ├── configs/
+│   ├── launch/           # 顶层启动别名：把 config/profile/python 路径收敛到 YAML
 │   ├── lerobot/          # LeRobot 配置
 │   ├── fastwam/          # FastWAM/custom 配置
 │   ├── imagewam/         # ImageWAM/custom 配置

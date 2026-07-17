@@ -30,6 +30,7 @@
 
 - 当前训练/推理命令以 [`TRAINING_AND_INFERENCE.md`](TRAINING_AND_INFERENCE.md) 为准；
 - 多机/多节点启动以 [`DISTRIBUTED_TRAINING.md`](DISTRIBUTED_TRAINING.md) 为准；
+- 日常启动优先用仓库根目录 [`../run.py`](../run.py)：`./run.py list`；
 - 已在 SCUT `gpu11` 跑通 LeRobot ACT/PushT 真实 GPU training smoke，并观察到 2-step loss 下降；
 - 已在 SCUT `gpu11` 跑通 LeRobot FastWAM/LIBERO CUDA inference smoke，输出 action evidence；
 - LeRobot 数据、policy、FastWAM v3 转换和 Wan/T5 base cache 均已项目内落盘；
