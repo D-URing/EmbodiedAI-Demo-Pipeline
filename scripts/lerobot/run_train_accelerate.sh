@@ -29,6 +29,22 @@ command -v lerobot-train >/dev/null || {
 }
 LEROBOT_TRAIN_BIN="$(command -v lerobot-train)"
 
+if [[ "${LEROBOT_ALLOW_BUSY_GPUS:-0}" != "1" ]] && command -v nvidia-smi >/dev/null 2>&1; then
+  busy_gpu_processes="$(
+    nvidia-smi --query-compute-apps=pid,process_name,used_memory \
+      --format=csv,noheader,nounits 2>/dev/null | sed '/^[[:space:]]*$/d' || true
+  )"
+  if [[ -n "$busy_gpu_processes" ]]; then
+    echo "ERROR: found existing GPU compute processes before LeRobot launch." >&2
+    echo "This usually means a previous distributed run left orphan processes and may cause CUDA OOM." >&2
+    echo "$busy_gpu_processes" >&2
+    echo "Stop them first, or set LEROBOT_ALLOW_BUSY_GPUS=1 if sharing GPUs is intentional." >&2
+    exit 2
+  fi
+fi
+
+export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"
+
 python - <<'PY'
 import os
 import sys
@@ -45,6 +61,7 @@ if sys.version_info < (3, 12):
     raise SystemExit(f"ERROR: LeRobot env must use Python >=3.12, got {sys.version.split()[0]}")
 print(f"python={sys.version.split()[0]}")
 print(f"CUDA_VISIBLE_DEVICES={os.environ.get('CUDA_VISIBLE_DEVICES', '<unset>')}")
+print(f"PYTORCH_CUDA_ALLOC_CONF={os.environ.get('PYTORCH_CUDA_ALLOC_CONF', '<unset>')}")
 PY
 
 RUN_ID="${LEROBOT_RUN_ID:-$(date +%Y%m%d-%H%M%S)}"

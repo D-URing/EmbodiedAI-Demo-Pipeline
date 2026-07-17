@@ -127,6 +127,22 @@ case "${FASTWAM_INIT}" in
 esac
 
 if [[ "${FASTWAM_REQUIRE_CUDA}" == "1" ]]; then
+  if [[ "${FASTWAM_ALLOW_BUSY_GPUS:-0}" != "1" ]] && command -v nvidia-smi >/dev/null 2>&1; then
+    busy_gpu_processes="$(
+      nvidia-smi --query-compute-apps=pid,process_name,used_memory \
+        --format=csv,noheader,nounits 2>/dev/null | sed '/^[[:space:]]*$/d' || true
+    )"
+    if [[ -n "$busy_gpu_processes" ]]; then
+      echo "ERROR: found existing GPU compute processes before FastWAM launch." >&2
+      echo "This usually means a previous distributed run left orphan processes and may cause CUDA OOM." >&2
+      echo "$busy_gpu_processes" >&2
+      echo "Stop them first, or set FASTWAM_ALLOW_BUSY_GPUS=1 if sharing GPUs is intentional." >&2
+      exit 2
+    fi
+  fi
+
+  export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"
+
   if [[ -z "${CUDA_HOME:-}" && -n "${CONDA_PREFIX:-}" && -x "${CONDA_PREFIX}/bin/nvcc" ]]; then
     export CUDA_HOME="$CONDA_PREFIX"
   elif [[ -z "${CUDA_HOME:-}" && -x "/usr/local/cuda/bin/nvcc" ]]; then
@@ -142,6 +158,7 @@ if not torch.cuda.is_available():
     raise SystemExit("ERROR: CUDA is required for FastWAM; CPU fallback is intentionally disabled.")
 print(f"CUDA OK: {torch.cuda.get_device_name(0)}")
 print(f"torch={torch.__version__}")
+print(f"PYTORCH_CUDA_ALLOC_CONF={os.environ.get('PYTORCH_CUDA_ALLOC_CONF', '<unset>')}")
 capability = torch.cuda.get_device_capability(0)
 arch = f"sm_{capability[0]}{capability[1]}"
 supported_arches = set(torch.cuda.get_arch_list())

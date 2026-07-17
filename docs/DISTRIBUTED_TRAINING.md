@@ -235,6 +235,21 @@ runs/experiments/custom/<run_name>/<run_id>/
 
 ## 推荐测速顺序
 
+LeRobot/FastWAM runner 默认会做 busy-GPU preflight：如果启动前发现已有 GPU compute 进程，会直接退出，避免旧 orphan 进程和新任务叠在一起造成 OOM。只有明确要共享 GPU 时，才设置：
+
+```bash
+export LEROBOT_ALLOW_BUSY_GPUS=1
+export FASTWAM_ALLOW_BUSY_GPUS=1
+```
+
+runner 默认还会设置：
+
+```bash
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+```
+
+这不能替代降低 batch size，但能减少一部分 CUDA allocator fragmentation 问题。
+
 1. 单节点 dry-run；
 2. 单节点 2-step smoke；
 3. 单节点 200-step 测速；
