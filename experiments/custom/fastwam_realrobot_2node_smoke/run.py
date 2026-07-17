@@ -2,17 +2,13 @@
 from __future__ import annotations
 
 import argparse
+import os
 import shlex
 import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-
-try:
-    import yaml
-except ImportError as exc:
-    raise SystemExit("ERROR: PyYAML is required. Activate the FastWAM env first.") from exc
 
 
 def find_project_root(start: Path) -> Path:
@@ -22,7 +18,50 @@ def find_project_root(start: Path) -> Path:
     raise SystemExit(f"ERROR: cannot locate project root from {start}")
 
 
+def read_launcher_python_hint(path: Path) -> str:
+    """用标准库从 YAML 文本里读 launch.launcher_python。
+
+    这里故意不依赖 PyYAML：如果用户用系统 Python 启动，而系统 Python 没有 yaml，
+    wrapper 仍然能先切到实验配置指定的 conda Python，再继续解析完整 YAML。
+    """
+    in_launch = False
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.split("#", 1)[0].rstrip()
+        if not line.strip():
+            continue
+        if line.startswith("launch:"):
+            in_launch = True
+            continue
+        if in_launch and raw_line[:1].strip():
+            break
+        if in_launch and line.lstrip().startswith("launcher_python:"):
+            return line.split(":", 1)[1].strip().strip("'\"")
+    return ""
+
+
+def reexec_with_config_python(config_path: Path) -> None:
+    launcher_python = read_launcher_python_hint(config_path)
+    if not launcher_python:
+        return
+    launcher_path = Path(launcher_python)
+    if not launcher_path.exists():
+        return
+    try:
+        if launcher_path.resolve() == Path(sys.executable).resolve():
+            return
+    except OSError:
+        if str(launcher_path) == sys.executable:
+            return
+    os.execv(str(launcher_path), [str(launcher_path), str(Path(__file__).resolve()), *sys.argv[1:]])
+
+
 def load_config(path: Path) -> dict[str, Any]:
+    try:
+        import yaml
+    except ImportError as exc:
+        raise SystemExit(
+            "ERROR: PyYAML is required, and automatic env bootstrap did not find a usable launcher_python."
+        ) from exc
     data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     if not isinstance(data, dict):
         raise SystemExit(f"ERROR: config root must be a mapping: {path}")
@@ -40,6 +79,7 @@ def main() -> int:
     here = Path(__file__).resolve().parent
     project_root = find_project_root(here)
     config_path = here / "config.yaml"
+    reexec_with_config_python(config_path)
     config = load_config(config_path)
     launch = config.get("launch") or {}
     if not isinstance(launch, dict):
