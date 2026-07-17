@@ -49,6 +49,7 @@ python scripts/distributed/ssh_launch.py \
 已在 `cluster_120` 实测：
 
 - LeRobot/pi05：2 节点 × 8 卡，2 step smoke 成功，loss `0.347 -> 0.141`；
+- LeRobot/pi05：2 节点 × 8 卡，200 step eth0 profile 吞吐约 `90.75 samples/s`；同一任务单节点 8 卡约 `53.12 samples/s`，两节点扩展约 `1.71x`；
 - custom/FastWAM：2 节点 × 8 卡，1 step smoke 成功，loss `2.3717`，约 `0.21 step/s`、`3.37 samples/s`；
 - node1 需要可用 CUDA Toolkit / `nvcc`，当前使用 `/usr/local/cuda`；
 - FastWAM LIBERO 数据链接必须是项目内相对链接：`upstreams/FastWAM-realrobot/data/libero_mujoco3.3.2 -> ../../../data/custom/fastwam/libero-fastwam`。
@@ -143,21 +144,40 @@ effective_batch = training.batch_size * accelerate_global_num_processes
 
 实验 YAML 里的 `distributed:` 是 fallback：只有绕过 SSH launcher、直接调用底层 backend runner 时才按它启动。日常两节点启动时，以 `launch.profile` 指向的 profile 为准。要改节点数、每节点 GPU 数、master 地址或端口，改 `configs/distributed/cluster120_2node.yaml`；不要改实验 YAML 里的 `distributed.num_processes` 来控制两节点。
 
-`cluster_120` 两节点实测命令：
+`cluster_120` 两节点稳定实测命令：
 
 ```bash
 cd /mnt/pfs/qahi3i/dingxibo/EmbodiedAI-Demo-Pipeline
 python experiments/lerobot/pi05_cluster120_2node_probe/run.py
 ```
 
-RDMA/RoCE A/B 测速入口：
+默认 profile 是 `configs/distributed/cluster120_2node.yaml`，控制面和 NCCL socket 都走 eth0。它不是理论最优网络配置，但目前是最稳的真实训练入口。
+
+### cluster_120 网络 profile 状态
+
+cluster_120 的外部 SSH 入口可能表现为同一公网 IP 的不同端口，但训练视角下它们是两台不同机器：
+
+| 角色 | 外部入口 | hostname | eth0 | rdma1 |
+| --- | --- | --- | --- | --- |
+| trainer0 / node0 | `ssh cluster_120` | `aibox-rfafa78dec4c-67f9c85899-v89q4` | `192.168.32.7` | `192.168.32.21` |
+| node1 | `ssh -p 5134 root@120.48.82.177` | `aibox-r546211a1f47-6dd5b96dff-d7qnt` | `192.168.32.34` | `192.168.32.43` |
+
+多机训练不要用公网 IP/端口作为 rank 间通信地址；应该使用 profile 里记录的内网地址。
+
+当前建议顺序：
+
+1. 日常训练使用 `configs/distributed/cluster120_2node.yaml`。
+2. 想验证 IB/RDMA 数据面时，先用 `configs/distributed/cluster120_2node_ib.yaml`。这个 profile 保持 SSH/rendezvous/GLOO 走 eth0，只给 NCCL 显式启用 `mlx5_2` / RoCE / GPUDirect RDMA。
+3. `configs/distributed/cluster120_2node_rdma.yaml` 是强制 rdma1 profile，仅用于诊断。它会把 rendezvous master、SSH 目标、NCCL socket、GLOO 都切到 rdma1；已观察到可让 NCCL 日志出现 `NET/IB` 和 GPUDirect RDMA，但也可能卡在 NCCL 初始化/建链阶段。
+
+IB/RDMA 数据面诊断入口：
 
 ```bash
 python experiments/lerobot/pi05_cluster120_2node_probe/run.py \
-  --profile configs/distributed/cluster120_2node_rdma.yaml
+  --profile configs/distributed/cluster120_2node_ib.yaml
 ```
 
-`cluster120_2node_rdma.yaml` 会把 rendezvous master 切到 `rdma1` IP，并导出 `NCCL_SOCKET_IFNAME==rdma1`、`GLOO_SOCKET_IFNAME=rdma1`、`NCCL_IB_HCA==mlx5_2`。A/B 阶段默认打开 `NCCL_DEBUG=INFO`，用于确认 NCCL 实际使用的网络路径；稳定后可以改回 `WARN`。
+注意：`cluster120_2node_ib.yaml` 和 `cluster120_2node_rdma.yaml` 目前都不作为默认入口。一次测试中，`cluster120_2node_ib.yaml` 已确认日志出现 `NET/IB`，但 2 分钟左右仍未进入 LeRobot step，说明 NCCL/IB 参数还需要单独压测；在完成 `all_reduce_perf` 或集群官方 NCCL 推荐参数验证前，不要把它们切成默认 profile。
 
 ## FastWAM
 
