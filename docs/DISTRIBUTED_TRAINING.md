@@ -182,12 +182,12 @@ upstreams/FastWAM-realrobot/data/libero_mujoco3.3.2 \
 ```bash
 cd /mnt/pfs/qahi3i/dingxibo/EmbodiedAI-Demo-Pipeline
 /opt/conda/envs/fastwam-sm120/bin/python scripts/distributed/ssh_launch.py \
-  --config experiments/custom/fastwam_realrobot_single8_random/config.yaml \
+  --config experiments/custom/fastwam_realrobot_2node_smoke/config.yaml \
   --profile configs/distributed/cluster120_2node.yaml \
-  --run-id fastwam_2node_$(date +%Y%m%d_%H%M%S)
+  --run-id fastwam_smoke_$(date +%Y%m%d_%H%M%S)
 ```
 
-如果只是验证链路，建议复制一份临时 YAML，把 `fastwam.mode` 改成 `smoke`，并设置 `mode.smoke.max_steps: 1`。
+长实验再切回 `experiments/custom/fastwam_realrobot_single8_random/config.yaml` 或复制新实验目录调整 `mode.pilot/full`。
 
 FastWAM runner 默认做了几件集群兼容处理：
 

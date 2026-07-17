@@ -1,0 +1,139 @@
+# 这个 YAML 是 custom/FastWAM 路线的主入口配置。
+# 用户日常不要直接调用 scripts/fastwam/*.sh；优先改这里，然后执行：
+#   python experiments/custom/fastwam_realrobot_single8_random/run.py --dry-run
+#   python experiments/custom/fastwam_realrobot_single8_random/run.py
+
+backend: fastwam
+
+# 底层默认配置。run.py 会先读取本 YAML，再把这里的选择转换成 FASTWAM_* 环境变量，
+# 最后 source 这个 base_config。一般不要改这个路径。
+base_config: configs/fastwam/realrobot_train_eval.sh
+
+experiment:
+  # 实验名会用于 generated config、run 目录和日志命名。
+  name: fastwam_realrobot_2node_smoke
+
+  # route=custom 表示这是“自建/外部模型链路”，不是 LeRobot 官方封装路线。
+  route: custom
+
+  # run_name 是 runs/experiments/custom/<run_name>/<run_id>/ 中间这一层。
+  run_name: fastwam_realrobot_2node_smoke
+
+  # 留空时 run.py 自动生成带时间戳的 run_id。
+  # 多机训练时必须显式指定同一个 run_id，确保所有节点写到同一个实验目录。
+  run_id:
+
+environment:
+  # 这里只用于 preflight 提醒；不会自动创建环境。
+  # 环境准备仍通过 make prepare-env-custom-fastwam 完成。
+  conda_env: fastwam
+
+paths:
+  # 项目约定：数据、模型、上游源码、运行产物都落在项目目录内，并由 .gitignore 忽略。
+  # 这样共享盘上 pull 一次仓库后，计算节点无需外网也能复用这些资产。
+  run_root: runs/experiments/custom
+  cache_root: upstreams
+  fastwam_workdir: upstreams/FastWAM-realrobot
+  model_base: models
+  cache_paths:
+    # 编译/运行缓存固定在项目内共享盘，避免计算节点临时目录导致每次重编译。
+    # 注意：这些目录由 .gitignore 忽略，不会提交到仓库。
+    torch_extensions: .cache/torch_extensions/fastwam
+    triton: .cache/triton/fastwam
+    xdg: .cache
+
+distributed:
+  # 单机 8 卡配置。当前已在 gpu11/A800 上跑通过。
+  # 如果只想用部分卡，可以设置 CUDA_VISIBLE_DEVICES，并同步修改 gpus_per_node。
+  nnodes: 1
+  node_rank: 0
+  gpus_per_node: 8
+
+  # 单机多卡用 127.0.0.1 最稳。多机时 rank0 节点需要填可被其它节点访问的 IP/hostname。
+  master_addr: 127.0.0.1
+  master_port: 29500
+
+fastwam:
+  # 训练规模开关：
+  #   smoke: 只检查链路，极少 step；
+  #   pilot: 短实验/调参入口；
+  #   full: 长实验，按 num_epochs 跑。
+  mode: smoke
+
+  # recipe 是本项目对 upstream FastWAM task config 的别名。
+  # joint_base 默认映射到 real_robot_joint_2cam224_1e-4；这里又用 task_name 显式覆盖成 LIBERO task。
+  recipe: joint_base
+
+  # 真实使用的 upstream task 配置文件：
+  #   upstreams/FastWAM-realrobot/configs/task/libero_joint_2cam224_1e-4.yaml
+  # 它决定数据集目录、两路相机、action/state 维度、processor 等。
+  task_name: libero_joint_2cam224_1e-4
+
+  # Wan/FastWAM runtime assets 的 repo id。实际文件落在项目内 models/Wan-AI/...。
+  # make download-fastwam-artifacts 会准备 VAE、T5 text encoder 和 tokenizer。
+  model_id: Wan-AI/Wan2.2-TI2V-5B
+  tokenizer_model_id: Wan-AI/Wan2.1-T2V-1.3B
+
+  # false 表示直接使用 Wan-AI 官方文件名：Wan2.2_VAE.pth、models_t5_umt5-xxl-enc-bf16.pth。
+  # true 会走 DiffSynth 转换权重路径；当前集群验证使用 false。
+  redirect_common_files: false
+
+  # 视频解码默认走 pyav。
+  # 原因：当前 fastwam 环境里 torchcodec 可以被发现，但缺少匹配 FFmpeg libavutil，
+  # 会反复打印 torchcodec loading traceback，然后仍然回退 pyav。这里直接从源头跳过。
+  # 如果未来单独配好了 torchcodec + FFmpeg，可改成 torchcodec 做吞吐对比。
+  video_backend: pyav
+  suppress_video_warnings: true
+
+  # 初始化方式非常关键：
+  #   random  = 不加载 release checkpoint，也跳过 Wan/ActionDiT pretrained DiT；用于验证真实训练链路。
+  #   base    = 不 resume release ckpt，但保留 base/pretrained 初始化。
+  #   release = 面向已有 release ckpt 的微调路线；正式“微调”建议用 release，并在 extra_overrides 中显式写 resume=...。
+  init: random
+
+  # FastWAM custom 路线没有 CPU fallback；没有 CUDA 会直接退出。
+  require_cuda: true
+
+  # A100/A800 上优先 bf16。若遇到算子或数值问题，可改 fp16/no。
+  mixed_precision: bf16
+
+  # 初期默认关闭 wandb，避免计算节点外网和权限问题。长期实验可显式打开。
+  wandb: false
+  text_embeddings:
+    # FastWAM 训练 dataloader 不在线跑 text encoder，而是读取预计算的 context/mask cache。
+    # 因此训练前必须先生成 data/text_embeds_cache/libero/*.pt。
+    # precompute=auto 会在训练前自动执行 upstream scripts/precompute_text_embeds.py。
+    precompute: false
+
+    # 文本 prompt 只有几十条，用 8 卡主要是为了和训练环境一致；如果显存紧张可降到 1 或 2。
+    gpus: 8
+
+    # false 表示已有缓存直接跳过，适合反复实验；修改 prompt/tokenizer/model 后再改 true。
+    overwrite: false
+    wait_timeout: 3600
+
+    # 不用 torchrun --standalone，避免集群把 rendezvous hostname 解析成不可达的 gpu11。
+    master_addr: 127.0.0.1
+    master_port: 29517
+
+  # 直接透传给 upstream Hydra 的额外覆盖项。正式微调常用这里。
+  # 示例：
+  #   extra_overrides:
+  #     - learning_rate=3e-5
+  #     - resume=/mnt/.../models/custom/fastwam/release/libero_uncond_2cam224.pt
+  extra_overrides: []
+
+mode:
+  smoke:
+    max_steps: 1
+    batch_size: 1
+    num_workers: 0
+    save_every: 1
+
+  pilot:
+    # 当前默认是“能快速交差/验证链路”的短跑：已证明能出 loss 和 checkpoint。
+    # 正式实验建议 max_steps 至少调到 500/1000+，batch_size 根据显存调大。
+    max_steps: 20
+    batch_size: 1
+    num_workers: 4
+    save_every: 10
