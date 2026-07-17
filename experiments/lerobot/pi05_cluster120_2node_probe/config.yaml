@@ -91,8 +91,18 @@ training:
   wandb: false
 
 distributed:
-  # 这里保留后端默认值；通过本实验 run.py 启动时，会被 launch.profile 自动覆盖为两节点配置。
-  # 多机节点、rank、master 地址不要手写到底层命令里，改 configs/distributed/cluster120_2node.yaml。
+  # 这一段不是 cluster_120 两节点日常启动的权威配置，而是“不经过 SSH launcher”
+  # 直接调用 scripts/lerobot/run_config.py 时的 fallback。
+  #
+  # 日常执行：
+  #   python experiments/lerobot/pi05_cluster120_2node_probe/run.py
+  # 时，下面这些值会被 launch.profile 自动覆盖：
+  #   - num_processes 会被设置为 sum(profile.nodes[*].gpus)，当前 8+8=16；
+  #   - num_machines 会被设置为 profile.nodes 数量，当前 2；
+  #   - machine_rank/master 地址/端口按节点自动注入。
+  #
+  # 所以：改两节点/每节点 GPU 数，请改 configs/distributed/cluster120_2node.yaml；
+  # 不要为了两节点把这里手动改成 num_processes=16，否则绕过 launcher 单机调试时容易误启动。
   num_processes: 8
   num_machines: 1
   machine_rank: 0

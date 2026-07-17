@@ -51,8 +51,18 @@ paths:
     xdg: .cache
 
 distributed:
-  # 这里保留后端默认值；通过本实验 run.py 启动时，会被 launch.profile 自动覆盖为两节点配置。
-  # 如果绕过 run.py 直接调用底层 FastWAM runner，才会使用下面这些默认值。
+  # 这一段不是 cluster_120 两节点日常启动的权威配置，而是“不经过 SSH launcher”
+  # 直接调用 scripts/fastwam/run_config.py 时的 fallback。
+  #
+  # 日常执行：
+  #   python experiments/custom/fastwam_realrobot_2node_smoke/run.py
+  # 时，下面这些值会被 launch.profile 自动覆盖：
+  #   - nnodes 会被设置为 profile.nodes 数量，当前 2；
+  #   - node_rank/master 地址/端口按节点自动注入；
+  #   - gpus_per_node 来自每个 profile node 的 gpus 字段，当前每节点 8。
+  #
+  # 所以：改两节点/每节点 GPU 数，请改 configs/distributed/cluster120_2node.yaml；
+  # 不要为了两节点把这里手动改成 nnodes=2，否则绕过 launcher 单机调试时容易误启动。
   nnodes: 1
   node_rank: 0
   gpus_per_node: 8

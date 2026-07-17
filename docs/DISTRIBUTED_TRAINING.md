@@ -141,6 +141,8 @@ effective_batch = training.batch_size * accelerate_global_num_processes
 
 注意这个语义很容易踩坑：Accelerate 的 `--num_processes` 是全局总进程数，不是每台机器进程数。两节点各 8 卡时如果误传 `--num_processes 8 --num_machines 2`，Accelerate 会均分成每台 4 个 rank，现象就是每台机器只用 GPU 0-3。
 
+实验 YAML 里的 `distributed:` 是 fallback：只有绕过 SSH launcher、直接调用底层 backend runner 时才按它启动。日常两节点启动时，以 `launch.profile` 指向的 profile 为准。要改节点数、每节点 GPU 数、master 地址或端口，改 `configs/distributed/cluster120_2node.yaml`；不要改实验 YAML 里的 `distributed.num_processes` 来控制两节点。
+
 `cluster_120` 两节点实测命令：
 
 ```bash
