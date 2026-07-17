@@ -68,18 +68,21 @@ policy:
   gradient_checkpointing: true
 
 training:
-  # 当前默认就是已经验证过的快速交差配置：真实 8 卡 2-step。
-  # 跑 200-step 探针时改成 steps: 200；长期实验再改到 10000/20000+。
-  steps: 2
+  # cluster_120 两节点测速默认跑 200 step，避免 2-step smoke 被 warmup/加载开销污染。
+  # 长期实验再复制本实验目录，改到 10000/20000+，并打开 checkpoint。
+  steps: 200
 
-  # batch_size 是每卡/每进程 batch；有效 batch = batch_size * distributed.num_processes。
-  batch_size: 1
-  num_workers: 0
+  # batch_size 是每卡/每进程 batch。
+  # 两节点 profile 当前是 8 + 8 = 16 个进程，所以：
+  #   effective_batch = batch_size * 16
+  # 已实测 batch_size=8 可跑通，约 45.7GB/卡；你可以从 8 往上试，OOM 就降回来。
+  batch_size: 8
+  num_workers: 4
   prefetch_factor: 4
   persistent_workers: true
-  log_freq: 1
+  log_freq: 10
 
-  # 短探针不保存 checkpoint，避免测试时写大文件。
+  # 测速不保存 checkpoint，避免测试时写大文件。
   # 正式训练改成 true，并设置 save_freq。
   save_checkpoint: false
   save_freq: 2

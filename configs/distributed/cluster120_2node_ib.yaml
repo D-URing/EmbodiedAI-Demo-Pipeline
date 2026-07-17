@@ -48,10 +48,12 @@ environment:
     NCCL_IB_ADAPTIVE_ROUTING: "0"
     NCCL_MIN_NCHANNELS: "8"
 
-    # 首次 A/B 测速建议打开 INFO，确认日志里出现 NET/IB 和 GDRDMA。
-    # 稳定后可改成 WARN，减少日志量。
-    NCCL_DEBUG: INFO
-    NCCL_DEBUG_SUBSYS: INIT,ENV,NET
+    # 真实训练测速默认不要开 INFO，否则 16 个 rank 会刷大量 NCCL 日志。
+    # 如果需要确认是否走 NET/IB，再临时改成：
+    #   NCCL_DEBUG: INFO
+    #   NCCL_DEBUG_SUBSYS: INIT,ENV,NET
+    NCCL_DEBUG: WARN
+    NCCL_DEBUG_SUBSYS: INIT
 
 ssh:
   options:
