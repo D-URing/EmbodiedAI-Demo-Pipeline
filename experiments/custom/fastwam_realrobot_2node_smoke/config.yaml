@@ -1,7 +1,7 @@
 # 这个 YAML 是 custom/FastWAM 路线的主入口配置。
 # 用户日常不要直接调用 scripts/fastwam/*.sh；优先改这里，然后执行：
-#   python experiments/custom/fastwam_realrobot_single8_random/run.py --dry-run
-#   python experiments/custom/fastwam_realrobot_single8_random/run.py
+#   python experiments/custom/fastwam_realrobot_2node_smoke/run.py --dry-run
+#   python experiments/custom/fastwam_realrobot_2node_smoke/run.py
 
 backend: fastwam
 
@@ -23,6 +23,14 @@ experiment:
   # 多机训练时必须显式指定同一个 run_id，确保所有节点写到同一个实验目录。
   run_id:
 
+launch:
+  # 这个实验是 cluster_120 两节点 SSH 分布式 smoke 入口。
+  # 日常启动：python experiments/custom/fastwam_realrobot_2node_smoke/run.py
+  type: distributed_ssh
+  profile: configs/distributed/cluster120_2node.yaml
+  launcher_python: /opt/conda/envs/fastwam-sm120/bin/python
+  run_id_prefix: fastwam_smoke
+
 environment:
   # 这里只用于 preflight 提醒；不会自动创建环境。
   # 环境准备仍通过 make prepare-env-custom-fastwam 完成。
@@ -43,13 +51,13 @@ paths:
     xdg: .cache
 
 distributed:
-  # 单机 8 卡配置。当前已在 gpu11/A800 上跑通过。
-  # 如果只想用部分卡，可以设置 CUDA_VISIBLE_DEVICES，并同步修改 gpus_per_node。
+  # 这里保留后端默认值；通过本实验 run.py 启动时，会被 launch.profile 自动覆盖为两节点配置。
+  # 如果绕过 run.py 直接调用底层 FastWAM runner，才会使用下面这些默认值。
   nnodes: 1
   node_rank: 0
   gpus_per_node: 8
 
-  # 单机多卡用 127.0.0.1 最稳。多机时 rank0 节点需要填可被其它节点访问的 IP/hostname。
+  # 单机多卡用 127.0.0.1 最稳。多机时实际值来自 configs/distributed/cluster120_2node.yaml。
   master_addr: 127.0.0.1
   master_port: 29500
 

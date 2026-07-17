@@ -13,11 +13,10 @@
 
 | 目标 | 推荐入口 | 说明 |
 |---|---|---|
-| 查看所有常用训练入口 | `./run.py list` | 顶层统一启动入口，别再手写长命令 |
-| cluster_120 两节点 LeRobot/pi05 | `./run.py pi05-2node` | 自动选择 config/profile/conda python/run_id |
-| cluster_120 两节点 FastWAM smoke | `./run.py fastwam-2node-smoke` | 已实测 2 节点 × 8 卡；默认 1 step 连通性验证 |
-| cluster_120 两节点 FastWAM pilot | `./run.py fastwam-2node-pilot` | smoke 通过后再跑短实验 |
-| SCUT gpu11 单机 pi05/FastWAM | `./run.py pi05-scut` / `./run.py fastwam-scut` | 单机 8 卡入口 |
+| cluster_120 两节点 LeRobot/pi05 | `python experiments/lerobot/pi05_cluster120_2node_probe/run.py` | 已实测 2 节点 × 8 卡；config 里绑定 profile/env/run_id 前缀 |
+| cluster_120 两节点 FastWAM smoke | `python experiments/custom/fastwam_realrobot_2node_smoke/run.py` | 已实测 2 节点 × 8 卡；默认 1 step 连通性验证 |
+| SCUT gpu11 单机 pi05 | `python experiments/lerobot/pi05_so100_8gpu_probe/run.py` | 单机 8 卡入口；集群差异写在实验 config/profile 里 |
+| SCUT gpu11 单机 FastWAM | `python experiments/custom/fastwam_realrobot_single8_random/run.py` | 单机 8 卡入口；默认 random init 验证真实训练链路 |
 | 快速证明 LeRobot 能训练出 loss | `bash experiments/lerobot/pusht_act_smoke/launch.sh` | 轻量 ACT/PushT 真实训练 |
 | 跑 LeRobot VLA 微调 | `bash experiments/lerobot/smolvla_so100_8gpu_long/launch.sh` | 单机 8 卡 SmolVLA 长训模板 |
 | 跑 LeRobot 离线推理 | `bash experiments/lerobot/*_infer/launch.sh` | 只证明 data-to-policy inference，不是环境评测 |
@@ -55,10 +54,8 @@
 ├── pipelines/
 │   ├── lerobot/          # LeRobot 主线：dataset -> train/load -> inference -> report
 │   └── custom/           # Custom WAM 后端族：FastWAM / ImageWAM / future backends
-├── run.py                # 项目顶层统一启动入口：./run.py list / ./run.py pi05-2node
-├── experiments/          # 训练/推理启动入口：优先 config.yaml + run.py，必要时保留 launch.sh/slurm
+├── experiments/          # 训练/推理启动入口：每个实验目录维护自己的 config.yaml + run.py/launch.sh
 ├── configs/
-│   ├── launch/           # 顶层启动别名：把 config/profile/python 路径收敛到 YAML
 │   ├── lerobot/          # LeRobot 配置
 │   ├── fastwam/          # FastWAM/custom 配置
 │   ├── imagewam/         # ImageWAM/custom 配置

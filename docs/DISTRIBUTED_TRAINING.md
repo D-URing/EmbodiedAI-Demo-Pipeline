@@ -1,17 +1,19 @@
 # 多机分布式训练启动说明
 
-当前项目里，LeRobot/pi05 和 custom/FastWAM 都已经有单机多卡入口。日常不要手写底层 launcher 长命令，优先使用顶层 alias：
+当前项目里，LeRobot/pi05 和 custom/FastWAM 都已经有单机多卡和两节点入口。
+
+项目约定是：每个真实实验目录自己维护 `config.yaml + run.py`。日常不要手写底层 launcher 长命令，也不要新建根目录总入口；要跑哪个实验，就执行哪个实验目录下的 `run.py`。
 
 ```bash
-./run.py list
-./run.py pi05-2node
-./run.py fastwam-2node-smoke
+python experiments/lerobot/pi05_cluster120_2node_probe/run.py
+python experiments/custom/fastwam_realrobot_2node_smoke/run.py
 ```
 
-alias 配置在：
+两节点 profile、conda python、run_id 前缀写在对应实验的 `config.yaml` 里：
 
 ```bash
-configs/launch/aliases.yaml
+experiments/lerobot/pi05_cluster120_2node_probe/config.yaml
+experiments/custom/fastwam_realrobot_2node_smoke/config.yaml
 ```
 
 底层多机自动化由统一 SSH launcher 负责，只有排查 profile/节点时才需要直接调用：
@@ -140,7 +142,7 @@ effective_batch = training.batch_size * distributed.num_processes * distributed.
 
 ```bash
 cd /mnt/pfs/qahi3i/dingxibo/EmbodiedAI-Demo-Pipeline
-./run.py pi05-2node
+python experiments/lerobot/pi05_cluster120_2node_probe/run.py
 ```
 
 ## FastWAM
@@ -192,7 +194,7 @@ upstreams/FastWAM-realrobot/data/libero_mujoco3.3.2 \
 
 ```bash
 cd /mnt/pfs/qahi3i/dingxibo/EmbodiedAI-Demo-Pipeline
-./run.py fastwam-2node-smoke
+python experiments/custom/fastwam_realrobot_2node_smoke/run.py
 ```
 
 长实验再切回 `experiments/custom/fastwam_realrobot_single8_random/config.yaml` 或复制新实验目录调整 `mode.pilot/full`。
