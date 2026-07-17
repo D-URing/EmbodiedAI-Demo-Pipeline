@@ -1,0 +1,88 @@
+# cluster_120 两节点 IB/RDMA 数据面 profile。
+#
+# 设计目标：
+# - SSH、torch/accelerate rendezvous、GLOO 控制面继续走 eth0，保证启动稳定；
+# - NCCL GPU 梯度同步数据面显式启用 mlx5_2 / RoCE / GPUDirect RDMA；
+# - 用于和 configs/distributed/cluster120_2node.yaml 做 A/B 测速。
+#
+# 为什么不直接全走 rdma1？
+# - cluster120_2node_rdma.yaml 已验证 NCCL 能识别 NET/IB 和 GPUDirect RDMA；
+# - 但把 master_addr、SSH 目标、NCCL_SOCKET_IFNAME、GLOO_SOCKET_IFNAME 都强绑 rdma1
+#   时，实际运行可能卡在 NCCL 初始化/建链阶段；
+# - 所以本文件采用更稳妥的“控制面 eth0 + 数据面 IB”。
+#
+# 用法：
+#   python experiments/lerobot/pi05_cluster120_2node_probe/run.py \
+#     --profile configs/distributed/cluster120_2node_ib.yaml
+#
+# 如果只想看即将执行的命令：
+#   python experiments/lerobot/pi05_cluster120_2node_probe/run.py \
+#     --profile configs/distributed/cluster120_2node_ib.yaml --dry-run
+
+profile_name: cluster120_2node_ib
+
+paths:
+  repo_root: /mnt/pfs/qahi3i/dingxibo/EmbodiedAI-Demo-Pipeline
+
+environment:
+  conda_init: /opt/conda/etc/profile.d/conda.sh
+  backend_conda_envs:
+    lerobot: lerobot-sm120
+    fastwam: fastwam-sm120
+
+  # ssh_launch.py 会在每个节点启动训练前 export 这些变量。
+  exports:
+    # 控制面仍走 eth0，避免 rendezvous/OOB 绑到 rdma1 后卡住。
+    NCCL_SOCKET_IFNAME: "=eth0"
+    GLOO_SOCKET_IFNAME: eth0
+
+    # 数据面启用 IB/RoCE。mlx5_2 是当前两台机器上和训练网络匹配的 active HCA。
+    NCCL_IB_HCA: "=mlx5_2"
+    NCCL_IB_GID_INDEX: "7"
+    NCCL_IB_DISABLE: "0"
+
+    # 集群镜像中已有的 RoCE 调优项，先显式固化，便于复现实验。
+    NCCL_IB_TC: "162"
+    NCCL_IB_TIMEOUT: "22"
+    NCCL_IB_QPS_PER_CONNECTION: "8"
+    NCCL_IB_ADAPTIVE_ROUTING: "0"
+    NCCL_MIN_NCHANNELS: "8"
+
+    # 首次 A/B 测速建议打开 INFO，确认日志里出现 NET/IB 和 GDRDMA。
+    # 稳定后可改成 WARN，减少日志量。
+    NCCL_DEBUG: INFO
+    NCCL_DEBUG_SUBSYS: INIT,ENV,NET
+
+ssh:
+  options:
+    - BatchMode=yes
+    - StrictHostKeyChecking=accept-new
+    - ServerAliveInterval=30
+    - ServerAliveCountMax=6
+
+distributed:
+  # master/rendezvous 继续使用 node0 普通网卡。
+  master_addr: 192.168.32.7
+  master_port: 29505
+  backend_master_ports:
+    lerobot: 29505
+    fastwam: 29500
+  gpus_per_node: 8
+
+launch:
+  rank0_warmup_seconds: 5
+
+nodes:
+  - host: localhost
+    local: true
+    gpus: 8
+    workdir: /mnt/pfs/qahi3i/dingxibo/EmbodiedAI-Demo-Pipeline
+    conda_init: /opt/conda/etc/profile.d/conda.sh
+
+  - host: 192.168.32.34
+    gpus: 8
+    workdir: /mnt/pfs/tjj2fh/dingxibo/EmbodiedAI-Demo-Pipeline
+    conda_init: /root/miniforge/etc/profile.d/conda.sh
+    backend_conda_envs:
+      lerobot: /opt/conda/envs/lerobot-sm120
+      fastwam: /opt/conda/envs/fastwam-sm120

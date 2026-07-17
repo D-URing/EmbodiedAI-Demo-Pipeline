@@ -1,4 +1,9 @@
-# cluster_120 两节点 RDMA/RoCE profile。
+# cluster_120 两节点 RDMA/RoCE 强制 profile。
+#
+# 注意：这是诊断/实验 profile，不建议作为默认训练入口。
+# 当前已验证它可以让 NCCL 日志出现 NET/IB 和 GPUDirect RDMA，但也观察到
+# 训练可能卡在 NCCL 初始化/建链阶段。日常想测试 IB 数据面，优先使用：
+#   configs/distributed/cluster120_2node_ib.yaml
 #
 # 和 cluster120_2node.yaml 的区别：
 # - trainer/rendezvous master 使用 node0 的 rdma1 IP：192.168.32.21；
