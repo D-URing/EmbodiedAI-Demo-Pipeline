@@ -247,11 +247,16 @@ def rank_env(
     master_port: int,
 ) -> dict[str, str]:
     if backend == "lerobot":
+        # Accelerate 的 --num_processes 是“全局总进程数”，不是每节点进程数。
+        # 例如 2 节点 × 8 GPU 时必须传 16；如果传 8，Accelerate 会均分成每节点 4 个 rank，
+        # 现象就是每台机器只使用 GPU 0-3。
+        total_processes = sum(item.gpus for item in nodes)
         return {
             "LEROBOT_RUN_ID": run_id,
             "LEROBOT_NUM_MACHINES": str(len(nodes)),
             "LEROBOT_MACHINE_RANK": str(rank),
-            "LEROBOT_NUM_PROCESSES": str(node.gpus),
+            "LEROBOT_NUM_PROCESSES": str(total_processes),
+            "LEROBOT_GPUS_PER_NODE": str(node.gpus),
             "LEROBOT_MAIN_PROCESS_IP": master_addr,
             "LEROBOT_MAIN_PROCESS_PORT": str(master_port),
         }

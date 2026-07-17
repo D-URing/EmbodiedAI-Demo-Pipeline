@@ -133,10 +133,13 @@ nodes:
 LeRobot 的有效 batch 约为：
 
 ```text
-effective_batch = training.batch_size * distributed.num_processes * distributed.num_machines
+effective_batch = training.batch_size * accelerate_global_num_processes
 ```
 
-但在 SSH launcher 下，`num_processes/num_machines` 会被 profile 自动覆盖。
+在 SSH launcher 下，`accelerate_global_num_processes` 会从 profile 自动计算为 `sum(node.gpus)`。
+例如 `cluster120_2node` 是 `8 + 8 = 16`，所以 `batch_size=8` 时有效 batch 是 `128`。
+
+注意这个语义很容易踩坑：Accelerate 的 `--num_processes` 是全局总进程数，不是每台机器进程数。两节点各 8 卡时如果误传 `--num_processes 8 --num_machines 2`，Accelerate 会均分成每台 4 个 rank，现象就是每台机器只用 GPU 0-3。
 
 `cluster_120` 两节点实测命令：
 
