@@ -321,6 +321,12 @@ if [[ ! "${TEXT_EMBED_GPUS}" =~ ^[0-9]+$ ]] || (( TEXT_EMBED_GPUS < 1 )); then
   exit 2
 fi
 
+# FastWAM 上游 scripts/train_zero1.sh 的第一个参数语义是 nproc_per_node，
+# 也就是“每个节点启动几个训练进程”。它内部会再计算：
+#   total_processes = nproc_per_node * NNODES
+# 然后传给 accelerate。因此这里传 GPUS_PER_NODE=8 是正确的；
+# 不要像 LeRobot 顶层 accelerate wrapper 那样改成全局总进程数。
+TOTAL_PROCESSES=$(( GPUS_PER_NODE * FASTWAM_NNODES ))
 CMD=(bash scripts/train_zero1.sh "$GPUS_PER_NODE" "${MODEL_ARGS[@]}" "${RUN_ARGS[@]}" "${EXTRA_ARGS[@]}")
 if (( IS_MAIN_RANK == 1 )); then
   printf "%q " "${CMD[@]}" > "$RUN_DIR/command.txt"
@@ -355,6 +361,7 @@ manifest = {
     "overlay_ref": "${FASTWAM_OVERLAY_REF}",
     "gpus_per_node": int("${GPUS_PER_NODE}"),
     "nnodes": int("${FASTWAM_NNODES}"),
+    "total_processes": int("${TOTAL_PROCESSES}"),
     "node_rank": int("${FASTWAM_NODE_RANK}"),
     "mixed_precision": "${FASTWAM_MIXED_PRECISION}",
     "init": "${FASTWAM_INIT}",
@@ -382,6 +389,7 @@ PY
 fi
 
 echo "FASTWAM_TRAIN_START task=${TASK_NAME} mode=${FASTWAM_MODE} recipe=${FASTWAM_RECIPE} run_dir=${RUN_DIR}"
+echo "FASTWAM_DISTRIBUTED_TOPOLOGY nproc_per_node=${GPUS_PER_NODE} nnodes=${FASTWAM_NNODES} total_processes=${TOTAL_PROCESSES} node_rank=${FASTWAM_NODE_RANK}"
 
 TEXT_EMBED_MARKER="$RUN_DIR/precompute_text_embeds.done"
 TEXT_EMBED_LOG="$RUN_DIR/precompute_text_embeds.log"

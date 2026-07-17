@@ -180,6 +180,13 @@ FASTWAM_MASTER_PORT
 FASTWAM_RUN_ID
 ```
 
+FastWAM 和 LeRobot 在进程数语义上不一样：
+
+- LeRobot 直接调用 `accelerate launch --num_processes`，这里的 `num_processes` 是全局总进程数，所以两节点各 8 卡要传 16；
+- FastWAM 调用上游 `scripts/train_zero1.sh <nproc_per_node>`，这里的第一个参数是每节点进程数。上游脚本内部会计算 `total_processes = nproc_per_node * NNODES` 再传给 accelerate，所以两节点各 8 卡时本项目传 `FASTWAM_GPUS_PER_NODE=8`、`FASTWAM_NNODES=2` 是正确的。
+
+因此 FastWAM 没有“每台只用 4 卡”的同类问题。若要改 FastWAM 每节点 GPU 数，改 profile 中对应 node 的 `gpus`；不要把 `FASTWAM_GPUS_PER_NODE` 改成全局总卡数。
+
 FastWAM rank0 会先预计算 text embeddings，其它 rank 会等待 marker 文件。若各节点 run 目录不是同一个共享路径，建议先离线准备好 `upstreams/FastWAM-realrobot/data/text_embeds_cache/libero/*.pt`，并在 smoke/测速配置里设置：
 
 ```yaml
