@@ -1,0 +1,101 @@
+# LeRobot / pi05 / SO100 / 百舸 PyTorchJob 原生启动配置。
+#
+# 适用场景：
+#   - 百舸平台 jobType=PyTorchJob；
+#   - 平台自动注入 MASTER_ADDR / MASTER_PORT / RANK / WORLD_SIZE / NPROC_PER_NODE；
+#   - Master 和 Worker 会执行同一条 job command；
+#   - 不依赖 ssh，不需要手动进每个 worker。
+#
+# 正式 job command 推荐：
+#   cd /mnt/cluster/dingxibo/EmbodiedAI-Demo-Pipeline && \
+#   source .venv_lerobot/bin/activate && \
+#   python experiments/lerobot/pi05_baige_pytorchjob_probe/run.py
+#
+# 交互调试：
+#   python experiments/lerobot/pi05_baige_pytorchjob_probe/run.py --dry-run
+
+backend: lerobot
+base_config: configs/lerobot/train/svla_so100_pi05_8gpu_probe.sh
+
+experiment:
+  name: pi05_baige_pytorchjob_probe
+  route: lerobot
+  run_name: pi05_baige_pytorchjob_probe
+
+  # 正式 PyTorchJob 下可以留空：run.py 会优先使用 AIHC_JOB_ID，确保所有节点 run_id 一致。
+  # 如果在交互式多机调试，请手动 export BAIGE_RUN_ID=<同一个名字>。
+  run_id:
+
+environment:
+  # 百舸推荐镜像/自建 venv 场景下不强制 conda。
+  # 进入 .venv_lerobot 后直接执行 run.py 即可。
+  conda_env:
+
+paths:
+  data_root: data
+  model_root: models
+  run_root: runs/experiments/lerobot
+  embodied_run_root: runs
+  hf_home: hf_cache
+  hf_hub_cache: hf_cache/hub
+  hf_datasets_cache: hf_cache/datasets
+  torch_home: hf_cache/torch
+
+dataset:
+  repo_id: lerobot/svla_so100_pickplace
+  root: data/lerobot/svla_so100_pickplace
+  video_backend: pyav
+  eval_split: ""
+
+policy:
+  type: pi05
+  repo_id: local/svla_so100_pi05_baige_pytorchjob_probe
+  pretrained_path: models/lerobot/pi05/pi05_base
+  push_to_hub: false
+  device: cuda
+  dtype: bfloat16
+  compile_model: false
+  gradient_checkpointing: true
+
+training:
+  # NCCL smoke 通过后，测速建议先用 200；长期实验再复制本目录改成 10000+。
+  steps: 200
+
+  # 每 GPU / 每进程 batch。有效 batch = batch_size * WORLD_SIZE * NPROC_PER_NODE。
+  # 例如 2 节点 * 8 卡，batch_size=4 时，有效 batch=64。
+  batch_size: 4
+
+  # A100/大显存机器可以从 4 开始；若数据加载慢，再调到 8。
+  num_workers: 4
+  prefetch_factor: 4
+  persistent_workers: true
+  log_freq: 10
+
+  save_checkpoint: false
+  save_freq: 100
+  seed: 1005
+  env_eval_freq: 0
+  eval_steps: 0
+  max_eval_samples: ""
+  wandb: false
+
+distributed:
+  # 这里只是本地 dry-run / 非百舸环境 fallback。
+  # 百舸原生启动时，scripts/distributed/baige_launch.py 会用平台注入值覆盖这里：
+  #   num_processes = WORLD_SIZE * NPROC_PER_NODE
+  #   num_machines = WORLD_SIZE
+  #   machine_rank = RANK
+  #   main_process_ip = MASTER_ADDR
+  #   main_process_port = MASTER_PORT
+  num_processes: 8
+  num_machines: 1
+  machine_rank: 0
+  main_process_ip: 127.0.0.1
+  main_process_port: 23456
+  mixed_precision: bf16
+
+runtime:
+  offline: true
+  allow_download: false
+  hf_hub_disable_xet: true
+  nccl_debug: WARN

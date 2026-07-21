@@ -67,15 +67,25 @@ PY
 RUN_ID="${LEROBOT_RUN_ID:-$(date +%Y%m%d-%H%M%S)}"
 RUN_DIR="${LEROBOT_RUN_ROOT}/${LEROBOT_RUN_NAME}/${RUN_ID}"
 OUTPUT_DIR="${LEROBOT_OUTPUT_DIR:-${RUN_DIR}/lerobot_output}"
+MACHINE_RANK="${LEROBOT_MACHINE_RANK:-0}"
+NUM_MACHINES="${LEROBOT_NUM_MACHINES:-1}"
 
-if [[ -e "$OUTPUT_DIR" && "${LEROBOT_RESUME:-0}" != "1" ]]; then
+if [[ -e "$OUTPUT_DIR" && "${LEROBOT_RESUME:-0}" != "1" && "$MACHINE_RANK" == "0" ]]; then
   echo "ERROR: LeRobot output_dir already exists: $OUTPUT_DIR" >&2
   echo "Set LEROBOT_RESUME=1 and LEROBOT_RESUME_CONFIG_PATH=/path/to/train_config.json to resume intentionally." >&2
   exit 2
 fi
 
 mkdir -p "$RUN_DIR" "$(dirname "$OUTPUT_DIR")"
-cp "$CONFIG_PATH" "$RUN_DIR/config.sh"
+CONFIG_SNAPSHOT="$RUN_DIR/config.sh"
+COMMAND_TXT="$RUN_DIR/command.txt"
+BACKEND_MANIFEST_JSON="$RUN_DIR/backend_manifest.json"
+if [[ "$NUM_MACHINES" != "1" ]]; then
+  CONFIG_SNAPSHOT="$RUN_DIR/config.rank${MACHINE_RANK}.sh"
+  COMMAND_TXT="$RUN_DIR/command.rank${MACHINE_RANK}.txt"
+  BACKEND_MANIFEST_JSON="$RUN_DIR/backend_manifest.rank${MACHINE_RANK}.json"
+fi
+cp "$CONFIG_PATH" "$CONFIG_SNAPSHOT"
 
 TRAIN_CMD=(
   "$LEROBOT_TRAIN_BIN"
@@ -145,6 +155,9 @@ fi
 
 ACCELERATE_CMD=(
   accelerate launch
+  --same_network
+  --multi_gpu
+  --gpu_ids all
   --num_processes "$LEROBOT_NUM_PROCESSES"
   --num_machines "$LEROBOT_NUM_MACHINES"
   --machine_rank "$LEROBOT_MACHINE_RANK"
@@ -153,14 +166,10 @@ ACCELERATE_CMD=(
   --mixed_precision "$LEROBOT_ACCELERATE_MIXED_PRECISION"
 )
 
-if [[ "${LEROBOT_NUM_MACHINES}" == "1" ]]; then
-  ACCELERATE_CMD+=(--multi_gpu)
-fi
-
 FULL_CMD=("${ACCELERATE_CMD[@]}" "${TRAIN_CMD[@]}")
 
-printf "%q " "${FULL_CMD[@]}" > "$RUN_DIR/command.txt"
-printf "\n" >> "$RUN_DIR/command.txt"
+printf "%q " "${FULL_CMD[@]}" > "$COMMAND_TXT"
+printf "\n" >> "$COMMAND_TXT"
 
 python - <<PY
 from __future__ import annotations
@@ -195,7 +204,7 @@ manifest = {
         "mixed_precision": "${LEROBOT_ACCELERATE_MIXED_PRECISION}",
     },
 }
-Path("${RUN_DIR}/backend_manifest.json").write_text(
+Path("${BACKEND_MANIFEST_JSON}").write_text(
     json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
     encoding="utf-8",
 )
@@ -204,18 +213,35 @@ PY
 echo "LEROBOT_ACCELERATE_TRAIN_START run_dir=$RUN_DIR output_dir=$OUTPUT_DIR"
 echo "LEROBOT_ACCELERATE_EFFECTIVE_BATCH_SIZE $(( LEROBOT_BATCH_SIZE * LEROBOT_NUM_PROCESSES ))"
 
+TRAIN_STDOUT_LOG="$RUN_DIR/train_stdout.log"
+if [[ "$NUM_MACHINES" != "1" ]]; then
+  TRAIN_STDOUT_LOG="$RUN_DIR/train_stdout.rank${MACHINE_RANK}.log"
+fi
+
 run_start_epoch=$(date +%s)
 set +e
-"${FULL_CMD[@]}" 2>&1 | tee "$RUN_DIR/train_stdout.log"
+"${FULL_CMD[@]}" 2>&1 | tee "$TRAIN_STDOUT_LOG"
 train_status=${PIPESTATUS[0]}
 set -e
 run_end_epoch=$(date +%s)
 run_elapsed_seconds=$(( run_end_epoch - run_start_epoch ))
 
-if python scripts/lerobot/parse_train_log.py --log "$RUN_DIR/train_stdout.log" --output-dir "$RUN_DIR"; then
+if [[ "$MACHINE_RANK" == "0" ]] && python scripts/lerobot/parse_train_log.py --log "$TRAIN_STDOUT_LOG" --output-dir "$RUN_DIR"; then
   echo "LEROBOT_LOSS_REPORT $RUN_DIR/loss_summary.json"
+elif [[ "$MACHINE_RANK" != "0" ]]; then
+  echo "LEROBOT_LOSS_REPORT skipped on machine_rank=${MACHINE_RANK}; rank0 writes the shared summary."
 else
-  echo "WARNING: LeRobot loss parser did not find complete train records in $RUN_DIR/train_stdout.log" >&2
+  echo "WARNING: LeRobot loss parser did not find complete train records in $TRAIN_STDOUT_LOG" >&2
+fi
+
+if [[ "$MACHINE_RANK" != "0" ]]; then
+  if (( train_status != 0 )); then
+    echo "ERROR: LeRobot accelerate training failed with status ${train_status}. See $TRAIN_STDOUT_LOG" >&2
+    exit "$train_status"
+  fi
+  echo "LEROBOT_ACCELERATE_TRAIN_COMPLETE $RUN_DIR"
+  echo "LEROBOT_OUTPUT $OUTPUT_DIR"
+  exit 0
 fi
 
 python - <<PY
