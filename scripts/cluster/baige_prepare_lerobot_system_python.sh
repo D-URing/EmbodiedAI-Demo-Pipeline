@@ -76,6 +76,65 @@ python -m pip install --upgrade --no-cache-dir \
 python -m pip install --break-system-packages --no-cache-dir -U "$LEROBOT_DIFFUSERS_SPEC"
 
 python - <<'PY'
+from __future__ import annotations
+
+import importlib
+from pathlib import Path
+
+import diffusers
+
+
+def can_import_wan() -> bool:
+    try:
+        from diffusers import AutoencoderKLWan  # noqa: F401
+        return True
+    except Exception as exc:
+        print(f"diffusers AutoencoderKLWan import failed before patch: {type(exc).__name__}: {exc}")
+        return False
+
+
+def patch_missing_logger(path: Path) -> bool:
+    if not path.is_file():
+        return False
+    text = path.read_text(encoding="utf-8")
+    if "logger" not in text or "logger = logging.get_logger(__name__)" in text:
+        return False
+
+    if "from ...utils import logging" in text:
+        marker = "from ...utils import logging\n"
+        replacement = marker + "\nlogger = logging.get_logger(__name__)\n"
+    elif "from diffusers.utils import logging" in text:
+        marker = "from diffusers.utils import logging\n"
+        replacement = marker + "\nlogger = logging.get_logger(__name__)\n"
+    else:
+        # autoencoder_kl_wan.py lives in diffusers/models/autoencoders, so
+        # three-dot relative import reaches diffusers.utils.
+        marker = "import torch\n"
+        replacement = marker + "from ...utils import logging\n\nlogger = logging.get_logger(__name__)\n"
+
+    if marker not in text:
+        return False
+    path.write_text(text.replace(marker, replacement, 1), encoding="utf-8")
+    print(f"Patched missing diffusers logger in {path}")
+    return True
+
+
+if not can_import_wan():
+    root = Path(diffusers.__file__).resolve().parent
+    candidates = [
+        root / "models" / "autoencoders" / "autoencoder_kl_wan.py",
+        root / "quantizers" / "pipe_quant_config.py",
+        root / "quantizers" / "torchao_quantizer.py",
+    ]
+    patched = False
+    for candidate in candidates:
+        patched = patch_missing_logger(candidate) or patched
+    importlib.invalidate_caches()
+    if not patched:
+        print("WARNING: no diffusers logger patch was applied; import validation will show the original error.")
+PY
+
+python - <<'PY'
 import importlib
 import inspect
 
