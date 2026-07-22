@@ -175,6 +175,14 @@ def build_env(config: dict[str, Any], project_root: Path, config_path: Path) -> 
                 cache_paths["xdg"],
                 ".cache",
             )
+        if "hf_datasets" in cache_paths:
+            raw_hf_datasets = str(cache_paths["hf_datasets"])
+            if raw_hf_datasets:
+                env["FASTWAM_HF_DATASETS_CACHE"] = project_path(
+                    project_root,
+                    raw_hf_datasets,
+                    ".cache/huggingface/datasets_fastwam",
+                )
 
     text_embeddings = fastwam.get("text_embeddings") or {}
     if text_embeddings:

@@ -81,6 +81,10 @@ export FASTWAM_SUPPRESS_VIDEO_WARNINGS="${FASTWAM_SUPPRESS_VIDEO_WARNINGS:-1}"
 export FASTWAM_TORCH_EXTENSIONS_DIR="${FASTWAM_TORCH_EXTENSIONS_DIR:-$EMBODIED_REPO_ROOT/.cache/torch_extensions/fastwam}"
 export FASTWAM_TRITON_CACHE_DIR="${FASTWAM_TRITON_CACHE_DIR:-$EMBODIED_REPO_ROOT/.cache/triton/fastwam}"
 export FASTWAM_XDG_CACHE_HOME="${FASTWAM_XDG_CACHE_HOME:-$EMBODIED_REPO_ROOT/.cache}"
+# HuggingFace datasets 会为 parquet 生成 Arrow cache。这个 cache 不适合放共享盘
+# 让多节点同时写，否则容易出现 *.incomplete 残留导致 worker 读半成品报错。
+# run_realrobot_train_eval.sh 默认会按 node_rank 放到 /tmp；这里保留覆盖入口。
+export FASTWAM_HF_DATASETS_CACHE="${FASTWAM_HF_DATASETS_CACHE:-}"
 
 # 文本 embedding cache。
 # FastWAM 训练时不在线加载 text encoder，而是读取预计算好的 Wan/T5 context cache。

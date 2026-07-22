@@ -33,6 +33,10 @@ paths:
     torch_extensions: .cache/torch_extensions/fastwam
     triton: .cache/triton/fastwam
     xdg: .cache
+    # 注意：HF datasets parquet/arrow cache 默认不放共享盘，runner 会按 node_rank
+    # 放到 /tmp/embodied_fastwam_hf/datasets_rank*，避免多节点同时写 .incomplete。
+    # 如确需固定位置，可在运行时设置 FASTWAM_HF_DATASETS_CACHE=/path。
+    hf_datasets: ""
 
 distributed:
   # fallback；百舸原生启动时会被 scripts/distributed/baige_launch.py 覆盖。

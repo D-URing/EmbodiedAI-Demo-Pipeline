@@ -218,7 +218,14 @@ export LEROBOT_VIDEO_BACKEND="${LEROBOT_VIDEO_BACKEND:-$FASTWAM_VIDEO_BACKEND}"
 export XDG_CACHE_HOME="${FASTWAM_XDG_CACHE_HOME:-$EMBODIED_REPO_ROOT/.cache}"
 export TORCH_EXTENSIONS_DIR="${FASTWAM_TORCH_EXTENSIONS_DIR:-$EMBODIED_REPO_ROOT/.cache/torch_extensions/fastwam}"
 export TRITON_CACHE_DIR="${FASTWAM_TRITON_CACHE_DIR:-$EMBODIED_REPO_ROOT/.cache/triton/fastwam}"
-mkdir -p "$XDG_CACHE_HOME" "$TORCH_EXTENSIONS_DIR" "$TRITON_CACHE_DIR"
+
+# HuggingFace datasets parquet -> Arrow cache should not be shared across
+# nodes on PFS/NFS. File locks and *.incomplete directories are unreliable
+# under concurrent multi-node writes, so use a node-local cache by default.
+export HF_DATASETS_CACHE="${FASTWAM_HF_DATASETS_CACHE:-/tmp/embodied_fastwam_hf/datasets_rank${FASTWAM_NODE_RANK}}"
+export HF_HOME="${HF_HOME:-/tmp/embodied_fastwam_hf/home_rank${FASTWAM_NODE_RANK}}"
+mkdir -p "$XDG_CACHE_HOME" "$TORCH_EXTENSIONS_DIR" "$TRITON_CACHE_DIR" "$HF_DATASETS_CACHE" "$HF_HOME"
+echo "FASTWAM_HF_DATASETS_CACHE ${HF_DATASETS_CACHE}"
 
 append_pythonwarning() {
   local rule="$1"
