@@ -40,6 +40,10 @@ export LEROBOT_INSTALL_NO_DEPS=1
 export LEROBOT_FORCE_OPENCV_HEADLESS=1
 export LEROBOT_EXTRAS="${LEROBOT_EXTRAS:-training,pusht,smolvla,pi,fastwam}"
 export LEROBOT_SOURCE_DIR="${LEROBOT_SOURCE_DIR:-$REPO_ROOT/upstreams/lerobot}"
+# diffusers 的 Wan 模块在部分 PyPI 版本里会触发 logger 未定义 bug。
+# 默认安装 upstream main；如平台需要固定内网 wheel，可覆盖：
+#   LEROBOT_DIFFUSERS_SPEC='diffusers==0.xx.y' bash scripts/cluster/baige_prepare_lerobot_system_python.sh
+export LEROBOT_DIFFUSERS_SPEC="${LEROBOT_DIFFUSERS_SPEC:-git+https://github.com/huggingface/diffusers.git@main}"
 
 bash scripts/lerobot/install_lerobot_cluster.sh
 
@@ -58,7 +62,6 @@ python -m pip install --upgrade --no-cache-dir \
   "av>=14,<16" \
   "accelerate" \
   "transformers<5" \
-  "diffusers>=0.36.1,<0.37" \
   "safetensors" \
   "huggingface_hub" \
   "einops" \
@@ -69,6 +72,9 @@ python -m pip install --upgrade --no-cache-dir \
   "tqdm" \
   "wandb" \
   "rich"
+
+python -m pip uninstall -y diffusers || true
+python -m pip install --no-cache-dir --force-reinstall --no-deps "$LEROBOT_DIFFUSERS_SPEC"
 
 python - <<'PY'
 import importlib
