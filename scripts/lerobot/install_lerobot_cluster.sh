@@ -15,6 +15,7 @@ LEROBOT_TORCHVISION_SPEC="${LEROBOT_TORCHVISION_SPEC:-torchvision}"
 LEROBOT_EXTRAS="${LEROBOT_EXTRAS:-training,pusht,smolvla,pi,fastwam}"
 LEROBOT_INSTALL_NO_DEPS="${LEROBOT_INSTALL_NO_DEPS:-0}"
 LEROBOT_SKIP_TORCH_INSTALL="${LEROBOT_SKIP_TORCH_INSTALL:-0}"
+LEROBOT_SKIP_PIP_BOOTSTRAP="${LEROBOT_SKIP_PIP_BOOTSTRAP:-0}"
 LEROBOT_FORCE_OPENCV_HEADLESS="${LEROBOT_FORCE_OPENCV_HEADLESS:-1}"
 CONDA_EXE="${CONDA_EXE:-conda}"
 CONDA_CHANNEL_ARGS="${CONDA_CHANNEL_ARGS:---override-channels -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge}"
@@ -41,7 +42,11 @@ if sys.version_info < (3, 12):
 print(f"Python OK: {sys.version.split()[0]}")
 PY
 
-python -m pip install --upgrade pip setuptools wheel
+if [[ "$LEROBOT_SKIP_PIP_BOOTSTRAP" == "1" ]]; then
+  echo "Skip pip/setuptools/wheel bootstrap; using platform-provided Python packaging tools."
+else
+  python -m pip install --upgrade pip setuptools wheel
+fi
 if [[ "$LEROBOT_SKIP_TORCH_INSTALL" == "1" ]]; then
   echo "Skip torch/torchvision install; using platform-provided PyTorch."
 else

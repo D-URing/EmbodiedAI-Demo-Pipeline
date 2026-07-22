@@ -12,6 +12,12 @@ cd "$REPO_ROOT"
 
 echo "BAIGE_LEROBOT_SYSTEM_PYTHON_PREPARE repo=$REPO_ROOT"
 
+# 官方镜像的系统 Python 由 Debian/Ubuntu 和镜像共同管理；直接升级 wheel
+# 可能触发 "uninstall-no-record-file"。这里显式允许 pip 往系统环境补包，
+# 但不升级/替换平台默认 torch、torchvision、CUDA、NCCL。
+export PIP_BREAK_SYSTEM_PACKAGES="${PIP_BREAK_SYSTEM_PACKAGES:-1}"
+export PIP_DISABLE_PIP_VERSION_CHECK="${PIP_DISABLE_PIP_VERSION_CHECK:-1}"
+
 python - <<'PY'
 import sys
 import torch
@@ -29,6 +35,7 @@ PY
 
 export LEROBOT_CREATE_CONDA=0
 export LEROBOT_SKIP_TORCH_INSTALL=1
+export LEROBOT_SKIP_PIP_BOOTSTRAP=1
 export LEROBOT_INSTALL_NO_DEPS=1
 export LEROBOT_FORCE_OPENCV_HEADLESS=1
 export LEROBOT_EXTRAS="${LEROBOT_EXTRAS:-training,pusht,smolvla,pi,fastwam}"
