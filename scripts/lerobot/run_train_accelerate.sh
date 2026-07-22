@@ -19,15 +19,13 @@ if [[ "${LEROBOT_POLICY_DEVICE}" != "cuda" ]]; then
   exit 2
 fi
 
-command -v accelerate >/dev/null || {
-  echo "ERROR: accelerate is not on PATH. Reinstall LeRobot with training extras." >&2
-  exit 2
-}
-command -v lerobot-train >/dev/null || {
-  echo "ERROR: lerobot-train is not on PATH. Run scripts/lerobot/install_lerobot_cluster.sh first." >&2
-  exit 2
-}
-LEROBOT_TRAIN_BIN="$(command -v lerobot-train)"
+python - <<'PY'
+import importlib
+
+for module in ["accelerate", "lerobot.scripts.lerobot_train"]:
+    importlib.import_module(module)
+print("LeRobot launcher imports OK: accelerate + lerobot.scripts.lerobot_train")
+PY
 
 if [[ "${LEROBOT_ALLOW_BUSY_GPUS:-0}" != "1" ]] && command -v nvidia-smi >/dev/null 2>&1; then
   busy_gpu_processes="$(
@@ -80,15 +78,29 @@ mkdir -p "$RUN_DIR" "$(dirname "$OUTPUT_DIR")"
 CONFIG_SNAPSHOT="$RUN_DIR/config.sh"
 COMMAND_TXT="$RUN_DIR/command.txt"
 BACKEND_MANIFEST_JSON="$RUN_DIR/backend_manifest.json"
+ACCELERATE_ENTRY="$RUN_DIR/accelerate_entry.py"
+LEROBOT_TRAIN_ENTRY="$RUN_DIR/lerobot_train_entry.py"
 if [[ "$NUM_MACHINES" != "1" ]]; then
   CONFIG_SNAPSHOT="$RUN_DIR/config.rank${MACHINE_RANK}.sh"
   COMMAND_TXT="$RUN_DIR/command.rank${MACHINE_RANK}.txt"
   BACKEND_MANIFEST_JSON="$RUN_DIR/backend_manifest.rank${MACHINE_RANK}.json"
+  ACCELERATE_ENTRY="$RUN_DIR/accelerate_entry.rank${MACHINE_RANK}.py"
+  LEROBOT_TRAIN_ENTRY="$RUN_DIR/lerobot_train_entry.rank${MACHINE_RANK}.py"
 fi
 cp "$CONFIG_PATH" "$CONFIG_SNAPSHOT"
 
+cat > "$ACCELERATE_ENTRY" <<'PY'
+from accelerate.commands.accelerate_cli import main
+raise SystemExit(main())
+PY
+
+cat > "$LEROBOT_TRAIN_ENTRY" <<'PY'
+from lerobot.scripts.lerobot_train import main
+raise SystemExit(main())
+PY
+
 TRAIN_CMD=(
-  "$LEROBOT_TRAIN_BIN"
+  python "$LEROBOT_TRAIN_ENTRY"
   --policy.type="$LEROBOT_POLICY_TYPE"
   --policy.device="$LEROBOT_POLICY_DEVICE"
   --policy.repo_id="$LEROBOT_POLICY_REPO_ID"
@@ -154,7 +166,7 @@ else
 fi
 
 ACCELERATE_CMD=(
-  accelerate launch
+  python "$ACCELERATE_ENTRY" launch
   --same_network
   --multi_gpu
   --gpu_ids all

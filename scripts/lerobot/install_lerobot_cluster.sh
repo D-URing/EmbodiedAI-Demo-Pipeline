@@ -14,6 +14,7 @@ LEROBOT_TORCH_SPEC="${LEROBOT_TORCH_SPEC:-torch}"
 LEROBOT_TORCHVISION_SPEC="${LEROBOT_TORCHVISION_SPEC:-torchvision}"
 LEROBOT_EXTRAS="${LEROBOT_EXTRAS:-training,pusht,smolvla,pi,fastwam}"
 LEROBOT_INSTALL_NO_DEPS="${LEROBOT_INSTALL_NO_DEPS:-0}"
+LEROBOT_SKIP_TORCH_INSTALL="${LEROBOT_SKIP_TORCH_INSTALL:-0}"
 LEROBOT_FORCE_OPENCV_HEADLESS="${LEROBOT_FORCE_OPENCV_HEADLESS:-1}"
 CONDA_EXE="${CONDA_EXE:-conda}"
 CONDA_CHANNEL_ARGS="${CONDA_CHANNEL_ARGS:---override-channels -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge}"
@@ -41,7 +42,11 @@ print(f"Python OK: {sys.version.split()[0]}")
 PY
 
 python -m pip install --upgrade pip setuptools wheel
-python -m pip install --index-url "$TORCH_INDEX_URL" "$LEROBOT_TORCH_SPEC" "$LEROBOT_TORCHVISION_SPEC"
+if [[ "$LEROBOT_SKIP_TORCH_INSTALL" == "1" ]]; then
+  echo "Skip torch/torchvision install; using platform-provided PyTorch."
+else
+  python -m pip install --index-url "$TORCH_INDEX_URL" "$LEROBOT_TORCH_SPEC" "$LEROBOT_TORCHVISION_SPEC"
+fi
 
 mkdir -p "$(dirname "$LEROBOT_SOURCE_DIR")"
 if [[ ! -d "$LEROBOT_SOURCE_DIR/.git" ]]; then
