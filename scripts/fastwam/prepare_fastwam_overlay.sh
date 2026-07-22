@@ -44,6 +44,7 @@ FASTWAM_PIP_RESUME_RETRIES="${FASTWAM_PIP_RESUME_RETRIES:-50}"
 FASTWAM_CUSTOM_LIBERO_DATA="${FASTWAM_CUSTOM_LIBERO_DATA:-$EMBODIED_REPO_ROOT/data/custom/fastwam/libero-fastwam}"
 FASTWAM_EXTRACT_CUSTOM_LIBERO_DATA="${FASTWAM_EXTRACT_CUSTOM_LIBERO_DATA:-1}"
 FASTWAM_SKIP_TORCH_INSTALL="${FASTWAM_SKIP_TORCH_INSTALL:-0}"
+FASTWAM_SKIP_PIP_BOOTSTRAP="${FASTWAM_SKIP_PIP_BOOTSTRAP:-0}"
 FASTWAM_ALLOW_PYTHON_MINOR_MISMATCH="${FASTWAM_ALLOW_PYTHON_MINOR_MISMATCH:-0}"
 CONDA_EXE="${CONDA_EXE:-conda}"
 CONDA_CHANNEL_ARGS="${CONDA_CHANNEL_ARGS:---override-channels -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge}"
@@ -393,7 +394,11 @@ if [[ -n "$FASTWAM_TORCH_EXTRA_INDEX_URL" ]]; then
   TORCH_INDEX_ARGS+=(--extra-index-url "$FASTWAM_TORCH_EXTRA_INDEX_URL")
 fi
 
-python -m pip install "${PIP_NETWORK_ARGS[@]}" "${PIP_INDEX_ARGS[@]}" --upgrade pip setuptools wheel
+if [[ "$FASTWAM_SKIP_PIP_BOOTSTRAP" == "1" ]]; then
+  echo "Skip pip/setuptools/wheel bootstrap; using platform-provided Python packaging tools."
+else
+  python -m pip install "${PIP_NETWORK_ARGS[@]}" "${PIP_INDEX_ARGS[@]}" --upgrade pip setuptools wheel
+fi
 python -m pip install "${PIP_NETWORK_ARGS[@]}" "${PIP_INDEX_ARGS[@]}" PyYAML
 if [[ "$FASTWAM_SKIP_TORCH_INSTALL" == "1" ]]; then
   python - <<'PY'

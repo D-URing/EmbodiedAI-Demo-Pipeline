@@ -1,0 +1,81 @@
+# custom/FastWAM / LIBERO / 百舸 PyTorchJob 原生测速配置。
+#
+# 适用场景：
+#   - 百舸 jobType=PyTorchJob；
+#   - 平台注入 MASTER_ADDR / MASTER_PORT / RANK / WORLD_SIZE / NPROC_PER_NODE；
+#   - Master 和 Worker 执行同一条 command；
+#   - 不依赖 ssh。
+#
+# 推荐 command：
+#   cd /mnt/mnt/pfs/dingxibo/EmbodiedAI-Demo-Pipeline && \
+#   git pull origin main && \
+#   bash scripts/cluster/baige_run_fastwam.sh
+
+backend: fastwam
+base_config: configs/fastwam/realrobot_train_eval.sh
+
+experiment:
+  name: fastwam_baige_pytorchjob_probe
+  route: custom
+  run_name: fastwam_baige_pytorchjob_probe
+  run_id:
+
+environment:
+  # 百舸 Pro6000/sm120 路线使用平台默认 Python/torch，不强制 conda。
+  conda_env:
+
+paths:
+  run_root: runs/experiments/custom
+  cache_root: upstreams
+  fastwam_workdir: upstreams/FastWAM-realrobot
+  model_base: models
+  cache_paths:
+    torch_extensions: .cache/torch_extensions/fastwam
+    triton: .cache/triton/fastwam
+    xdg: .cache
+
+distributed:
+  # fallback；百舸原生启动时会被 scripts/distributed/baige_launch.py 覆盖。
+  nnodes: 1
+  node_rank: 0
+  gpus_per_node: 8
+  master_addr: 127.0.0.1
+  master_port: 29500
+
+fastwam:
+  mode: pilot
+  recipe: joint_base
+  task_name: libero_joint_2cam224_1e-4
+  model_id: Wan-AI/Wan2.2-TI2V-5B
+  tokenizer_model_id: Wan-AI/Wan2.1-T2V-1.3B
+  redirect_common_files: false
+  video_backend: pyav
+  suppress_video_warnings: true
+
+  # 测速先用 random 初始化，避免 release checkpoint 路径影响启动。
+  init: random
+  require_cuda: true
+  mixed_precision: bf16
+  wandb: false
+
+  text_embeddings:
+    # 测速默认不预计算，要求已有 text_embeds_cache。
+    # 如果首次缺缓存，可临时改成 auto 或执行：
+    #   FASTWAM_PRECOMPUTE_TEXT_EMBEDS=auto bash scripts/cluster/baige_run_fastwam.sh
+    precompute: false
+    gpus: 8
+    overwrite: false
+    wait_timeout: 3600
+    master_addr: 127.0.0.1
+    master_port: 29517
+
+  extra_overrides: []
+
+mode:
+  pilot:
+    # FastWAM 比 pi05 更重，先用 per-GPU batch=1 测真实吞吐。
+    # 稳定后再尝试 batch_size=2。
+    max_steps: 200
+    batch_size: 1
+    num_workers: 4
+    save_every: 300
