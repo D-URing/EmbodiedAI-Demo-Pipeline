@@ -100,7 +100,7 @@ raise SystemExit(main())
 PY
 
 TRAIN_CMD=(
-  python "$LEROBOT_TRAIN_ENTRY"
+  "$LEROBOT_TRAIN_ENTRY"
   --policy.type="$LEROBOT_POLICY_TYPE"
   --policy.device="$LEROBOT_POLICY_DEVICE"
   --policy.repo_id="$LEROBOT_POLICY_REPO_ID"
@@ -151,7 +151,7 @@ if [[ "${LEROBOT_RESUME:-0}" == "1" ]]; then
     echo "Example: LEROBOT_RESUME_CONFIG_PATH=runs/lerobot/<run>/<id>/lerobot_output/checkpoints/<step>/train_config.json" >&2
     exit 2
   fi
-  TRAIN_CMD=("$LEROBOT_TRAIN_BIN" --config_path="$LEROBOT_RESUME_CONFIG_PATH" --resume=true --output_dir="$OUTPUT_DIR")
+  TRAIN_CMD=("$LEROBOT_TRAIN_ENTRY" --config_path="$LEROBOT_RESUME_CONFIG_PATH" --resume=true --output_dir="$OUTPUT_DIR")
   if [[ -n "${LEROBOT_TRAIN_EXTRA_ARGS:-}" ]]; then
     # shellcheck disable=SC2206
     RESUME_EXTRA_ARGS=( ${LEROBOT_TRAIN_EXTRA_ARGS} )
