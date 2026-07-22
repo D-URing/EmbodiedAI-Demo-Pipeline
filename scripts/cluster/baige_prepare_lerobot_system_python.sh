@@ -58,6 +58,7 @@ python -m pip install --upgrade --no-cache-dir \
   "av>=14,<16" \
   "accelerate" \
   "transformers<5" \
+  "diffusers>=0.36.1,<0.37" \
   "safetensors" \
   "huggingface_hub" \
   "einops" \
@@ -85,6 +86,7 @@ mods = [
     "av",
     "accelerate",
     "transformers",
+    "diffusers",
     "safetensors",
     "huggingface_hub",
     "einops",
@@ -102,9 +104,11 @@ for name in mods:
     print(name, "OK", getattr(mod, "__version__", ""))
 
 import av
+from diffusers import AutoencoderKLWan
 from datasets.packaged_modules.parquet.parquet import ParquetConfig
 
 print("av_has_option", hasattr(av, "option"))
+print("diffusers_autoencoder_kl_wan", AutoencoderKLWan)
 print("parquet_config_supports_filters", "filters" in inspect.signature(ParquetConfig).parameters)
 PY
 
