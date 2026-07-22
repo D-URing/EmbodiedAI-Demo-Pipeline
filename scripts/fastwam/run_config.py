@@ -181,13 +181,22 @@ def build_env(config: dict[str, Any], project_root: Path, config_path: Path) -> 
         if not isinstance(text_embeddings, dict):
             raise SystemExit("ERROR: fastwam.text_embeddings must be a mapping")
         if "precompute" in text_embeddings:
-            env["FASTWAM_PRECOMPUTE_TEXT_EMBEDS"] = str(text_embeddings["precompute"])
+            env["FASTWAM_PRECOMPUTE_TEXT_EMBEDS"] = env_override(
+                "FASTWAM_PRECOMPUTE_TEXT_EMBEDS",
+                text_embeddings["precompute"],
+            )
         if "gpus" in text_embeddings:
             env["FASTWAM_TEXT_EMBED_GPUS"] = env_override("FASTWAM_TEXT_EMBED_GPUS", text_embeddings["gpus"])
         if "overwrite" in text_embeddings:
-            env["FASTWAM_TEXT_EMBED_OVERWRITE"] = bool_text(text_embeddings["overwrite"])
+            env["FASTWAM_TEXT_EMBED_OVERWRITE"] = env_override(
+                "FASTWAM_TEXT_EMBED_OVERWRITE",
+                bool_text(text_embeddings["overwrite"]),
+            )
         if "wait_timeout" in text_embeddings:
-            env["FASTWAM_TEXT_EMBED_WAIT_TIMEOUT"] = str(text_embeddings["wait_timeout"])
+            env["FASTWAM_TEXT_EMBED_WAIT_TIMEOUT"] = env_override(
+                "FASTWAM_TEXT_EMBED_WAIT_TIMEOUT",
+                text_embeddings["wait_timeout"],
+            )
         if "master_addr" in text_embeddings:
             env["FASTWAM_TEXT_EMBED_MASTER_ADDR"] = env_override(
                 "FASTWAM_TEXT_EMBED_MASTER_ADDR",
