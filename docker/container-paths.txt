@@ -1,0 +1,16 @@
+EmbodiedAI container paths
+
+  Project source and upstream dependencies:
+    /opt/embodied-ai-demo-pipeline
+
+  Python virtual environments:
+    /opt/venvs
+
+  Runtime data, models, caches, and outputs:
+    /data/embodied-ai-demo-pipeline
+
+  Platform-mounted user home and shared workspace:
+    /workspace
+
+The image does not store project files under /workspace, so the platform can
+mount the user's shared directory there without hiding image contents.
